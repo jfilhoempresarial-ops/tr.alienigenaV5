@@ -1,4 +1,4 @@
-import { buscarBannersAtivos } from '../services/banners.service.js';
+import { buscarBannersAtivos, registrarClique } from '../services/banners.service.js';
 
 const INTERVALO_MS = 3000;
 let timerAtual = null;
@@ -46,6 +46,12 @@ export async function renderCarrosselBanners() {
 
   const slides = container.querySelectorAll('.carrossel__slide');
   const dots = container.querySelectorAll('.carrossel__dot');
+
+  slides.forEach((slide, i) => {
+    slide.addEventListener('click', () => {
+      registrarClique(banners[i].id, banners[i].empresaNome);
+    });
+  });
 
   function mostrarSlide(indice) {
     slides.forEach((slide, i) => slide.classList.toggle('carrossel__slide--ativo', i === indice));
