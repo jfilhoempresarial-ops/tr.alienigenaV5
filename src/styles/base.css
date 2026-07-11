@@ -1,0 +1,120 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--cor-branco);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.navbar__logo {
+  font-weight: bold;
+  color: var(--cor-primaria-escura);
+  text-decoration: none;
+}
+
+.navbar__cta {
+  background: var(--cor-primaria);
+  color: var(--cor-branco);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+main {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.categorias-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.categoria-card {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 20px 8px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--cor-texto);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.categoria-card__icone {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.card-empresa {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.card-empresa__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.card-empresa__whatsapp {
+  display: inline-block;
+  margin-top: 10px;
+  background: #25d366;
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.tag {
+  display: inline-block;
+  background: #eef7ee;
+  color: var(--cor-primaria);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-right: 6px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+form input,
+form select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: var(--cor-primaria);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
