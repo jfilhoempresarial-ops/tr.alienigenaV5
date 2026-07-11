@@ -24,6 +24,12 @@ body {
   text-decoration: none;
 }
 
+.navbar__acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .navbar__cta {
   background: var(--cor-primaria);
   color: var(--cor-branco);
@@ -31,6 +37,12 @@ body {
   border-radius: var(--radius);
   text-decoration: none;
   font-size: 14px;
+}
+
+.navbar__admin {
+  text-decoration: none;
+  font-size: 18px;
+  opacity: 0.6;
 }
 
 main {
@@ -113,6 +125,92 @@ main {
   margin-bottom: 8px;
 }
 
+.admin-login,
+.admin-painel {
+  max-width: 400px;
+}
+
+.admin-painel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.btn-secundario {
+  background: transparent;
+  color: var(--cor-primaria);
+  border: 1px solid var(--cor-primaria);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.card-evento {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-evento__imagem {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.card-evento__conteudo {
+  padding: 14px;
+}
+
+.card-evento__data {
+  color: var(--cor-primaria);
+  font-weight: bold;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.card-evento__local {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.card-evento__link {
+  display: inline-block;
+  margin-top: 8px;
+  background: var(--cor-primaria);
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.relatorio__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.relatorio__tabela th,
+.relatorio__tabela td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.relatorio__tabela th {
+  background: var(--cor-fundo);
+  font-weight: bold;
+}
+
 .card-empresa {
   background: var(--cor-branco);
   border-radius: var(--radius);
@@ -153,12 +251,14 @@ form label {
 }
 
 form input,
-form select {
+form select,
+form textarea {
   width: 100%;
   padding: 8px;
   margin-top: 4px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  font-family: inherit;
 }
 
 button {
