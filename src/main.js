@@ -3,6 +3,8 @@ import { renderHome } from './pages/home.js';
 import { renderResultados } from './pages/resultados.js';
 import { renderCadastroEmpresa } from './pages/cadastro-empresa.js';
 import { renderRelatorioCliques } from './pages/admin-relatorios.js';
+import { renderEventos } from './pages/eventos.js';
+import { renderAdmin } from './pages/admin.js';
 
 const app = document.getElementById('app');
 
@@ -18,6 +20,10 @@ function router() {
     renderCadastroEmpresa(app);
   } else if (rota === 'admin-relatorios') {
     renderRelatorioCliques(app);
+  } else if (rota === 'eventos') {
+    renderEventos(app);
+  } else if (rota === 'admin') {
+    renderAdmin(app);
   } else {
     app.innerHTML = '<p>Página não encontrada.</p>';
   }
