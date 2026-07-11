@@ -1,3 +1,5 @@
+import { renderCarrosselBanners } from '../components/carrossel-banners.js';
+
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
   { id: 'posto', label: 'Postos', icone: '⛽' },
@@ -10,6 +12,7 @@ const CATEGORIAS = [
 export function renderHome(container) {
   container.innerHTML = `
     <section class="home">
+      <div id="carrossel-banners"></div>
       <h1>Encontre ajuda na estrada, perto de você</h1>
       <div class="categorias-grid">
         ${CATEGORIAS.map(
@@ -23,4 +26,6 @@ export function renderHome(container) {
       </div>
     </section>
   `;
+
+  renderCarrosselBanners();
 }
