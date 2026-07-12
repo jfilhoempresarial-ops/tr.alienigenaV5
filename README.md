@@ -35,3 +35,5 @@ Se um arquivo em `pages/` começar a passar de ~150 linhas, é sinal de que uma 
 - [ ] Página de perfil da empresa (`pages/empresa-perfil.js`)
 - [ ] Sistema de avaliações
 - [ ] Service worker para funcionar offline (PWA completo)
+
+      
