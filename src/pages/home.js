@@ -9,7 +9,10 @@ const CATEGORIAS = [
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
   { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', externo: 'https://www.idt.org.br/vagas-disponiveis' },
   { id: 'fretes', label: 'Fretes', icone: '📦' },
-  { id: 'truckfest', label: 'Truck Fest', icone: '🎪' },
+  { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '#/eventos' },
+  { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
+  { id: 'caminhoes', label: 'Compra e Venda', icone: '🚛', rotaInterna: '#/caminhoes' },
+  { id: 'noticias', label: 'Notícias', icone: '📰', rotaInterna: '#/noticias' },
 ];
 
 export function renderHome(container) {
@@ -18,21 +21,16 @@ export function renderHome(container) {
       <div id="carrossel-banners"></div>
       <h1>Encontre ajuda na estrada, perto de você</h1>
       <div class="categorias-grid">
-        ${CATEGORIAS.map((cat) =>
-          cat.externo
-            ? `
-          <a href="${cat.externo}" target="_blank" rel="noopener" class="categoria-card">
+        ${CATEGORIAS.map((cat) => {
+          const href = cat.externo ?? cat.rotaInterna ?? `#/resultados/${cat.id}`;
+          const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
+          return `
+          <a href="${href}" ${targetBlank} class="categoria-card">
             <span class="categoria-card__icone">${cat.icone}</span>
             <span class="categoria-card__label">${cat.label}</span>
           </a>
-        `
-            : `
-          <a href="#/resultados/${cat.id}" class="categoria-card">
-            <span class="categoria-card__icone">${cat.icone}</span>
-            <span class="categoria-card__label">${cat.label}</span>
-          </a>
-        `
-        ).join('')}
+        `;
+        }).join('')}
       </div>
     </section>
   `;
