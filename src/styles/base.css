@@ -147,6 +147,80 @@ main {
   font-size: 13px;
 }
 
+.card-noticia {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-noticia__imagem {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.card-noticia__conteudo {
+  padding: 14px;
+}
+
+.card-noticia__data {
+  font-size: 12px;
+  color: #888;
+  margin: 0 0 4px 0;
+}
+
+.card-noticia__link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--cor-primaria);
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.caminhoes__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-caminhao {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-caminhao__foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.card-caminhao__conteudo {
+  padding: 14px;
+}
+
+.card-caminhao__preco {
+  color: var(--cor-primaria);
+  font-weight: bold;
+  font-size: 18px;
+  margin: 4px 0;
+}
+
+.card-caminhao__local {
+  font-size: 13px;
+  color: #666;
+}
+
 .card-evento {
   background: var(--cor-branco);
   border-radius: var(--radius);
