@@ -5,6 +5,9 @@ import { renderCadastroEmpresa } from './pages/cadastro-empresa.js';
 import { renderRelatorioCliques } from './pages/admin-relatorios.js';
 import { renderEventos } from './pages/eventos.js';
 import { renderAdmin } from './pages/admin.js';
+import { renderNoticias } from './pages/noticias.js';
+import { renderCaminhoes } from './pages/caminhoes.js';
+import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 
 const app = document.getElementById('app');
 
@@ -24,6 +27,12 @@ function router() {
     renderEventos(app);
   } else if (rota === 'admin') {
     renderAdmin(app);
+  } else if (rota === 'noticias') {
+    renderNoticias(app);
+  } else if (rota === 'caminhoes') {
+    renderCaminhoes(app);
+  } else if (rota === 'cadastro-caminhao') {
+    renderCadastroCaminhao(app);
   } else {
     app.innerHTML = '<p>Página não encontrada.</p>';
   }
