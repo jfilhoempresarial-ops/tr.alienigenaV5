@@ -8,6 +8,7 @@ import { renderAdmin } from './pages/admin.js';
 import { renderNoticias } from './pages/noticias.js';
 import { renderCaminhoes } from './pages/caminhoes.js';
 import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
+import { renderVagas } from './pages/vagas.js';
 
 const app = document.getElementById('app');
 
@@ -33,7 +34,9 @@ function router() {
     renderCaminhoes(app);
   } else if (rota === 'cadastro-caminhao') {
     renderCadastroCaminhao(app);
-  } else {
+  } else if (rota === 'vagas') {
+  renderVagas(app);
+} else {
     app.innerHTML = '<p>Página não encontrada.</p>';
   }
 }
@@ -41,3 +44,4 @@ function router() {
 renderNavbar();
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', router);
+

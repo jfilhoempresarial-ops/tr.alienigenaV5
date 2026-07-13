@@ -7,7 +7,7 @@ const CATEGORIAS = [
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
-  { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', externo: 'https://www.idt.org.br/vagas-disponiveis' },
+  {  id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '#/vagas' },
   { id: 'fretes', label: 'Fretes', icone: '📦' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '#/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },

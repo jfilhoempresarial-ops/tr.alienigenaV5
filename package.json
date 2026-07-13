@@ -8,13 +8,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
+    "cheerio": "^1.2.0",
     "csv-parse": "^7.0.1",
     "firebase": "^10.12.0",
     "firebase-admin": "^14.1.0",
-=======
-    "firebase": "^10.12.0",
->>>>>>> 98cd52cbee13448657f19541451e91ca883c6e3f
     "leaflet": "^1.9.4"
   },
   "devDependencies": {
