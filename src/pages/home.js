@@ -7,7 +7,7 @@ const CATEGORIAS = [
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
-  {  id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '#/vagas' },
+  { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '#/vagas' },
   { id: 'fretes', label: 'Fretes', icone: '📦' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '#/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
@@ -20,20 +20,41 @@ export function renderHome(container) {
     <section class="home">
       <div id="carrossel-banners"></div>
       <h1>Encontre ajuda na estrada, perto de você</h1>
-      <div class="categorias-grid">
-        ${CATEGORIAS.map((cat) => {
-          const href = cat.externo ?? cat.rotaInterna ?? `#/resultados/${cat.id}`;
-          const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
-          return `
-          <a href="${href}" ${targetBlank} class="categoria-card">
-            <span class="categoria-card__icone">${cat.icone}</span>
-            <span class="categoria-card__label">${cat.label}</span>
-          </a>
-        `;
-        }).join('')}
+
+      <div class="categorias-carrossel">
+        <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
+
+        <div class="categorias-carrossel__trilho" id="categorias-trilho">
+          ${CATEGORIAS.map((cat) => {
+            const href = cat.externo ?? cat.rotaInterna ?? `#/resultados/${cat.id}`;
+            const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
+            return `
+            <a href="${href}" ${targetBlank} class="categoria-card">
+              <span class="categoria-card__icone">${cat.icone}</span>
+              <span class="categoria-card__label">${cat.label}</span>
+            </a>
+          `;
+          }).join('')}
+        </div>
+
+        <button class="categorias-carrossel__seta categorias-carrossel__seta--direita" aria-label="Próximas categorias">›</button>
       </div>
     </section>
   `;
 
   renderCarrosselBanners();
+
+  const trilho = container.querySelector('#categorias-trilho');
+  const setaEsquerda = container.querySelector('.categorias-carrossel__seta--esquerda');
+  const setaDireita = container.querySelector('.categorias-carrossel__seta--direita');
+
+  const distanciaScroll = () => trilho.clientWidth * 0.7;
+
+  setaEsquerda.addEventListener('click', () => {
+    trilho.scrollBy({ left: -distanciaScroll(), behavior: 'smooth' });
+  });
+
+  setaDireita.addEventListener('click', () => {
+    trilho.scrollBy({ left: distanciaScroll(), behavior: 'smooth' });
+  });
 }
