@@ -3,4 +3,7 @@ dist/
 .env
 .env.local
 .DS_Store
+<<<<<<< HEAD
 scripts/serviceAccountKey.json
+=======
+>>>>>>> 98cd52cbee13448657f19541451e91ca883c6e3f
