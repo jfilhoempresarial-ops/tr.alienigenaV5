@@ -358,3 +358,8 @@ button {
   font-size: 26px;
   color: #7ed321;
 }
+.navbar__logo-img {
+  height: 64px;
+  width: auto;
+  display: block;
+}
