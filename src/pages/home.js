@@ -55,7 +55,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">💼 Vagas em destaque</h2>
+          <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
           <a href="#/vagas" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-vagas">
@@ -136,9 +136,20 @@ function renderMiniCardEmpresa(empresa) {
 
 async function carregarVagasDestaque(container) {
   const alvo = container.querySelector('#lista-vagas');
+  const titulo = container.querySelector('#titulo-vagas-destaque');
   try {
     const dados = await buscarVagas();
-    const itens = (dados.itens || []).slice(0, 6);
+    const todosItens = dados.itens || [];
+    const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
+
+    titulo.textContent = todosItens.length
+      ? `💼 ${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje`
+      : '💼 Vagas em destaque';
+
+    const itens = [...todosItens]
+      .sort((a, b) => (b.quantidade || 1) - (a.quantidade || 1))
+      .slice(0, 6);
+
     if (itens.length === 0) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma vaga disponível no momento.</p>`;
       return;
