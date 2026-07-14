@@ -4,6 +4,7 @@ import {
   getDocs,
   query,
   where,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 
@@ -16,14 +17,23 @@ const COLLECTION = 'empresas';
 export async function buscarEmpresasPorCategoria(categoria, { apenasVerificadas = true } = {}) {
   const ref = collection(db, COLLECTION);
   const condicoes = [where('categorias', 'array-contains', categoria)];
-
   if (apenasVerificadas) {
     condicoes.push(where('verificado', '==', true));
   }
-
   const q = query(ref, ...condicoes);
   const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
 
+/**
+ * Busca uma amostra de empresas verificadas para exibir em destaque na home.
+ * Ainda não ordena por distância (isso passa a funcionar quando todas as
+ * empresas tiverem lat/lng preenchidos pelo script de geocodificação).
+ */
+export async function buscarEmpresasDestaque(quantidade = 6) {
+  const ref = collection(db, COLLECTION);
+  const q = query(ref, where('verificado', '==', true), limit(quantidade));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
