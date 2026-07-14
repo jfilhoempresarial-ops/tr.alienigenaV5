@@ -499,3 +499,38 @@ button {
   padding: 2px 6px;
   border-radius: 6px;
 }
+/* ===== Adicione este bloco no FINAL do base.css ===== */
+
+.vitrine-card {
+  flex: 0 0 auto;
+  width: 130px;
+  height: 88px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  display: block;
+  text-decoration: none;
+  scroll-snap-align: start;
+  background-color: #ccc;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.vitrine-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 65%);
+}
+
+.vitrine-card__nome {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
