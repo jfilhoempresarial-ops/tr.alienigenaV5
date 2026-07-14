@@ -554,3 +554,169 @@ button {
   width: auto;
   display: block;
 }
+/* ===== Melhorias visuais da página de Vagas ===== */
+
+.vagas__header h1 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.vagas__header p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 0;
+}
+
+.vagas__resumo {
+  margin: 16px 0;
+}
+
+.vagas__resumo p {
+  font-size: 13px;
+  color: #555;
+  margin: 6px 0;
+}
+
+.vagas__aviso {
+  background: #fff8e6;
+  border-left: 3px solid #f5a623;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #7a5c00 !important;
+}
+
+.vagas__busca {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.vagas__busca:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.vagas__cidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.chip {
+  border: none;
+  background: #eef1ee;
+  color: #333;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.chip:hover {
+  background: #dde3dd;
+}
+
+.chip--ativo {
+  background: var(--cor-primaria);
+  color: #fff;
+  font-weight: 600;
+}
+
+.vagas-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.vaga-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+}
+
+.vaga-card__cargo {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.vaga-card__local {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.vaga-card__acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-ligar,
+.btn-whatsapp,
+.btn-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-ligar {
+  background: #eef1ee;
+  color: #333;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.btn-email {
+  background: #eef1ee;
+  color: #333;
+}
+
+.sine-unidade {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sine-unidade__titulo {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.sine-unidade__linha {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.sine-unidade__acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vazio {
+  color: #888;
+  font-size: 14px;
+  padding: 20px 0;
+}
