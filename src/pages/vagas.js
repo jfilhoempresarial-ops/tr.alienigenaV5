@@ -69,11 +69,13 @@ export async function renderVagas(container) {
 
   function aplicarFiltros() {
     const qn = normalizar(filtroTexto);
-    return itens.filter((v) => {
-      const bateCidade = !filtroCidade || v.cidadeBase === filtroCidade;
-      const bateTexto = !qn || normalizar(v.cidade).includes(qn) || normalizar(v.cargo).includes(qn);
-      return bateCidade && bateTexto;
-    });
+    return itens
+      .filter((v) => {
+        const bateCidade = !filtroCidade || v.cidadeBase === filtroCidade;
+        const bateTexto = !qn || normalizar(v.cidade).includes(qn) || normalizar(v.cargo).includes(qn);
+        return bateCidade && bateTexto;
+      })
+      .sort((a, b) => (b.quantidade || 1) - (a.quantidade || 1));
   }
 
   function render() {
@@ -88,9 +90,12 @@ export async function renderVagas(container) {
           <p>Vagas para motoristas e ajudantes de transporte, próximas a você</p>
         </div>
 
+        <div class="vagas__total-destaque">
+          ${itens.length ? `Hoje temos <strong>${total}</strong> vaga${total !== 1 ? 's' : ''} de emprego disponíve${total !== 1 ? 'is' : 'l'} na área de transporte` : 'Nenhuma vaga disponível no momento'}
+        </div>
+
         <div class="vagas__resumo">
           <p>📅 Atualizado em: ${formatarData(dados.atualizado)}</p>
-          <p>🔎 ${itens.length ? `Hoje há ${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} na região` : 'Nenhuma vaga disponível no momento'}</p>
           <p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O nome da empresa contratante é informado no momento do atendimento.</p>
         </div>
 
@@ -124,7 +129,6 @@ export async function renderVagas(container) {
     inputBusca.addEventListener('input', (e) => {
       filtroTexto = e.target.value;
       render();
-      // Mantém o foco e o cursor no lugar certo depois do re-render.
       const alvo = container.querySelector('#vagas-busca');
       alvo.focus();
       alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);

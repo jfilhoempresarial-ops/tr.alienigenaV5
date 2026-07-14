@@ -343,3 +343,18 @@ button {
   border-radius: var(--radius);
   font-size: 15px;
 }
+.vagas__total-destaque {
+  background: #0f2d1a;
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin: 12px 0 16px;
+  line-height: 1.4;
+}
+.vagas__total-destaque strong {
+  font-size: 26px;
+  color: #7ed321;
+}
