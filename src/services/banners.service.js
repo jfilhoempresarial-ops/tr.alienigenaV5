@@ -17,6 +17,24 @@ export async function buscarBannersAtivos() {
 }
 
 /**
+ * Busca banners ativos de uma categoria específica (ex: "vagas", "mecanico"),
+ * para exibir no topo das páginas de cada categoria.
+ * O banner precisa ter o campo "categoria" preenchido no Firestore com o
+ * mesmo id usado no array CATEGORIAS do home.js.
+ */
+export async function buscarBannersPorCategoria(categoriaId) {
+  const ref = collection(db, COLLECTION);
+  const q = query(
+    ref,
+    where('ativo', '==', true),
+    where('categoria', '==', categoriaId),
+    orderBy('ordem', 'asc')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
  * Registra um clique no banner: soma +1 no contador do banner
  * E grava um evento individual (com data) para o relatório mensal.
  * "Fire and forget" — não trava a navegação do usuário pro WhatsApp/site.

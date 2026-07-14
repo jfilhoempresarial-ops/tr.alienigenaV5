@@ -2,6 +2,7 @@ import { buscarEmpresasPorCategoria } from '../services/empresas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { ordenarPorDistancia } from '../utils/distancia.js';
 import { renderCardEmpresa } from '../components/card-empresa.js';
+import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 export async function renderResultados(container, categoria) {
   container.innerHTML = `<p class="loading">Buscando prestadores...</p>`;
@@ -46,6 +47,7 @@ export async function renderResultados(container, categoria) {
 
   container.innerHTML = `
     <section class="resultados">
+      <div id="carrossel-categoria" class="carrossel-categoria"></div>
       <h2>${localizacao ? 'Resultados perto de você' : 'Resultados disponíveis'}</h2>
       ${avisoLocalizacao}
       <div class="resultados-lista">
@@ -53,6 +55,8 @@ export async function renderResultados(container, categoria) {
       </div>
     </section>
   `;
+
+  renderCarrosselBanners('carrossel-categoria', categoria);
 
   const botaoTentar = container.querySelector('#tentar-localizacao');
   if (botaoTentar) {

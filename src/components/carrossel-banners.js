@@ -1,10 +1,12 @@
-import { buscarBannersAtivos, registrarClique } from '../services/banners.service.js';
+import { buscarBannersAtivos, buscarBannersPorCategoria, registrarClique } from '../services/banners.service.js';
 
 const INTERVALO_MS = 3000;
 let timerAtual = null;
 
-export async function renderCarrosselBanners() {
-  const container = document.getElementById('carrossel-banners');
+const NUMERO_COMERCIAL = '5588988621481'; // TODO: troque pelo seu número real de WhatsApp comercial
+
+export async function renderCarrosselBanners(containerId = 'carrossel-banners', categoria = null) {
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   if (timerAtual) {
@@ -12,10 +14,20 @@ export async function renderCarrosselBanners() {
     timerAtual = null;
   }
 
-  const banners = await buscarBannersAtivos();
+  let banners;
+  try {
+    banners = categoria ? await buscarBannersPorCategoria(categoria) : await buscarBannersAtivos();
+  } catch (erro) {
+    console.error('Erro ao buscar banners:', erro);
+    banners = [];
+  }
 
   if (banners.length === 0) {
-    container.innerHTML = '';
+    if (categoria) {
+      renderPlaceholder(container, categoria);
+    } else {
+      container.innerHTML = '';
+    }
     return;
   }
 
@@ -26,7 +38,7 @@ export async function renderCarrosselBanners() {
       ${banners
         .map(
           (banner, i) => `
-        <a
+        
           href="${banner.link}"
           target="_blank"
           rel="noopener sponsored"
@@ -63,4 +75,19 @@ export async function renderCarrosselBanners() {
     const proximo = (indiceAtual + 1) % banners.length;
     mostrarSlide(proximo);
   }, INTERVALO_MS);
+}
+
+function renderPlaceholder(container, categoria) {
+  container.innerHTML = `
+    
+      href="https://wa.me/${NUMERO_COMERCIAL}?text=${encodeURIComponent('Quero anunciar minha empresa no TRA da Estrada')}"
+      target="_blank"
+      rel="noopener"
+      class="carrossel-placeholder"
+    >
+      <span class="carrossel-placeholder__tag">ESPAÇO PUBLICITÁRIO</span>
+      <span class="carrossel-placeholder__titulo">Sua empresa aqui</span>
+      <span class="carrossel-placeholder__sub">Alcance motoristas de ${categoria} na sua região</span>
+    </a>
+  `;
 }

@@ -720,3 +720,39 @@ button {
   font-size: 14px;
   padding: 20px 0;
 }
+.carrossel-categoria {
+  margin-bottom: 20px;
+}
+
+.carrossel-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-decoration: none;
+  border: 2px dashed #7ed321;
+}
+
+.carrossel-placeholder__tag {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #7ed321;
+  margin-bottom: 4px;
+}
+
+.carrossel-placeholder__titulo {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.carrossel-placeholder__sub {
+  font-size: 12px;
+  color: #ccc;
+}
