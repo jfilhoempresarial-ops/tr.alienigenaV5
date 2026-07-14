@@ -39,6 +39,7 @@ export async function renderCarrosselBanners(containerId = 'carrossel-banners', 
         .map(
           (banner, i) => `
         
+          <a
           href="${banner.link}"
           target="_blank"
           rel="noopener sponsored"
@@ -80,6 +81,7 @@ export async function renderCarrosselBanners(containerId = 'carrossel-banners', 
 function renderPlaceholder(container, categoria) {
   container.innerHTML = `
     
+      <a
       href="https://wa.me/${NUMERO_COMERCIAL}?text=${encodeURIComponent('Quero anunciar minha empresa no TRA da Estrada')}"
       target="_blank"
       rel="noopener"
