@@ -1,0 +1,14 @@
+Cidade Origem,Estado Origem,Cidade Destino,Estado Destino,Carga,Espécie,Veículo,Carroceria
+Trindade,PE,Sobral,CE,GPISITA,Granel,Rodotrem,Caçamba
+Trindade,PE,Sobral,CE,GPISITA,Granel,Carreta 4º eixo,Caçamba
+Trindade,PE,Sobral,CE,GPISITA,Granel,Bitrem 7 eixos,Caçamba
+Trindade,PE,Sobral,CE,GPISITA,Granel,Vanderléia,Caçamba
+Trindade,PE,Sobral,CE,GPISITA,Granel,Carreta LS,Caçamba
+Trindade,PE,Sobral,CE,GPISITA,Granel,Carreta,Caçamba
+São Gonçalo do Amarante,CE,Sobral,CE,ESCÓRIA,Granel,Rodotrem,Caçamba
+Sobral,CE,Sobral,CE,CIMENTO,Pallet,"Carreta LS, Bitrem 7 eixos","Grade Baixa, Prancha"
+Sobral,CE,Sobral,CE,CIMENTO,Pallet,"Truck, Carreta","Grade Baixa, Prancha"
+Sobral,CE,São Luís,MA,CALCARIO,Granel,"Carreta LS, Rodotrem",Caçamba
+Sobral,CE,Teresina,PI,CIMENTO,Pallet,Rodotrem,Grade Baixa
+Sobral,CE,Sobral,CE,CIMENTO,Pallet,"Carreta LS, Bitrem 7 eixos","Grade Baixa, Prancha"
+Sobral,CE,Sobral,CE,CIMENTO,Pallet,"Truck, Carreta","Grade Baixa, Prancha"

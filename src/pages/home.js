@@ -75,7 +75,6 @@ export function renderHome(container) {
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">📦 Fretes disponíveis</h2>
-          <span class="home-secao__ver-todas home-secao__ver-todas--em-breve">Em breve</span>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
           <p class="home-secao__vazio">Carregando...</p>
@@ -202,6 +201,10 @@ async function carregarFretesDestaque(container) {
   const alvo = container.querySelector('#lista-fretes');
   try {
     const fretes = await buscarFretesDestaque(6);
+    if (fretes.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Nenhum frete disponível no momento.</p>`;
+      return;
+    }
     alvo.innerHTML = fretes.map(renderMiniCardFrete).join('');
   } catch (erro) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
@@ -210,11 +213,12 @@ async function carregarFretesDestaque(container) {
 }
 
 function renderMiniCardFrete(frete) {
+  const rota = `${frete.cidadeOrigem}/${frete.estadoOrigem} → ${frete.cidadeDestino}/${frete.estadoDestino}`;
   return `
-    <div class="mini-card mini-card--exemplo">
-      <span class="mini-card__tag-exemplo">EXEMPLO</span>
-      <p class="mini-card__titulo">${frete.tipoVeiculo}</p>
-      <p class="mini-card__sub">${frete.origem} → ${frete.destino} • ${frete.km} km</p>
+    <div class="mini-card ${frete.isExemplo ? 'mini-card--exemplo' : ''}">
+      ${frete.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
+      <p class="mini-card__titulo">${frete.veiculo} • ${frete.carroceria}</p>
+      <p class="mini-card__sub">📦 ${frete.carga} (${frete.especie}) — ${rota}</p>
     </div>
   `;
 }
