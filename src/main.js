@@ -9,10 +9,10 @@ import { renderNoticias } from './pages/noticias.js';
 import { renderCaminhoes } from './pages/caminhoes.js';
 import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 import { renderVagas } from './pages/vagas.js';
+import { renderBusca } from './pages/busca.js';
 
 const app = document.getElementById('app');
 
-// Rotas fixas do site (tudo que NÃO é uma categoria de prestador).
 const ROTAS_FIXAS = {
   'cadastro-empresa': renderCadastroEmpresa,
   'admin-relatorios': renderRelatorioCliques,
@@ -27,22 +27,21 @@ const ROTAS_FIXAS = {
 function router() {
   const caminho = window.location.pathname.replace(/^\/+|\/+$/g, '');
   const [rota] = caminho.split('/');
+  const params = new URLSearchParams(window.location.search);
 
   window.scrollTo(0, 0);
 
   if (!rota) {
     renderHome(app);
+  } else if (rota === 'busca') {
+    renderBusca(app, params.get('q') || '');
   } else if (ROTAS_FIXAS[rota]) {
     ROTAS_FIXAS[rota](app);
   } else {
-    // Qualquer outro endereço de um segmento (ex: /mecanico, /posto)
-    // é tratado como categoria de prestador de serviço.
     renderResultados(app, rota);
   }
 }
 
-// Intercepta cliques em links internos (começando com "/") para navegar
-// sem recarregar a página inteira, usando a History API do navegador.
 document.addEventListener('click', (e) => {
   const link = e.target.closest('a');
   if (!link) return;
@@ -52,13 +51,12 @@ document.addEventListener('click', (e) => {
   if (link.target === '_blank' || link.hasAttribute('download')) return;
 
   e.preventDefault();
-  if (href !== window.location.pathname) {
+  if (href !== window.location.pathname + window.location.search) {
     window.history.pushState({}, '', href);
     router();
   }
 });
 
-// Suporte ao botão "voltar/avançar" do navegador.
 window.addEventListener('popstate', router);
 
 renderNavbar();
