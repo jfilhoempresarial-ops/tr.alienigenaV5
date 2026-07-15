@@ -906,3 +906,89 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
+.banner-grupos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  margin: 4px 0 20px;
+}
+
+.banner-grupos__icone {
+  font-size: 28px;
+}
+
+.banner-grupos__texto {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #eee;
+}
+
+.banner-grupos__texto strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+  color: #fff;
+}
+
+.banner-grupos__seta {
+  font-size: 22px;
+  color: #7ed321;
+}
+
+.grupos-whatsapp__header {
+  margin-bottom: 16px;
+}
+
+.grupos-whatsapp__header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.grupos-whatsapp__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.grupo-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.grupo-card--exemplo {
+  border: 1px dashed #ccc;
+}
+
+.grupo-card__nome {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.grupo-card__local,
+.grupo-card__admin {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 4px;
+}
+
+.grupo-card__acao {
+  display: inline-block;
+  margin-top: 8px;
+  background: #25d366;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
