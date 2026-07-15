@@ -5,11 +5,6 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
-function capitalizarNome(txt) {
-  return (txt || '')
-    .toLowerCase()
-    .replace(/(^|\s|\()\S/g, (letra) => letra.toUpperCase());
-}
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -27,6 +22,12 @@ const CATEGORIAS = [
 ];
 
 const LABEL_POR_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
+
+function capitalizarNome(txt) {
+  return (txt || '')
+    .toLowerCase()
+    .replace(/(^|\s|\()\S/g, (letra) => letra.toUpperCase());
+}
 
 export function renderHome(container) {
   container.innerHTML = `
@@ -72,9 +73,9 @@ export function renderHome(container) {
 
       <div class="home-secao" id="secao-aniversariantes">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎂 Aniversariantes da semana</h2>
+          <h2 class="home-secao__titulo">🎂 Aniversariantes da Loja do Alienígena</h2>
         </div>
-        <div class="home-secao__lista" id="lista-aniversariantes">
+        <div id="aniversariantes-resumo">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
@@ -187,29 +188,46 @@ function renderMiniCardEmpresa(empresa) {
 
 async function carregarAniversariantes(container) {
   const secao = container.querySelector('#secao-aniversariantes');
-  const alvo = container.querySelector('#lista-aniversariantes');
+  const alvo = container.querySelector('#aniversariantes-resumo');
   try {
     const aniversariantes = await buscarAniversariantesDaSemana();
     if (aniversariantes.length === 0) {
       secao.style.display = 'none';
       return;
     }
-    alvo.innerHTML = aniversariantes.map(renderMiniCardAniversariante).join('');
+
+    const hoje = new Date();
+    const diaHoje = hoje.getDate();
+    const mesHoje = hoje.getMonth() + 1;
+    const deHoje = aniversariantes.filter((a) => a.dia === diaHoje && a.mes === mesHoje);
+
+    alvo.innerHTML = `
+      <div class="aniversario-card">
+        <h3 class="aniversario-card__titulo">🎉 Aniversariantes de hoje</h3>
+        ${
+          deHoje.length
+            ? `<ul class="aniversario-card__lista">${deHoje
+                .map((p) => `<li>${capitalizarNome(p.nome)}</li>`)
+                .join('')}</ul>`
+            : '<p class="aniversario-card__vazio">Ninguém faz aniversário hoje.</p>'
+        }
+      </div>
+      <div class="aniversario-card">
+        <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
+        <ul class="aniversario-card__lista">
+          ${aniversariantes
+            .map(
+              (p) =>
+                `<li>${capitalizarNome(p.nome)} — ${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}</li>`
+            )
+            .join('')}
+        </ul>
+      </div>
+    `;
   } catch (erro) {
     secao.style.display = 'none';
     console.error(erro);
   }
-}
-
-function renderMiniCardAniversariante(pessoa) {
-  const diaFormatado = String(pessoa.dia).padStart(2, '0');
-  const mesFormatado = String(pessoa.mes).padStart(2, '0');
-  return `
-    <div class="mini-card mini-card--aniversario">
-      <p class="mini-card__titulo">🎉 ${capitalizarNome(pessoa.nome)}</p>
-      <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
-    </div>
-  `;
 }
 
 async function carregarVagasDestaque(container) {
