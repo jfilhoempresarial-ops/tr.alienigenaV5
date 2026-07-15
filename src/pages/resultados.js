@@ -23,6 +23,16 @@ function normalizar(txt) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+// Evita que a busca de localização trave a página para sempre caso o
+// navegador demore demais para responder (ex: popup de permissão que
+// não aparece, GPS lento). Depois de 5s, seguimos sem localização.
+function obterLocalizacaoComTimeout(ms = 5000) {
+  return Promise.race([
+    obterLocalizacaoAtual(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), ms)),
+  ]);
+}
+
 export async function renderResultados(container, categoria) {
   container.innerHTML = `<p class="loading">Buscando prestadores...</p>`;
 
@@ -45,10 +55,11 @@ export async function renderResultados(container, categoria) {
   }
 
   // A localização é só um "bônus" para ordenar por distância.
-  // Se falhar (permissão negada, sem GPS, timeout), mostramos a lista mesmo assim, sem ordenar.
+  // Se falhar ou demorar demais (permissão negada, sem GPS, timeout),
+  // mostramos a lista mesmo assim, sem ordenar.
   let localizacao = null;
   try {
-    localizacao = await obterLocalizacaoAtual();
+    localizacao = await obterLocalizacaoComTimeout();
   } catch (erro) {
     console.warn('Localização indisponível, mostrando lista sem ordenar por distância.', erro);
   }
