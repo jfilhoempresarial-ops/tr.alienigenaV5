@@ -774,3 +774,62 @@ button {
   background: linear-gradient(135deg, #fff8e6, #ffffff);
   border: 1px solid #f5d98e;
 }
+.carrossel-vertical {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin: 4px 0 20px;
+  scrollbar-width: none;
+}
+
+.carrossel-vertical::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-vertical {
+  flex: 0 0 auto;
+  width: 160px;
+  height: 260px;
+  border-radius: var(--radius);
+  background-color: #ccc;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
+  text-decoration: none;
+  display: block;
+}
+
+.banner-vertical__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 50%);
+}
+
+.banner-vertical--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  border: 2px dashed #7ed321;
+  color: #fff;
+  padding: 16px;
+}
+
+.banner-vertical__tag {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #7ed321;
+}
+
+.banner-vertical__titulo {
+  font-size: 15px;
+  font-weight: bold;
+}
