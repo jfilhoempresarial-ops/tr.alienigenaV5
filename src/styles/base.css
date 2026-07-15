@@ -1077,3 +1077,44 @@ button {
   border-radius: 8px;
   text-decoration: none;
 }
+#aniversariantes-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aniversario-card {
+  background: linear-gradient(135deg, #fff8e6, #ffffff);
+  border: 1px solid #f5d98e;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.aniversario-card__titulo {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.aniversario-card__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.aniversario-card__lista li {
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+}
+
+.aniversario-card__lista li:last-child {
+  border-bottom: none;
+}
+
+.aniversario-card__vazio {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
