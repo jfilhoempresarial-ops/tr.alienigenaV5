@@ -5,7 +5,6 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
-import { buscarGruposWhatsappAtivos } from '../services/grupos-whatsapp.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -75,14 +74,14 @@ export function renderHome(container) {
         </div>
       </div>
 
-      <div class="home-secao" id="secao-grupos">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📱 Grupos de WhatsApp parceiros</h2>
-        </div>
-        <div class="home-secao__lista" id="lista-grupos">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
+      <a href="/grupos-whatsapp" class="banner-grupos">
+        <span class="banner-grupos__icone">📱</span>
+        <span class="banner-grupos__texto">
+          <strong>Quer participar de grupo de WhatsApp de caminhoneiro?</strong>
+          Veja os grupos parceiros por cidade e fale direto com o admin
+        </span>
+        <span class="banner-grupos__seta">›</span>
+      </a>
 
       <div id="carrossel-vertical-home" class="carrossel-vertical"></div>
 
@@ -121,7 +120,6 @@ export function renderHome(container) {
   configurarBuscaHome(container);
   carregarPertoDeVoce(container);
   carregarAniversariantes(container);
-  carregarGrupos(container);
   renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
   carregarVagasDestaque(container);
   carregarVitrine(container);
@@ -205,37 +203,6 @@ function renderMiniCardAniversariante(pessoa) {
     <div class="mini-card mini-card--aniversario">
       <p class="mini-card__titulo">🎉 ${pessoa.nome}</p>
       <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
-    </div>
-  `;
-}
-
-async function carregarGrupos(container) {
-  const alvo = container.querySelector('#lista-grupos');
-  try {
-    const grupos = await buscarGruposWhatsappAtivos();
-    if (grupos.length === 0) {
-      alvo.innerHTML = `<p class="home-secao__vazio">Nenhum grupo cadastrado no momento.</p>`;
-      return;
-    }
-    alvo.innerHTML = grupos.map(renderMiniCardGrupo).join('');
-  } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
-    console.error(erro);
-  }
-}
-
-function renderMiniCardGrupo(grupo) {
-  const tel = (grupo.whatsapp || '').replace(/\D/g, '');
-  return `
-    <div class="mini-card ${grupo.isExemplo ? 'mini-card--exemplo' : ''}">
-      ${grupo.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
-      <p class="mini-card__titulo">📱 ${grupo.nomeGrupo}</p>
-      <p class="mini-card__sub">Responsável: ${grupo.responsavel} • 📍 ${grupo.cidade}</p>
-      ${
-        tel
-          ? `<a href="https://wa.me/${tel}?text=${encodeURIComponent('Vi seu grupo no TRA da Estrada, quero saber mais!')}" target="_blank" rel="noopener" class="mini-card__acao">💬 Falar com o admin</a>`
-          : ''
-      }
     </div>
   `;
 }
