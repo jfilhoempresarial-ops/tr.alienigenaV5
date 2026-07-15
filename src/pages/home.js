@@ -1,4 +1,5 @@
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
+import { renderCarrosselVertical } from '../components/carrossel-vertical.js';
 import { buscarEmpresasDestaque } from '../services/empresas.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
@@ -73,6 +74,8 @@ export function renderHome(container) {
         </div>
       </div>
 
+      <div id="carrossel-vertical-home" class="carrossel-vertical"></div>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
@@ -108,6 +111,7 @@ export function renderHome(container) {
   carregarPertoDeVoce(container);
   carregarAniversariantes(container);
   carregarGrupos(container);
+  renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
   carregarVagasDestaque(container);
   carregarVitrine(container);
   carregarFretesDestaque(container);
