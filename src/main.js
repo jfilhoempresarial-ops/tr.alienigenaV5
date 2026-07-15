@@ -12,36 +12,54 @@ import { renderVagas } from './pages/vagas.js';
 
 const app = document.getElementById('app');
 
+// Rotas fixas do site (tudo que NÃO é uma categoria de prestador).
+const ROTAS_FIXAS = {
+  'cadastro-empresa': renderCadastroEmpresa,
+  'admin-relatorios': renderRelatorioCliques,
+  eventos: renderEventos,
+  admin: renderAdmin,
+  noticias: renderNoticias,
+  caminhoes: renderCaminhoes,
+  'cadastro-caminhao': renderCadastroCaminhao,
+  vagas: renderVagas,
+};
+
 function router() {
-  const hash = window.location.hash.slice(1) || '/';
-  const [, rota, param] = hash.split('/');
+  const caminho = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  const [rota] = caminho.split('/');
+
+  window.scrollTo(0, 0);
 
   if (!rota) {
     renderHome(app);
-  } else if (rota === 'resultados' && param) {
-    renderResultados(app, param);
-  } else if (rota === 'cadastro-empresa') {
-    renderCadastroEmpresa(app);
-  } else if (rota === 'admin-relatorios') {
-    renderRelatorioCliques(app);
-  } else if (rota === 'eventos') {
-    renderEventos(app);
-  } else if (rota === 'admin') {
-    renderAdmin(app);
-  } else if (rota === 'noticias') {
-    renderNoticias(app);
-  } else if (rota === 'caminhoes') {
-    renderCaminhoes(app);
-  } else if (rota === 'cadastro-caminhao') {
-    renderCadastroCaminhao(app);
-  } else if (rota === 'vagas') {
-  renderVagas(app);
-} else {
-    app.innerHTML = '<p>Página não encontrada.</p>';
+  } else if (ROTAS_FIXAS[rota]) {
+    ROTAS_FIXAS[rota](app);
+  } else {
+    // Qualquer outro endereço de um segmento (ex: /mecanico, /posto)
+    // é tratado como categoria de prestador de serviço.
+    renderResultados(app, rota);
   }
 }
 
-renderNavbar();
-window.addEventListener('hashchange', router);
-window.addEventListener('DOMContentLoaded', router);
+// Intercepta cliques em links internos (começando com "/") para navegar
+// sem recarregar a página inteira, usando a History API do navegador.
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a');
+  if (!link) return;
 
+  const href = link.getAttribute('href');
+  if (!href || !href.startsWith('/') || href.startsWith('//')) return;
+  if (link.target === '_blank' || link.hasAttribute('download')) return;
+
+  e.preventDefault();
+  if (href !== window.location.pathname) {
+    window.history.pushState({}, '', href);
+    router();
+  }
+});
+
+// Suporte ao botão "voltar/avançar" do navegador.
+window.addEventListener('popstate', router);
+
+renderNavbar();
+router();
