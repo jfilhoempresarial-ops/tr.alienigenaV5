@@ -10,6 +10,7 @@ import { renderCaminhoes } from './pages/caminhoes.js';
 import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 import { renderVagas } from './pages/vagas.js';
 import { renderBusca } from './pages/busca.js';
+import { renderGruposWhatsapp } from './pages/grupos-whatsapp.js';
 
 const app = document.getElementById('app');
 
@@ -22,6 +23,7 @@ const ROTAS_FIXAS = {
   caminhoes: renderCaminhoes,
   'cadastro-caminhao': renderCadastroCaminhao,
   vagas: renderVagas,
+  'grupos-whatsapp': renderGruposWhatsapp,
 };
 
 function router() {
