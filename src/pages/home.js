@@ -30,6 +30,16 @@ export function renderHome(container) {
       <div id="carrossel-banners"></div>
       <h1>Motorista, encontre ajuda perto de você</h1>
 
+      <form id="busca-home-form" class="busca-home">
+        <input
+          type="text"
+          id="busca-home-input"
+          class="busca-home__input"
+          placeholder="O que você precisa hoje? (ex: borracharia, vaga motorista, mola)"
+        />
+        <button type="submit" class="busca-home__botao" aria-label="Buscar">🔍</button>
+      </form>
+
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
         <div class="categorias-carrossel__trilho" id="categorias-trilho">
@@ -108,6 +118,7 @@ export function renderHome(container) {
 
   renderCarrosselBanners();
   configurarCarrosselCategorias(container);
+  configurarBuscaHome(container);
   carregarPertoDeVoce(container);
   carregarAniversariantes(container);
   carregarGrupos(container);
@@ -115,6 +126,18 @@ export function renderHome(container) {
   carregarVagasDestaque(container);
   carregarVitrine(container);
   carregarFretesDestaque(container);
+}
+
+function configurarBuscaHome(container) {
+  const form = container.querySelector('#busca-home-form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const termo = container.querySelector('#busca-home-input').value.trim();
+    if (!termo) return;
+    const url = `/busca?q=${encodeURIComponent(termo)}`;
+    window.history.pushState({}, '', url);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
 }
 
 function configurarCarrosselCategorias(container) {
