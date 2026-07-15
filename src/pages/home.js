@@ -11,12 +11,12 @@ const CATEGORIAS = [
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
-  { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '#/vagas' },
+  { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '/vagas' },
   { id: 'fretes', label: 'Fretes', icone: '📦' },
-  { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '#/eventos' },
+  { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
-  { id: 'caminhoes', label: 'Compra e Venda', icone: '🚛', rotaInterna: '#/caminhoes' },
-  { id: 'noticias', label: 'Notícias', icone: '📰', rotaInterna: '#/noticias' },
+  { id: 'caminhoes', label: 'Compra e Venda', icone: '🚛', rotaInterna: '/caminhoes' },
+  { id: 'noticias', label: 'Notícias', icone: '📰', rotaInterna: '/noticias' },
 ];
 
 const LABEL_POR_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
@@ -31,7 +31,7 @@ export function renderHome(container) {
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
         <div class="categorias-carrossel__trilho" id="categorias-trilho">
           ${CATEGORIAS.map((cat) => {
-            const href = cat.externo ?? cat.rotaInterna ?? `#/resultados/${cat.id}`;
+            const href = cat.externo ?? cat.rotaInterna ?? `/${cat.id}`;
             const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
             return `
             <a href="${href}" ${targetBlank} class="categoria-card">
@@ -56,7 +56,7 @@ export function renderHome(container) {
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
-          <a href="#/vagas" class="home-secao__ver-todas">Ver todas</a>
+          <a href="/vagas" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-vagas">
           <p class="home-secao__vazio">Carregando...</p>
@@ -165,7 +165,7 @@ function renderMiniCardVaga(vaga) {
     <div class="mini-card">
       <p class="mini-card__titulo">${vaga.cargo}</p>
       <p class="mini-card__sub">📍 ${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</p>
-      <a href="#/vagas" class="mini-card__acao">Ver detalhes</a>
+      <a href="/vagas" class="mini-card__acao">Ver detalhes</a>
     </div>
   `;
 }
@@ -176,7 +176,6 @@ async function carregarVitrine(container) {
   try {
     const itens = await buscarVitrineAtiva();
     if (itens.length === 0) {
-      // Sem anunciantes ainda: esconde a seção inteira, para não aparecer vazia.
       secao.style.display = 'none';
       return;
     }
