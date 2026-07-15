@@ -770,3 +770,7 @@ button {
   outline: none;
   border-color: var(--cor-primaria);
 }
+.mini-card--aniversario {
+  background: linear-gradient(135deg, #fff8e6, #ffffff);
+  border: 1px solid #f5d98e;
+}
