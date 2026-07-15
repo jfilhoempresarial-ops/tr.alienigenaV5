@@ -11,6 +11,7 @@ import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 import { renderVagas } from './pages/vagas.js';
 import { renderBusca } from './pages/busca.js';
 import { renderGruposWhatsapp } from './pages/grupos-whatsapp.js';
+import { renderFretes } from './pages/fretes.js';
 
 const app = document.getElementById('app');
 
@@ -24,6 +25,7 @@ const ROTAS_FIXAS = {
   'cadastro-caminhao': renderCadastroCaminhao,
   vagas: renderVagas,
   'grupos-whatsapp': renderGruposWhatsapp,
+  fretes: renderFretes,
 };
 
 function router() {

@@ -296,7 +296,8 @@ function renderMiniCardFrete(frete) {
     <div class="mini-card ${frete.isExemplo ? 'mini-card--exemplo' : ''}">
       ${frete.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
       <p class="mini-card__titulo">${frete.veiculo} • ${frete.carroceria}</p>
-      <p class="mini-card__sub">📦 ${frete.carga} (${frete.especie}) — ${rota}</p>
+      <p class="mini-card__sub">📦 ${frete.carga} — ${rota}</p>
+      <a href="/fretes" class="mini-card__acao">Ver detalhes</a>
     </div>
   `;
 }

@@ -991,3 +991,89 @@ button {
   border-radius: 8px;
   text-decoration: none;
 }
+.fretes-pagina__header {
+  margin-bottom: 16px;
+}
+
+.fretes-pagina__header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.fretes-pagina__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.frete-card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.frete-card--exemplo {
+  border: 1px dashed #ccc;
+}
+
+.frete-card__resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.frete-card__rota {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.frete-card__basico {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.frete-card__seta {
+  color: #999;
+  font-size: 14px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.frete-card--aberto .frete-card__seta {
+  transform: rotate(180deg);
+}
+
+.frete-card__detalhe {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #444;
+}
+
+.frete-card--aberto .frete-card__detalhe {
+  display: block;
+  padding-top: 12px;
+}
+
+.frete-card__detalhe p {
+  margin: 0 0 6px;
+}
+
+.frete-card__whatsapp {
+  display: inline-block;
+  margin-top: 8px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+}
