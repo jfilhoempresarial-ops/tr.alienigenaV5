@@ -5,6 +5,11 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
+function capitalizarNome(txt) {
+  return (txt || '')
+    .toLowerCase()
+    .replace(/(^|\s|\()\S/g, (letra) => letra.toUpperCase());
+}
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -201,7 +206,7 @@ function renderMiniCardAniversariante(pessoa) {
   const mesFormatado = String(pessoa.mes).padStart(2, '0');
   return `
     <div class="mini-card mini-card--aniversario">
-      <p class="mini-card__titulo">🎉 ${pessoa.nome}</p>
+      <p class="mini-card__titulo">🎉 ${capitalizarNome(pessoa.nome)}</p>
       <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
     </div>
   `;
