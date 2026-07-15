@@ -428,8 +428,10 @@ button {
 }
 
 .home-secao__titulo {
-  font-size: 17px;
+  font-size: 22px;
+  font-weight: 700;
   margin: 0;
+}
 }
 
 .home-secao__ver-todas {
