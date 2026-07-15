@@ -37,6 +37,17 @@ export async function buscarEmpresasDestaque(quantidade = 6) {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
+/**
+ * Busca TODAS as empresas verificadas, de qualquer categoria.
+ * Usado pela busca global do site (buscar.service.js).
+ */
+export async function buscarTodasEmpresas() {
+  const ref = collection(db, COLLECTION);
+  const q = query(ref, where('verificado', '==', true));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
 /** Cadastra uma nova empresa (entra como não-verificada até aprovação manual). */
 export async function cadastrarEmpresa(dadosEmpresa) {
   const ref = collection(db, COLLECTION);
