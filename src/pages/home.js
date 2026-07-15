@@ -3,6 +3,7 @@ import { buscarEmpresasDestaque } from '../services/empresas.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
+import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -53,6 +54,15 @@ export function renderHome(container) {
         </div>
       </div>
 
+      <div class="home-secao" id="secao-aniversariantes">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎂 Aniversariantes da semana</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-aniversariantes">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
@@ -86,6 +96,7 @@ export function renderHome(container) {
   renderCarrosselBanners();
   configurarCarrosselCategorias(container);
   carregarPertoDeVoce(container);
+  carregarAniversariantes(container);
   carregarVagasDestaque(container);
   carregarVitrine(container);
   carregarFretesDestaque(container);
@@ -129,6 +140,33 @@ function renderMiniCardEmpresa(empresa) {
       <p class="mini-card__titulo">${empresa.nome}</p>
       <p class="mini-card__sub">${label}${empresa.endereco ? ' • ' + empresa.endereco : ''}</p>
       ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
+    </div>
+  `;
+}
+
+async function carregarAniversariantes(container) {
+  const secao = container.querySelector('#secao-aniversariantes');
+  const alvo = container.querySelector('#lista-aniversariantes');
+  try {
+    const aniversariantes = await buscarAniversariantesDaSemana();
+    if (aniversariantes.length === 0) {
+      secao.style.display = 'none';
+      return;
+    }
+    alvo.innerHTML = aniversariantes.map(renderMiniCardAniversariante).join('');
+  } catch (erro) {
+    secao.style.display = 'none';
+    console.error(erro);
+  }
+}
+
+function renderMiniCardAniversariante(pessoa) {
+  const diaFormatado = String(pessoa.dia).padStart(2, '0');
+  const mesFormatado = String(pessoa.mes).padStart(2, '0');
+  return `
+    <div class="mini-card mini-card--aniversario">
+      <p class="mini-card__titulo">🎉 ${pessoa.nome}</p>
+      <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
     </div>
   `;
 }
