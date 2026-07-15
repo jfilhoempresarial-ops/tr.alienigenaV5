@@ -28,7 +28,7 @@ export function renderHome(container) {
   container.innerHTML = `
     <section class="home">
       <div id="carrossel-banners"></div>
-      <h1>Encontre ajuda na estrada, perto de você</h1>
+      <h1>Motorista, encontre ajuda perto de você</h1>
 
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
