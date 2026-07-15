@@ -4,6 +4,7 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarFretesDestaque } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
+import { buscarGruposWhatsappAtivos } from '../services/grupos-whatsapp.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -63,6 +64,15 @@ export function renderHome(container) {
         </div>
       </div>
 
+      <div class="home-secao" id="secao-grupos">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">📱 Grupos de WhatsApp parceiros</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-grupos">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
@@ -97,6 +107,7 @@ export function renderHome(container) {
   configurarCarrosselCategorias(container);
   carregarPertoDeVoce(container);
   carregarAniversariantes(container);
+  carregarGrupos(container);
   carregarVagasDestaque(container);
   carregarVitrine(container);
   carregarFretesDestaque(container);
@@ -167,6 +178,37 @@ function renderMiniCardAniversariante(pessoa) {
     <div class="mini-card mini-card--aniversario">
       <p class="mini-card__titulo">🎉 ${pessoa.nome}</p>
       <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
+    </div>
+  `;
+}
+
+async function carregarGrupos(container) {
+  const alvo = container.querySelector('#lista-grupos');
+  try {
+    const grupos = await buscarGruposWhatsappAtivos();
+    if (grupos.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Nenhum grupo cadastrado no momento.</p>`;
+      return;
+    }
+    alvo.innerHTML = grupos.map(renderMiniCardGrupo).join('');
+  } catch (erro) {
+    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
+    console.error(erro);
+  }
+}
+
+function renderMiniCardGrupo(grupo) {
+  const tel = (grupo.whatsapp || '').replace(/\D/g, '');
+  return `
+    <div class="mini-card ${grupo.isExemplo ? 'mini-card--exemplo' : ''}">
+      ${grupo.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
+      <p class="mini-card__titulo">📱 ${grupo.nomeGrupo}</p>
+      <p class="mini-card__sub">Responsável: ${grupo.responsavel} • 📍 ${grupo.cidade}</p>
+      ${
+        tel
+          ? `<a href="https://wa.me/${tel}?text=${encodeURIComponent('Vi seu grupo no TRA da Estrada, quero saber mais!')}" target="_blank" rel="noopener" class="mini-card__acao">💬 Falar com o admin</a>`
+          : ''
+      }
     </div>
   `;
 }
