@@ -69,4 +69,6 @@ document.addEventListener('click', (e) => {
 window.addEventListener('popstate', router);
 
 renderNavbar();
+renderFooter();
+renderWhatsappFloat();
 router();
