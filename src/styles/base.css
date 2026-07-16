@@ -790,9 +790,10 @@ button {
 }
 
 .banner-vertical {
-  flex: 0 0 auto;
-  width: 160px;
-  height: 260px;
+  flex: 0 0 90%;
+  width: 90%;
+  aspect-ratio: 2.4 / 1;
+  height: auto;
   border-radius: var(--radius);
   background-color: #ccc;
   background-size: cover;
