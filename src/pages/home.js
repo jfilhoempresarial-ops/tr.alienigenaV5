@@ -209,6 +209,7 @@ async function carregarManchetes(container) {
     console.error(erro);
   }
 }
+
 function renderMiniCardEmpresa(empresa) {
   const tel = (empresa.whatsapp || '').replace(/\D/g, '');
   const categoria = (empresa.categorias || [])[0];
