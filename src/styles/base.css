@@ -1135,3 +1135,11 @@ button {
   color: #888;
   margin: 0;
 }
+.fretes-pagina__grupo {
+  margin-bottom: 24px;
+}
+
+.fretes-pagina__grupo-titulo {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
