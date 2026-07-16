@@ -36,6 +36,7 @@ export async function renderFretes(container, estadoInicial = null) {
   container.innerHTML = `
     <section class="fretes-pagina">
       <div id="carrossel-fretes" class="carrossel-categoria"></div>
+
       <div class="fretes-pagina__header">
         <h1>📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</h1>
         <p>Filtre pelo seu tipo de veículo e toque no frete para ver os detalhes</p>
@@ -43,7 +44,6 @@ export async function renderFretes(container, estadoInicial = null) {
 
       ${ufsOrdenadas
         .map((uf) => {
-          // Agrupa por veículo, já deixando a lista organizada por tipo (carreteiro vê tudo junto, caçamba vê tudo junto, etc).
           const lista = [...porEstado.get(uf)].sort((a, b) => a.veiculo.localeCompare(b.veiculo));
 
           const contagemPorVeiculo = new Map();
@@ -77,15 +77,15 @@ export async function renderFretes(container, estadoInicial = null) {
     </section>
   `;
 
+  renderCarrosselBanners('carrossel-fretes', 'fretes');
+
   container.querySelectorAll('.frete-card').forEach((card) => {
     card.addEventListener('click', () => {
       card.classList.toggle('frete-card--aberto');
     });
   });
 
-  renderCarrosselBanners('carrossel-fretes', 'fretes');
-
-container.querySelectorAll('.frete-card').forEach((card) => {
+  container.querySelectorAll('.fretes-pagina__filtros').forEach((filtro) => {
     const uf = filtro.dataset.estado;
     const listaEl = container.querySelector(`[data-lista-estado="${uf}"]`);
 
