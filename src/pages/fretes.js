@@ -1,6 +1,6 @@
 import { buscarTodosFretes } from '../services/fretes.service.js';
 
-const NUMERO_COMERCIAL = '5588988621481'; // TODO: confirme se é o número certo pra fechar fretes
+const NUMERO_COMERCIAL = '5588988621481';
 
 export async function renderFretes(container) {
   container.innerHTML = `<p class="loading">Carregando fretes...</p>`;
@@ -19,14 +19,28 @@ export async function renderFretes(container) {
     return;
   }
 
+  const doCeara = fretes.filter((f) => f.regiao === 'ceara');
+  const deOutros = fretes.filter((f) => f.regiao !== 'ceara');
+
   container.innerHTML = `
     <section class="fretes-pagina">
       <div class="fretes-pagina__header">
-        <h1>📦 Fretes disponíveis saindo do Ceará</h1>
+        <h1>📦 Fretes disponíveis</h1>
         <p>Toque em um frete para ver os detalhes completos</p>
       </div>
-      <div class="fretes-pagina__lista">
-        ${fretes.map(renderCardFrete).join('')}
+
+      <div class="fretes-pagina__grupo">
+        <h2 class="fretes-pagina__grupo-titulo">🚛 ${doCeara.length} frete${doCeara.length !== 1 ? 's' : ''} para o Ceará</h2>
+        <div class="fretes-pagina__lista">
+          ${doCeara.length ? doCeara.map(renderCardFrete).join('') : '<p class="vazio">Nenhum frete para o Ceará no momento.</p>'}
+        </div>
+      </div>
+
+      <div class="fretes-pagina__grupo">
+        <h2 class="fretes-pagina__grupo-titulo">🌎 ${deOutros.length} frete${deOutros.length !== 1 ? 's' : ''} para outros estados do Brasil</h2>
+        <div class="fretes-pagina__lista">
+          ${deOutros.length ? deOutros.map(renderCardFrete).join('') : '<p class="vazio">Nenhum frete para outros estados no momento.</p>'}
+        </div>
       </div>
     </section>
   `;
