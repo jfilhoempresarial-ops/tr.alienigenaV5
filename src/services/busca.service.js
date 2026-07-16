@@ -1,6 +1,6 @@
 import { buscarTodasEmpresas } from './empresas.service.js';
 import { buscarVagas } from './vagas.service.js';
-import { buscarFretesDestaque } from './fretes.service.js';
+import { buscarTodosFretes } from './fretes.service.js';
 import { buscarGruposWhatsappAtivos } from './grupos-whatsapp.service.js';
 import { buscarAniversariantesDaSemana } from './aniversariantes.service.js';
 
@@ -35,7 +35,7 @@ export async function buscarNoSite(termo) {
   const [empresasR, vagasR, fretesR, gruposR, aniversariantesR] = await Promise.allSettled([
     buscarTodasEmpresas(),
     buscarVagas(),
-    buscarFretesDestaque(50),
+    buscarTodosFretes(),
     buscarGruposWhatsappAtivos(),
     buscarAniversariantesDaSemana(),
   ]);
