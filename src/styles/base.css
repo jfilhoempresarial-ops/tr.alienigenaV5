@@ -1167,3 +1167,13 @@ button {
   color: #666;
   margin: 0;
 }
+.fretes-pagina__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.frete-card--oculto {
+  display: none;
+}
