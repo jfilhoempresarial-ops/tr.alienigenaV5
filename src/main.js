@@ -13,6 +13,8 @@ import { renderBusca } from './pages/busca.js';
 import { renderGruposWhatsapp } from './pages/grupos-whatsapp.js';
 import { renderFretes } from './pages/fretes.js';
 import { renderAniversariantesMes } from './pages/aniversariantes-mes.js';
+import { renderNavbar } from './components/navbar.js';
+import { renderFooter, renderWhatsappFloat } from './components/footer.js';
 
 const app = document.getElementById('app');
 
