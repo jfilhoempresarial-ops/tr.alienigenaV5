@@ -1233,3 +1233,59 @@ button {
 .aniversariantes-mes__data {
   color: #888;
 }
+.noticias__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.noticias__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.noticias__carregar-mais {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: #eef1ee;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+}
+
+.manchetes-home {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 20px;
+}
+
+.manchete-card {
+  display: block;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  border-left: 3px solid var(--cor-primaria);
+}
+
+.manchete-card__tag {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--cor-primaria);
+  text-transform: uppercase;
+}
+
+.manchete-card__titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  margin-top: 2px;
+}
