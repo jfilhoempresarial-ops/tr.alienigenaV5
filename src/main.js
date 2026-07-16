@@ -12,6 +12,7 @@ import { renderVagas } from './pages/vagas.js';
 import { renderBusca } from './pages/busca.js';
 import { renderGruposWhatsapp } from './pages/grupos-whatsapp.js';
 import { renderFretes } from './pages/fretes.js';
+import { renderAniversariantesMes } from './pages/aniversariantes-mes.js';
 
 const app = document.getElementById('app');
 
