@@ -1143,3 +1143,27 @@ button {
   font-size: 16px;
   margin-bottom: 10px;
 }
+.frete-estado-card {
+  flex: 0 0 auto;
+  width: 190px;
+  scroll-snap-align: start;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  display: block;
+}
+
+.frete-estado-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+  color: #111;
+}
+
+.frete-estado-card__sub {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
