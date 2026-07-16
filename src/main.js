@@ -38,8 +38,10 @@ function router() {
   if (!rota) {
     renderHome(app);
   } else if (rota === 'busca') {
-    renderBusca(app, params.get('q') || '');
-  } else if (ROTAS_FIXAS[rota]) {
+  renderBusca(app, params.get('q') || '');
+} else if (rota === 'fretes') {
+  renderFretes(app, params.get('estado'));
+} else if (ROTAS_FIXAS[rota]) {
     ROTAS_FIXAS[rota](app);
   } else {
     renderResultados(app, rota);
