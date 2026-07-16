@@ -35,6 +35,7 @@ export async function renderFretes(container, estadoInicial = null) {
 
   container.innerHTML = `
     <section class="fretes-pagina">
+      <div id="carrossel-fretes" class="carrossel-categoria"></div>
       <div class="fretes-pagina__header">
         <h1>📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</h1>
         <p>Filtre pelo seu tipo de veículo e toque no frete para ver os detalhes</p>
