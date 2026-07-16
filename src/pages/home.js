@@ -92,6 +92,7 @@ export function renderHome(container) {
         </div>
       </div>
 
+      <div id="carrossel-banners-perto"></div>
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">📍 Perto de você agora</h2>
@@ -133,6 +134,7 @@ export function renderHome(container) {
   `;
 
   renderCarrosselBanners();
+  renderCarrosselBanners('carrossel-banners-perto', 'pertodevoce');
   configurarCarrosselCategorias(container);
   configurarBuscaHome(container);
   carregarVagasDestaque(container);
