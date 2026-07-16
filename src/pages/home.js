@@ -5,6 +5,7 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
+import { buscarManchetesHome } from '../services/noticias.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -44,6 +45,16 @@ export function renderHome(container) {
         />
         <button type="submit" class="busca-home__botao" aria-label="Buscar">🔍</button>
       </form>
+
+<div class="home-secao">
+  <div class="home-secao__header">
+    <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
+    <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
+  </div>
+  <div id="manchetes-home" class="manchetes-home">
+    <p class="home-secao__vazio">Carregando...</p>
+  </div>
+</div>
 
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
@@ -130,6 +141,7 @@ export function renderHome(container) {
   renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
   carregarVitrine(container);
   carregarAniversariantes(container);
+  carregarManchetes(container);
 }
 
 function configurarBuscaHome(container) {
@@ -173,6 +185,30 @@ async function carregarPertoDeVoce(container) {
   }
 }
 
+async function carregarManchetes(container) {
+  const alvo = container.querySelector('#manchetes-home');
+  try {
+    const manchetes = await buscarManchetesHome(3);
+    if (manchetes.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma notícia no momento.</p>`;
+      return;
+    }
+    const TAG_CATEGORIA = { autonomo: 'Autônomo', clt: 'CLT', agregado: 'Agregado' };
+    alvo.innerHTML = manchetes
+      .map(
+        (n) => `
+      <a href="${n.link}" target="_blank" rel="noopener" class="manchete-card">
+        <span class="manchete-card__tag">${TAG_CATEGORIA[n.categoria] || 'Geral'}</span>
+        <p class="manchete-card__titulo">${n.titulo}</p>
+      </a>
+    `
+      )
+      .join('');
+  } catch (erro) {
+    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
+    console.error(erro);
+  }
+}
 function renderMiniCardEmpresa(empresa) {
   const tel = (empresa.whatsapp || '').replace(/\D/g, '');
   const categoria = (empresa.categorias || [])[0];
