@@ -3,17 +3,16 @@
  * diariamente) e cadastra cada combinação de veículo+carroceria como um
  * documento separado na coleção "fretes" do Firestore.
  *
- * Filtra automaticamente para trazer só fretes com ORIGEM no Ceará
- * (cidade termina em " - CE" na planilha).
+ * Classifica automaticamente cada frete em "ceara" (quando origem OU
+ * destino é no Ceará) ou "outros" (nenhum dos dois é CE) — isso alimenta
+ * os dois grupos separados que aparecem na página /fretes do site.
  *
  * COMO USAR:
  * 1. Coloque este arquivo dentro da pasta "scripts/" do projeto.
- * 2. Instale a biblioteca necessária (só precisa fazer isso UMA VEZ):
+ * 2. (Só na primeira vez) instale a biblioteca necessária:
  *      npm install xlsx
  * 3. Coloque a planilha recebida dentro de "scripts/", com o nome
- *    "cargas.xlsx" (mesmo formato de sempre: Origem, Destino, Carga,
- *    Espécie, Exige Rastreamento, Veículo, Carroceria, Preço,
- *    Peso (ton), Obs.).
+ *    "cargas.xlsx" (mesmo formato de sempre).
  * 4. No terminal, dentro da pasta do projeto, rode:
  *      node scripts/importar-fretes.cjs
  *
@@ -66,3 +65,82 @@ async function limparColecao() {
       lote = db.batch();
       contador = 0;
     }
+  });
+  if (contador > 0) lotes.push(lote.commit());
+  await Promise.all(lotes);
+}
+
+async function main() {
+  const workbook = XLSX.readFile(CAMINHO_PLANILHA);
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const linhas = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+  console.log(`\nTotal de linhas na planilha: ${linhas.length}`);
+
+  const combinacoes = [];
+  let puladas = 0;
+
+  for (const linha of linhas) {
+    const origem = dividirCidadeEstado(linha['Origem']);
+    const destino = dividirCidadeEstado(linha['Destino']);
+    const carga = (linha['Carga'] || '').toString().trim();
+    const especie = (linha['Espécie'] || '').toString().trim();
+    const veiculos = dividirLista(linha['Veículo']);
+    const carrocerias = dividirLista(linha['Carroceria']);
+    const preco = (linha['Preço'] || '').toString().trim();
+    const pesoTon = linha['Peso (ton)'] || null;
+    const obs = (linha['Obs.'] || '').toString().trim();
+
+    if (!origem.cidade || !destino.cidade || veiculos.length === 0 || carrocerias.length === 0) {
+      puladas++;
+      continue;
+    }
+
+    const regiao = origem.estado === 'CE' || destino.estado === 'CE' ? 'ceara' : 'outros';
+
+    for (const veiculo of veiculos) {
+      for (const carroceria of carrocerias) {
+        combinacoes.push({
+          cidadeOrigem: origem.cidade,
+          estadoOrigem: origem.estado,
+          cidadeDestino: destino.cidade,
+          estadoDestino: destino.estado,
+          carga,
+          especie,
+          veiculo,
+          carroceria,
+          preco: preco || null,
+          pesoTon: pesoTon || null,
+          obs: obs || null,
+          regiao,
+          criadoEm: new Date().toISOString(),
+          origem: 'importacao-planilha',
+        });
+      }
+    }
+  }
+
+  const totalCeara = combinacoes.filter((c) => c.regiao === 'ceara').length;
+  const totalOutros = combinacoes.filter((c) => c.regiao === 'outros').length;
+
+  console.log(`Combinações geradas: ${combinacoes.length} (Ceará: ${totalCeara} • Outros estados: ${totalOutros})`);
+  console.log(`Linhas puladas (incompletas): ${puladas}\n`);
+
+  await limparColecao();
+
+  let enviadas = 0;
+  for (const dados of combinacoes) {
+    await db.collection('fretes').add(dados);
+    enviadas++;
+    console.log(
+      `✅ (${enviadas}) [${dados.regiao}] ${dados.cidadeOrigem}/${dados.estadoOrigem} → ${dados.cidadeDestino}/${dados.estadoDestino} — ${dados.veiculo} / ${dados.carroceria}`
+    );
+  }
+
+  console.log(`\n🎉 Concluído! ${enviadas} fretes cadastrados no Firestore.`);
+}
+
+main().catch((erro) => {
+  console.error('❌ Erro ao importar:', erro);
+  process.exit(1);
+});
