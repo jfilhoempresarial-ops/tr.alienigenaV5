@@ -1079,8 +1079,25 @@ button {
 }
 #aniversariantes-resumo {
   display: flex;
-  flex-direction: column;
   gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+#aniversariantes-resumo::-webkit-scrollbar {
+  display: none;
+}
+
+.aniversario-card {
+  flex: 0 0 auto;
+  width: 260px;
+  scroll-snap-align: start;
+  background: linear-gradient(135deg, #fff8e6, #ffffff);
+  border: 1px solid #f5d98e;
+  border-radius: var(--radius);
+  padding: 14px 16px;
 }
 
 .aniversario-card {
