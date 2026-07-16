@@ -1,8 +1,8 @@
-import { buscarTodosFretes } from '../services/fretes.service.js';
+import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 
 const NUMERO_COMERCIAL = '5588988621481';
 
-export async function renderFretes(container) {
+export async function renderFretes(container, estadoInicial = null) {
   container.innerHTML = `<p class="loading">Carregando fretes...</p>`;
 
   let fretes;
@@ -19,29 +19,40 @@ export async function renderFretes(container) {
     return;
   }
 
-  const doCeara = fretes.filter((f) => f.regiao === 'ceara');
-  const deOutros = fretes.filter((f) => f.regiao !== 'ceara');
+  const porEstado = new Map();
+  fretes.forEach((f) => {
+    const uf = f.estadoOrigem || '??';
+    if (!porEstado.has(uf)) porEstado.set(uf, []);
+    porEstado.get(uf).push(f);
+  });
+
+  const ufsOrdenadas = [...porEstado.keys()].sort((a, b) => {
+    if (a === 'CE') return -1;
+    if (b === 'CE') return 1;
+    return a.localeCompare(b);
+  });
 
   container.innerHTML = `
     <section class="fretes-pagina">
       <div class="fretes-pagina__header">
-        <h1>📦 Fretes disponíveis</h1>
+        <h1>📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</h1>
         <p>Toque em um frete para ver os detalhes completos</p>
       </div>
 
-      <div class="fretes-pagina__grupo">
-        <h2 class="fretes-pagina__grupo-titulo">🚛 ${doCeara.length} frete${doCeara.length !== 1 ? 's' : ''} para o Ceará</h2>
-        <div class="fretes-pagina__lista">
-          ${doCeara.length ? doCeara.map(renderCardFrete).join('') : '<p class="vazio">Nenhum frete para o Ceará no momento.</p>'}
-        </div>
-      </div>
-
-      <div class="fretes-pagina__grupo">
-        <h2 class="fretes-pagina__grupo-titulo">🌎 ${deOutros.length} frete${deOutros.length !== 1 ? 's' : ''} para outros estados do Brasil</h2>
-        <div class="fretes-pagina__lista">
-          ${deOutros.length ? deOutros.map(renderCardFrete).join('') : '<p class="vazio">Nenhum frete para outros estados no momento.</p>'}
-        </div>
-      </div>
+      ${ufsOrdenadas
+        .map((uf) => {
+          const lista = porEstado.get(uf);
+          const nomeEstado = NOME_ESTADO[uf] || uf;
+          return `
+            <div class="fretes-pagina__grupo" id="estado-${uf}">
+              <h2 class="fretes-pagina__grupo-titulo">🚛 ${lista.length} frete${lista.length !== 1 ? 's' : ''} saindo de ${nomeEstado}</h2>
+              <div class="fretes-pagina__lista">
+                ${lista.map(renderCardFrete).join('')}
+              </div>
+            </div>
+          `;
+        })
+        .join('')}
     </section>
   `;
 
@@ -50,6 +61,13 @@ export async function renderFretes(container) {
       card.classList.toggle('frete-card--aberto');
     });
   });
+
+  if (estadoInicial) {
+    const alvo = container.querySelector(`#estado-${estadoInicial}`);
+    if (alvo) {
+      setTimeout(() => alvo.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
 }
 
 function renderCardFrete(frete) {
