@@ -4,7 +4,7 @@ import { buscarEmpresasDestaque } from '../services/empresas.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
-import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
+import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -73,7 +73,7 @@ export function renderHome(container) {
 
       <div class="home-secao" id="secao-aniversariantes">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎂 Aniversariantes da Loja do Alienígena</h2>
+          <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
         </div>
         <div id="aniversariantes-resumo">
           <p class="home-secao__vazio">Carregando...</p>
@@ -190,8 +190,9 @@ async function carregarAniversariantes(container) {
   const secao = container.querySelector('#secao-aniversariantes');
   const alvo = container.querySelector('#aniversariantes-resumo');
   try {
-    const aniversariantes = await buscarAniversariantesDaSemana();
-    if (aniversariantes.length === 0) {
+    const [semana, mes] = await Promise.all([buscarAniversariantesDaSemana(), buscarAniversariantesDoMes()]);
+
+    if (semana.length === 0 && mes.length === 0) {
       secao.style.display = 'none';
       return;
     }
@@ -199,7 +200,7 @@ async function carregarAniversariantes(container) {
     const hoje = new Date();
     const diaHoje = hoje.getDate();
     const mesHoje = hoje.getMonth() + 1;
-    const deHoje = aniversariantes.filter((a) => a.dia === diaHoje && a.mes === mesHoje);
+    const deHoje = semana.filter((a) => a.dia === diaHoje && a.mes === mesHoje);
 
     alvo.innerHTML = `
       <div class="aniversario-card">
@@ -213,15 +214,19 @@ async function carregarAniversariantes(container) {
         }
       </div>
       <div class="aniversario-card">
-        <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
+        <div class="aniversario-card__header-linha">
+          <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
+          <span class="aniversario-card__contador">${semana.length}</span>
+        </div>
         <ul class="aniversario-card__lista">
-          ${aniversariantes
+          ${semana
             .map(
               (p) =>
                 `<li>${capitalizarNome(p.nome)} — ${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}</li>`
             )
             .join('')}
         </ul>
+        <a href="/aniversariantes-mes" class="aniversario-card__botao-mes">Ver ${mes.length} aniversariante${mes.length !== 1 ? 's' : ''} do mês</a>
       </div>
     `;
   } catch (erro) {
