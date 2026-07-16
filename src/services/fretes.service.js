@@ -4,12 +4,11 @@ import { db } from '../firebase/config.js';
 const COLLECTION = 'fretes';
 
 const EXEMPLOS = [
-  { veiculo: 'Truck', carroceria: 'Baú', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Tianguá', estadoDestino: 'CE', carga: 'Carga geral', especie: 'Geral', preco: '55,00', pesoTon: 14, obs: null, isExemplo: true },
-  { veiculo: 'Carreta', carroceria: 'Graneleira', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Ipu', estadoDestino: 'CE', carga: 'Grãos', especie: 'Granel', preco: '35,00', pesoTon: 28, obs: null, isExemplo: true },
-  { veiculo: 'Bitrem', carroceria: 'Caçamba', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'São Benedito', estadoDestino: 'CE', carga: 'Areia', especie: 'Granel', preco: '65,00', pesoTon: 32, obs: null, isExemplo: true },
+  { veiculo: 'Truck', carroceria: 'Baú', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Tianguá', estadoDestino: 'CE', carga: 'Carga geral', especie: 'Geral', preco: '55,00', pesoTon: 14, obs: null, regiao: 'ceara', isExemplo: true },
+  { veiculo: 'Carreta', carroceria: 'Graneleira', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Ipu', estadoDestino: 'CE', carga: 'Grãos', especie: 'Granel', preco: '35,00', pesoTon: 28, obs: null, regiao: 'ceara', isExemplo: true },
+  { veiculo: 'Bitrem', carroceria: 'Caçamba', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Teresina', estadoDestino: 'PI', carga: 'Areia', especie: 'Granel', preco: '65,00', pesoTon: 32, obs: null, regiao: 'outros', isExemplo: true },
 ];
 
-/** Usado na home — só uma amostra recente. */
 export async function buscarFretesDestaque(quantidade = 3) {
   try {
     const ref = collection(db, COLLECTION);
@@ -23,7 +22,6 @@ export async function buscarFretesDestaque(quantidade = 3) {
   return EXEMPLOS.slice(0, quantidade);
 }
 
-/** Usado na página completa de fretes (/fretes) — lista tudo. */
 export async function buscarTodosFretes() {
   try {
     const ref = collection(db, COLLECTION);
