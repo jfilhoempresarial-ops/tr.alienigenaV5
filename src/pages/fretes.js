@@ -1,4 +1,5 @@
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
+import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 const NUMERO_COMERCIAL = '5588988621481';
 
