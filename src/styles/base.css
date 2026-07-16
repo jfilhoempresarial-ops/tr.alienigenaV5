@@ -1290,3 +1290,81 @@ button {
   color: #111;
   margin-top: 2px;
 }
+/* ===== Rodapé institucional ===== */
+
+.footer {
+  background: #0f2d1a;
+  color: #ddd;
+  padding: 32px 20px 20px;
+  margin-top: 40px;
+}
+
+.footer__coluna {
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.footer__logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.footer__titulo {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.footer__texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #bbb;
+  margin: 0;
+}
+
+.footer__whatsapp {
+  display: inline-block;
+  margin-top: 10px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.footer__base {
+  max-width: 480px;
+  margin: 24px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.footer__base p {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+}
+
+/* ===== Botão flutuante de WhatsApp ===== */
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: #25d366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
