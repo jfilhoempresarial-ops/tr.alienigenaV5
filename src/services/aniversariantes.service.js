@@ -18,17 +18,17 @@ function diasDaSemanaAtual() {
   return dias;
 }
 
-/**
- * Busca todos os aniversariantes cadastrados no Firestore (importados via
- * scripts/importar-aniversariantes.cjs) e filtra apenas os que caem
- * dentro da semana atual.
- */
+async function buscarTodosAniversariantes() {
+  const ref = collection(db, COLLECTION);
+  const snapshot = await getDocs(query(ref, orderBy('dia', 'asc')));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/** Aniversariantes que caem dentro da semana atual (domingo a sábado). */
 export async function buscarAniversariantesDaSemana() {
   let todos = [];
   try {
-    const ref = collection(db, COLLECTION);
-    const snapshot = await getDocs(query(ref, orderBy('dia', 'asc')));
-    todos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    todos = await buscarTodosAniversariantes();
   } catch (erro) {
     console.error('Erro ao buscar aniversariantes:', erro);
     return [];
@@ -40,4 +40,18 @@ export async function buscarAniversariantesDaSemana() {
     .filter((a) => semana.some((s) => s.dia === a.dia && s.mes === a.mes))
     .map((a) => ({ ...a, ordem: semana.find((s) => s.dia === a.dia && s.mes === a.mes).ordem }))
     .sort((a, b) => a.ordem - b.ordem);
+}
+
+/** Aniversariantes do mês atual (usado no botão "Ver aniversariantes do mês"). */
+export async function buscarAniversariantesDoMes() {
+  let todos = [];
+  try {
+    todos = await buscarTodosAniversariantes();
+  } catch (erro) {
+    console.error('Erro ao buscar aniversariantes do mês:', erro);
+    return [];
+  }
+
+  const mesAtual = new Date().getMonth() + 1;
+  return todos.filter((a) => a.mes === mesAtual).sort((a, b) => a.dia - b.dia);
 }
