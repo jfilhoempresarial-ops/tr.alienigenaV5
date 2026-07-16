@@ -2,7 +2,7 @@ import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 import { renderCarrosselVertical } from '../components/carrossel-vertical.js';
 import { buscarEmpresasDestaque } from '../services/empresas.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
-import { buscarFretesDestaque } from '../services/fretes.service.js';
+import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana } from '../services/aniversariantes.service.js';
 
@@ -112,7 +112,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📦 Fretes disponíveis</h2>
+          <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
           <p class="home-secao__vazio">Carregando...</p>
@@ -129,7 +129,7 @@ export function renderHome(container) {
   renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
   carregarVagasDestaque(container);
   carregarVitrine(container);
-  carregarFretesDestaque(container);
+  carregarFretesResumo(container);
 }
 
 function configurarBuscaHome(container) {
@@ -293,29 +293,47 @@ function renderCardVitrine(item) {
   `;
 }
 
-async function carregarFretesDestaque(container) {
+async function carregarFretesResumo(container) {
   const alvo = container.querySelector('#lista-fretes');
+  const titulo = container.querySelector('#titulo-fretes-resumo');
   try {
-    const fretes = await buscarFretesDestaque(6);
+    const fretes = await buscarTodosFretes();
+
+    titulo.textContent = fretes.length
+      ? `📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}`
+      : '📦 Fretes disponíveis';
+
     if (fretes.length === 0) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhum frete disponível no momento.</p>`;
       return;
     }
-    alvo.innerHTML = fretes.map(renderMiniCardFrete).join('');
+
+    const porEstado = new Map();
+    fretes.forEach((f) => {
+      const uf = f.estadoOrigem || '??';
+      porEstado.set(uf, (porEstado.get(uf) || 0) + 1);
+    });
+
+    const ufsOrdenadas = [...porEstado.keys()].sort((a, b) => {
+      if (a === 'CE') return -1;
+      if (b === 'CE') return 1;
+      return a.localeCompare(b);
+    });
+
+    alvo.innerHTML = ufsOrdenadas
+      .map((uf) => {
+        const qtd = porEstado.get(uf);
+        const nomeEstado = NOME_ESTADO[uf] || uf;
+        return `
+          <a href="/fretes?estado=${uf}" class="frete-estado-card">
+            <p class="frete-estado-card__titulo">🚛 Saindo de ${nomeEstado}</p>
+            <p class="frete-estado-card__sub">${qtd} frete${qtd !== 1 ? 's' : ''}</p>
+          </a>
+        `;
+      })
+      .join('');
   } catch (erro) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
     console.error(erro);
   }
-}
-
-function renderMiniCardFrete(frete) {
-  const rota = `${frete.cidadeOrigem}/${frete.estadoOrigem} → ${frete.cidadeDestino}/${frete.estadoDestino}`;
-  return `
-    <div class="mini-card ${frete.isExemplo ? 'mini-card--exemplo' : ''}">
-      ${frete.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
-      <p class="mini-card__titulo">${frete.veiculo} • ${frete.carroceria}</p>
-      <p class="mini-card__sub">📦 ${frete.carga} — ${rota}</p>
-      <a href="/fretes" class="mini-card__acao">Ver detalhes</a>
-    </div>
-  `;
 }
