@@ -3,10 +3,18 @@ import { db } from '../firebase/config.js';
 
 const COLLECTION = 'noticias';
 
-/** Busca notícias ativas, mais recente primeiro. */
-export async function buscarNoticiasAtivas() {
+/** Busca notícias ativas, mais recente primeiro. Opcionalmente filtra por categoria. */
+export async function buscarNoticiasAtivas(categoria = null) {
   const ref = collection(db, COLLECTION);
-  const q = query(ref, where('ativo', '==', true), orderBy('data', 'desc'));
+  const condicoes = [where('ativo', '==', true)];
+  if (categoria) condicoes.push(where('categoria', '==', categoria));
+  const q = query(ref, ...condicoes, orderBy('data', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/** Usado na home: só as manchetes mais recentes, de qualquer categoria. */
+export async function buscarManchetesHome(quantidade = 3) {
+  const todas = await buscarNoticiasAtivas();
+  return todas.slice(0, quantidade);
 }
