@@ -83,7 +83,9 @@ export async function renderFretes(container, estadoInicial = null) {
     });
   });
 
-  container.querySelectorAll('.fretes-pagina__filtros').forEach((filtro) => {
+  renderCarrosselBanners('carrossel-fretes', 'fretes');
+
+container.querySelectorAll('.frete-card').forEach((card) => {
     const uf = filtro.dataset.estado;
     const listaEl = container.querySelector(`[data-lista-estado="${uf}"]`);
 
