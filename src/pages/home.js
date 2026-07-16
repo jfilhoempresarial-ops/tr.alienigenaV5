@@ -64,18 +64,28 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📍 Perto de você agora</h2>
+          <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
+          <a href="/vagas" class="home-secao__ver-todas">Ver todas</a>
         </div>
-        <div class="home-secao__lista" id="lista-perto-de-voce">
+        <div class="home-secao__lista" id="lista-vagas">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
 
-      <div class="home-secao" id="secao-aniversariantes">
+      <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
+          <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
         </div>
-        <div id="aniversariantes-resumo">
+        <div class="home-secao__lista" id="lista-fretes">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">📍 Perto de você agora</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-perto-de-voce">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
@@ -91,16 +101,6 @@ export function renderHome(container) {
 
       <div id="carrossel-vertical-home" class="carrossel-vertical"></div>
 
-      <div class="home-secao">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
-          <a href="/vagas" class="home-secao__ver-todas">Ver todas</a>
-        </div>
-        <div class="home-secao__lista" id="lista-vagas">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
-
       <div class="home-secao" id="secao-vitrine">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">🏷️ Marcas parceiras</h2>
@@ -110,11 +110,11 @@ export function renderHome(container) {
         </div>
       </div>
 
-      <div class="home-secao">
+      <div class="home-secao" id="secao-aniversariantes">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
+          <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
         </div>
-        <div class="home-secao__lista" id="lista-fretes">
+        <div id="aniversariantes-resumo">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
@@ -124,12 +124,12 @@ export function renderHome(container) {
   renderCarrosselBanners();
   configurarCarrosselCategorias(container);
   configurarBuscaHome(container);
-  carregarPertoDeVoce(container);
-  carregarAniversariantes(container);
-  renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
   carregarVagasDestaque(container);
-  carregarVitrine(container);
   carregarFretesResumo(container);
+  carregarPertoDeVoce(container);
+  renderCarrosselVertical('carrossel-vertical-home', 'home-vertical');
+  carregarVitrine(container);
+  carregarAniversariantes(container);
 }
 
 function configurarBuscaHome(container) {
