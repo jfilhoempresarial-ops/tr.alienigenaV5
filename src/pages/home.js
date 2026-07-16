@@ -46,16 +46,6 @@ export function renderHome(container) {
         <button type="submit" class="busca-home__botao" aria-label="Buscar">🔍</button>
       </form>
 
-<div class="home-secao">
-  <div class="home-secao__header">
-    <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
-    <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
-  </div>
-  <div id="manchetes-home" class="manchetes-home">
-    <p class="home-secao__vazio">Carregando...</p>
-  </div>
-</div>
-
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
         <div class="categorias-carrossel__trilho" id="categorias-trilho">
@@ -127,6 +117,26 @@ export function renderHome(container) {
           <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
         </div>
         <div id="aniversariantes-resumo">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="home-secao" id="secao-aniversariantes">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎂 Motoristas Aniversariantes</h2>
+        </div>
+        <div id="aniversariantes-resumo">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
+          <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
+        </div>
+        <div id="manchetes-home" class="manchetes-home">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
