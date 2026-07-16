@@ -25,7 +25,6 @@ const ROTAS_FIXAS = {
   'cadastro-caminhao': renderCadastroCaminhao,
   vagas: renderVagas,
   'grupos-whatsapp': renderGruposWhatsapp,
-  fretes: renderFretes,
 };
 
 function router() {
