@@ -1,7 +1,7 @@
 name: Atualizar fretes da planilha
 on:
   schedule:
-    - cron: '0 10 * * *'  # 07:00 no horário de Brasília (UTC-3)
+    - cron: '30 12 * * *'  # 09:30 no horário de Brasília (UTC-3)
   workflow_dispatch: {}    # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:
