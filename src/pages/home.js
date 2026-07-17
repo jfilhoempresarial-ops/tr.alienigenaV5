@@ -120,16 +120,6 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
-    </section>
-
-    <div class="home-secao" id="secao-aniversariantes">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎂 Motoristas Aniversariantes</h2>
-        </div>
-        <div id="aniversariantes-resumo">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
 
       <div class="home-secao">
         <div class="home-secao__header">
