@@ -16,6 +16,10 @@ import { renderAniversariantesMes } from './pages/aniversariantes-mes.js';
 import { renderFooter, renderWhatsappFloat } from './components/footer.js';
 import { renderCursos } from './pages/cursos.js';
 import { renderEmpresasParceiras } from './pages/empresas-parceiras.js';
+import { renderQuemSomos } from './pages/quem-somos.js';
+import { renderOQueFazemos } from './pages/o-que-fazemos.js';
+import { renderOndeEstamos } from './pages/onde-estamos.js';
+import { renderContato } from './pages/contato.js';
 
 const app = document.getElementById('app');
 
@@ -32,6 +36,10 @@ const ROTAS_FIXAS = {
   'aniversariantes-mes': renderAniversariantesMes,
   cursos: renderCursos,
   'empresas-parceiras': renderEmpresasParceiras,
+  'quem-somos': renderQuemSomos,
+  'o-que-fazemos': renderOQueFazemos,
+  'onde-estamos': renderOndeEstamos,
+  contato: renderContato,
 };
 
 function router() {
