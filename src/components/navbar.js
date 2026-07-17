@@ -20,6 +20,9 @@ export function renderNavbar() {
         <span></span>
       </button>
       <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo/Logo-tra.png" alt="TRA da Estrada" class="navbar__logo-img navbar__logo-img--grande"></a>
+      <nav class="navbar__links-desktop">
+        ${LINKS_MENU.map((link) => `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`).join('')}
+      </nav>
       <div class="navbar__acoes">
         <a href="/admin" class="navbar__admin" title="Área do admin">⚙️</a>
       </div>

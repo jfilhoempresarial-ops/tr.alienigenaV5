@@ -1870,3 +1870,118 @@ button {
     max-width: 680px;
   }
 }
+
+/* ===== Responsivo completo — Navbar e Home (desktop) ===== */
+
+.navbar__links-desktop {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  main {
+    max-width: 1100px;
+  }
+
+  .footer__grid,
+  .footer__coluna--newsletter,
+  .footer__base {
+    max-width: 1100px;
+  }
+
+  /* --- Navbar: logo à esquerda, links visíveis, sem hambúrguer --- */
+
+  .navbar {
+    justify-content: flex-start;
+    padding: 16px 32px;
+  }
+
+  .navbar__hamburguer {
+    display: none;
+  }
+
+  .navbar__logo--centro {
+    position: static;
+    transform: none;
+  }
+
+  .navbar__logo-img--grande {
+    height: 48px;
+  }
+
+  .navbar__links-desktop {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-left: 32px;
+  }
+
+  .navbar__link-desktop {
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .navbar__link-desktop:hover {
+    color: var(--cor-primaria);
+  }
+
+  .navbar__acoes {
+    margin-left: auto;
+  }
+
+  /* --- Banner do topo: menos alto proporcionalmente em telas largas --- */
+
+  .carrossel {
+    aspect-ratio: 4 / 1;
+  }
+
+  /* --- Categorias: grid fixo em vez de carrossel cortado --- */
+
+  .categorias-carrossel__seta {
+    display: none;
+  }
+
+  .categorias-carrossel__trilho {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    overflow: visible;
+  }
+
+  .categoria-card {
+    width: auto;
+  }
+
+  /* --- Vagas / Fretes / Perto de você: grid em vez de scroll horizontal --- */
+
+  .home-secao__lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    overflow: visible;
+  }
+
+  .mini-card,
+  .frete-estado-card {
+    width: auto;
+  }
+
+  #aniversariantes-resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    overflow: visible;
+  }
+
+  .aniversario-card {
+    width: auto;
+  }
+
+  /* --- Resultados de categoria: cards de empresa em grid --- */
+
+  .resultados-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+}
