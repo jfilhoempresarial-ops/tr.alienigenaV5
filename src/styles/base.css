@@ -1436,3 +1436,101 @@ button {
 .footer__newsletter-mensagem--erro {
   color: #ff6b6b;
 }
+/* ===== Menu hambúrguer e menu lateral ===== */
+
+.navbar {
+  gap: 12px;
+}
+
+.navbar__hamburguer {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.navbar__hamburguer span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--cor-primaria-escura);
+  border-radius: 2px;
+}
+
+.menu-lateral__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 200;
+}
+
+.menu-lateral__overlay--visivel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: #0f2d1a;
+  color: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-lateral--aberto {
+  transform: translateX(0);
+}
+
+.menu-lateral__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-lateral__logo {
+  height: 40px;
+  width: auto;
+}
+
+.menu-lateral__fechar {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.menu-lateral__links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.menu-lateral__link {
+  padding: 14px 20px;
+  color: #eee;
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.menu-lateral__link:active {
+  background: rgba(255, 255, 255, 0.05);
+}
