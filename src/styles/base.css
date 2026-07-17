@@ -1343,27 +1343,57 @@ button {
 }
 
 .manchete-card {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: #fff;
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   text-decoration: none;
-  border-left: 3px solid var(--cor-primaria);
+}
+
+.manchete-card__imagem {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--cor-fundo);
+}
+
+.manchete-card__imagem--vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.manchete-card__conteudo {
+  flex: 1;
+  min-width: 0;
 }
 
 .manchete-card__tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
-  color: var(--cor-primaria);
+  color: #d9412f;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .manchete-card__titulo {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #111;
-  margin-top: 2px;
+  margin: 4px 0 6px;
+  line-height: 1.3;
+}
+
+.manchete-card__data {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
 }
 /* ===== Rodapé institucional (colunas de links) ===== */
 

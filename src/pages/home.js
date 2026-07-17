@@ -230,14 +230,25 @@ async function carregarManchetes(container) {
   seguranca: 'Segurança',
   direitos: 'Direitos',
   geral: 'Geral',
+  autonomo: 'Autônomo',
+  clt: 'CLT',
+  agregado: 'Agregado',
 };
     
     alvo.innerHTML = manchetes
       .map(
         (n) => `
       <a href="${n.link}" target="_blank" rel="noopener" class="manchete-card">
-        <span class="manchete-card__tag">${TAG_CATEGORIA[n.categoria] || 'Geral'}</span>
-        <p class="manchete-card__titulo">${n.titulo}</p>
+        ${
+          n.imagemUrl
+            ? `<img src="${n.imagemUrl}" alt="" class="manchete-card__imagem" loading="lazy" />`
+            : `<span class="manchete-card__imagem manchete-card__imagem--vazia">📰</span>`
+        }
+        <div class="manchete-card__conteudo">
+          <span class="manchete-card__tag">#${TAG_CATEGORIA[n.categoria] || 'Geral'}</span>
+          <p class="manchete-card__titulo">${n.titulo}</p>
+          <p class="manchete-card__data">📅 ${formatarDataBR(n.data)}</p>
+        </div>
       </a>
     `
       )
@@ -246,6 +257,13 @@ async function carregarManchetes(container) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
     console.error(erro);
   }
+}
+
+/** Converte "AAAA-MM-DD" para "DD/MM/AAAA". */
+function formatarDataBR(dataStr) {
+  if (!dataStr) return '';
+  const [ano, mes, dia] = dataStr.split('-');
+  return `${dia}/${mes}/${ano}`;
 }
 
 function renderMiniCardEmpresa(empresa) {
