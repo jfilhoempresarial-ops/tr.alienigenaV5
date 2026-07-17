@@ -1854,3 +1854,19 @@ button {
   color: #888;
   margin: 0;
 }
+
+/* ===== Ajuste rápido de largura para telas maiores (PC/tablet) =====
+   Ainda é o mesmo layout mobile, só deixa de esticar feio em telas largas.
+   O responsivo completo (grids, navbar horizontal etc.) vem depois. */
+
+@media (min-width: 700px) {
+  main {
+    max-width: 680px;
+  }
+
+  .footer__grid,
+  .footer__coluna--newsletter,
+  .footer__base {
+    max-width: 680px;
+  }
+}
