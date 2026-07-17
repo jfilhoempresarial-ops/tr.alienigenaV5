@@ -306,8 +306,7 @@ async function carregarAniversariantes(container) {
         <a href="/aniversariantes-mes" class="aniversario-card__botao-mes">Ver ${mes.length} aniversariante${mes.length !== 1 ? 's' : ''} do mês</a>
       </div>
       <a href="#" class="aniversario-publicidade">
-        <span class="aniversario-publicidade__tag">ESPAÇO PUBLICITÁRIO</span>
-        <span class="aniversario-publicidade__titulo">Anuncie aqui</span>
+        <img src="/images/publicidade-aniversario.jpg" alt="Publicidade" />
       </a>
     `;
   } catch (erro) {
