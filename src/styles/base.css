@@ -1544,3 +1544,72 @@ button {
   font-size: 11px;
   color: #999;
 }
+/* ===== Avaliação de empresas ===== */
+
+.card-empresa__avaliacao {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.card-empresa__nota {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.card-empresa__nota-total {
+  font-size: 12px;
+  color: #888;
+}
+
+.card-empresa__avaliar-btn {
+  background: #eef1ee;
+  color: #333;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.card-empresa__avaliar-notas {
+  margin-top: 10px;
+}
+
+.card-empresa__avaliar-instrucao {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.card-empresa__avaliar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nota-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nota-btn:active {
+  background: var(--cor-primaria);
+  color: #fff;
+}
+
+.card-empresa__avaliar-obrigado {
+  font-size: 13px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  margin: 8px 0 0;
+}
