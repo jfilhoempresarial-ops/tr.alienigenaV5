@@ -42,14 +42,16 @@ export function renderFooter() {
           </a>
         </div>
 
-        <div class="footer__coluna">
-          <h3 class="footer__titulo">Navegação</h3>
-          ${LINKS_NAVEGACAO.map((link) => `<a href="${link.href}" class="footer__link">${link.label}</a>`).join('')}
-        </div>
+        <div class="footer__colunas-duplas">
+          <div class="footer__coluna">
+            <h3 class="footer__titulo">Navegação</h3>
+            ${LINKS_NAVEGACAO.map((link) => `<a href="${link.href}" class="footer__link">${link.label}</a>`).join('')}
+          </div>
 
-        <div class="footer__coluna">
-          <h3 class="footer__titulo">Institucional</h3>
-          ${LINKS_INSTITUCIONAL.map((link) => `<a href="${link.href}" class="footer__link">${link.label}</a>`).join('')}
+          <div class="footer__coluna">
+            <h3 class="footer__titulo">Institucional</h3>
+            ${LINKS_INSTITUCIONAL.map((link) => `<a href="${link.href}" class="footer__link">${link.label}</a>`).join('')}
+          </div>
         </div>
 
         <div class="footer__coluna footer__coluna--newsletter">

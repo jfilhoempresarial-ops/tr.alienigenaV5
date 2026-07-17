@@ -1306,6 +1306,15 @@ button {
   max-width: 480px;
   margin: 0 auto;
 }
+.footer__colunas-duplas {
+  display: flex;
+  gap: 20px;
+}
+
+.footer__colunas-duplas .footer__coluna {
+  flex: 1;
+  min-width: 0;
+}
 
 .footer__coluna--logo .footer__logo {
   height: 44px;
