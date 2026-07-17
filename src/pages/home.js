@@ -113,6 +113,13 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎪 Eventos para caminhoneiro</h2>
+        </div>
+        <div id="carrossel-banners-eventos"></div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
           <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
           <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
         </div>
@@ -132,6 +139,7 @@ export function renderHome(container) {
   carregarPertoDeVoce(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
   carregarAniversariantes(container);
+  renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
   carregarManchetes(container);
 }
 
