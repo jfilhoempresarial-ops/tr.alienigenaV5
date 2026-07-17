@@ -96,6 +96,15 @@ export async function renderResultados(container, categoria) {
       <section class="resultados">
         <div id="carrossel-categoria" class="carrossel-categoria"></div>
 
+        <a href="/cadastro-empresa" class="banner-grupos">
+          <span class="banner-grupos__icone">🏢</span>
+          <span class="banner-grupos__texto">
+            <strong>Sua empresa não está aqui?</strong>
+            Cadastre grátis e apareça para motoristas da região
+          </span>
+          <span class="banner-grupos__seta">›</span>
+        </a>
+
         ${
           placeholderBusca
             ? `<input

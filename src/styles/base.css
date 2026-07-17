@@ -16,6 +16,7 @@ body {
   padding: 16px;
   background: var(--cor-branco);
   border-bottom: 1px solid #e0e0e0;
+  position: relative;
 }
 
 .navbar__logo {
@@ -28,15 +29,6 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.navbar__cta {
-  background: var(--cor-primaria);
-  color: var(--cor-branco);
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  text-decoration: none;
-  font-size: 14px;
 }
 
 .navbar__admin {
@@ -554,6 +546,19 @@ button {
   height: 64px;
   width: auto;
   display: block;
+}
+
+/* ===== Logo centralizada no navbar (substitui o botão "Cadastrar minha empresa") ===== */
+
+.navbar__logo--centro {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.navbar__logo-img--grande {
+  height: 84px;
 }
 /* ===== Melhorias visuais da página de Vagas ===== */
 
