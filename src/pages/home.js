@@ -195,7 +195,15 @@ async function carregarManchetes(container) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma notícia no momento.</p>`;
       return;
     }
-    const TAG_CATEGORIA = { autonomo: 'Autônomo', clt: 'CLT', agregado: 'Agregado' };
+    
+    const TAG_CATEGORIA = {
+  mobilizacao: 'Mobilização',
+  rodovia: 'Rodovia',
+  seguranca: 'Segurança',
+  direitos: 'Direitos',
+  geral: 'Geral',
+};
+    
     alvo.innerHTML = manchetes
       .map(
         (n) => `
