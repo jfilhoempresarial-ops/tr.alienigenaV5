@@ -2,7 +2,12 @@ name: Atualizar fretes da planilha
 on:
   schedule:
     - cron: '30 12 * * *'  # 09:30 no horário de Brasília (UTC-3)
-  workflow_dispatch: {}    # permite rodar manualmente pela aba "Actions" do GitHub
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/cargas.xlsx'  # dispara automaticamente sempre que essa planilha mudar
+  workflow_dispatch: {}        # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:
     runs-on: ubuntu-latest
@@ -18,4 +23,4 @@ jobs:
       - name: Importar planilha de fretes
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
-        run: node scripts/importar-fretes.cjs
+        run: node scripts/importar-fretes.cjs 
