@@ -133,9 +133,6 @@ export function renderHome(container) {
 
      
       <div class="home-secao" id="secao-aniversariantes">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
-        </div>
         <div id="aniversariantes-resumo">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
@@ -278,9 +275,12 @@ async function carregarAniversariantes(container) {
     const grupos = agruparPorData(semana);
 
     alvo.innerHTML = `
+      <a href="#" class="aniversario-publicidade">
+        <img src="/images/publicidade-aniversario.jpg" alt="Publicidade" />
+      </a>
       <div class="aniversario-card">
         <div class="aniversario-card__header-linha">
-          <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
+          <h3 class="aniversario-card__titulo">📅 Motoristas da TRA aniversariantes</h3>
           <span class="aniversario-card__contador">${semana.length}</span>
         </div>
         <div class="aniversario-card__lista">
@@ -305,9 +305,6 @@ async function carregarAniversariantes(container) {
         </div>
         <a href="/aniversariantes-mes" class="aniversario-card__botao-mes">Ver ${mes.length} aniversariante${mes.length !== 1 ? 's' : ''} do mês</a>
       </div>
-      <a href="#" class="aniversario-publicidade">
-        <img src="/images/publicidade-aniversario.jpg" alt="Publicidade" />
-      </a>
     `;
   } catch (erro) {
     secao.style.display = 'none';

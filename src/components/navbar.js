@@ -8,6 +8,8 @@ const LINKS_MENU = [
   { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
   { href: '/cursos', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
+  // Ainda sem página própria — só reserva o espaço no menu lateral por enquanto.
+  { href: '#', label: 'Toxicológico', apenasMenuLateral: true },
 ];
 
 export function renderNavbar() {
@@ -21,7 +23,9 @@ export function renderNavbar() {
       </button>
       <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo/Logo-tra.png" alt="TRA da Estrada" class="navbar__logo-img navbar__logo-img--grande"></a>
       <nav class="navbar__links-desktop">
-        ${LINKS_MENU.map((link) => `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`).join('')}
+        ${LINKS_MENU.filter((link) => !link.apenasMenuLateral)
+          .map((link) => `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`)
+          .join('')}
       </nav>
       <div class="navbar__acoes">
         <a href="/admin" class="navbar__admin" title="Área do admin">⚙️</a>
