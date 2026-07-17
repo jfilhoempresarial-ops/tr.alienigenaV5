@@ -7,17 +7,19 @@
  * destino é no Ceará) ou "outros" (nenhum dos dois é CE) — isso alimenta
  * os dois grupos separados que aparecem na página /fretes do site.
  *
- * COMO USAR:
- * 1. Coloque este arquivo dentro da pasta "scripts/" do projeto.
- * 2. (Só na primeira vez) instale a biblioteca necessária:
- *      npm install xlsx
- * 3. Coloque a planilha recebida dentro de "scripts/", com o nome
+ * COMO USAR (local, no seu computador):
+ * 1. Coloque a planilha recebida dentro de "scripts/", com o nome
  *    "cargas.xlsx" (mesmo formato de sempre).
- * 4. No terminal, dentro da pasta do projeto, rode:
+ * 2. No terminal, dentro da pasta do projeto, rode:
  *      node scripts/importar-fretes.cjs
  *
+ * TAMBÉM RODA AUTOMATICAMENTE pelo GitHub Actions 1x por dia
+ * (veja .github/workflows/atualizar-fretes.yml), usando a mesma planilha
+ * "cargas.xlsx" que estiver commitada no repositório naquele momento.
+ *
  * Este script LIMPA a coleção antiga e sobe a lista nova por completo —
- * rode sempre que receber uma planilha atualizada.
+ * rode sempre que receber uma planilha atualizada (ou apenas commite o
+ * arquivo novo e deixe a automação rodar sozinha no próximo horário).
  */
 
 const path = require('path');
@@ -28,8 +30,22 @@ const { getFirestore } = require('firebase-admin/firestore');
 const CAMINHO_PLANILHA = path.join(__dirname, 'cargas.xlsx');
 const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
 
+/**
+ * Autenticação dupla:
+ * - No GitHub Actions, usa a variável de ambiente FIREBASE_SERVICE_ACCOUNT_BASE64
+ *   (mesma já configurada como secret pro scraper de vagas).
+ * - Localmente, usa o arquivo serviceAccountKey.json na pasta scripts/.
+ */
+function obterCredencial() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8');
+    return JSON.parse(json);
+  }
+  return require(CAMINHO_CHAVE);
+}
+
 initializeApp({
-  credential: cert(require(CAMINHO_CHAVE)),
+  credential: cert(obterCredencial()),
 });
 const db = getFirestore();
 
