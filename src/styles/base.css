@@ -962,6 +962,20 @@ button {
   display: block;
 }
 
+.banner-parceiros-gif {
+  display: block;
+  margin: 4px 0 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.banner-parceiros-gif img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .grupos-whatsapp__header {
   margin-bottom: 16px;
 }

@@ -145,6 +145,10 @@ export function renderHome(container) {
         <div id="carrossel-banners-eventos"></div>
       </div>
 
+      <a href="#" class="banner-parceiros-gif">
+        <img src="/images/gif-agrup.gif" alt="Grupos parceiros TRA da Estrada" />
+      </a>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
