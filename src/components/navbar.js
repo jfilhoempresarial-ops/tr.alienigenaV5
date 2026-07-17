@@ -8,8 +8,10 @@ const LINKS_MENU = [
   { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
   { href: '/cursos', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
-  // Ainda sem página própria — só reserva o espaço no menu lateral por enquanto.
+  // Itens que aparecem só no menu lateral (não entram na barra horizontal do desktop).
   { href: '#', label: 'Toxicológico', apenasMenuLateral: true },
+  { href: 'https://lojadoalienigena.com.br', label: 'Loja do Motorista', apenasMenuLateral: true, externo: true },
+  { href: '#', label: 'Programa A Voz do Motorista', apenasMenuLateral: true },
 ];
 
 export function renderNavbar() {
@@ -39,7 +41,10 @@ export function renderNavbar() {
         <button class="menu-lateral__fechar" id="menu-lateral-fechar" aria-label="Fechar menu">✕</button>
       </div>
       <nav class="menu-lateral__links">
-        ${LINKS_MENU.map((link) => `<a href="${link.href}" class="menu-lateral__link">${link.label}</a>`).join('')}
+        ${LINKS_MENU.map(
+          (link) =>
+            `<a href="${link.href}" ${link.externo ? 'target="_blank" rel="noopener"' : ''} class="menu-lateral__link">${link.label}</a>`
+        ).join('')}
       </nav>
     </aside>
   `;
