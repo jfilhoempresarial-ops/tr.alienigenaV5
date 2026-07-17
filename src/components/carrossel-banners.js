@@ -5,6 +5,15 @@ let timerAtual = null;
 
 const NUMERO_COMERCIAL = '5588988621481'; // TODO: troque pelo seu número real de WhatsApp comercial
 
+// Texto customizado do placeholder por categoria. Categorias que não estão
+// aqui caem no texto genérico "Alcance motoristas de {categoria} na sua região".
+const PLACEHOLDER_TEXTO = {
+  eventos: {
+    titulo: 'Divulgue seu evento aqui',
+    sub: 'Alcance motoristas de toda a região',
+  },
+};
+
 export async function renderCarrosselBanners(containerId = 'carrossel-banners', categoria = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -79,6 +88,10 @@ export async function renderCarrosselBanners(containerId = 'carrossel-banners', 
 }
 
 function renderPlaceholder(container, categoria) {
+  const textoCustom = PLACEHOLDER_TEXTO[categoria];
+  const titulo = textoCustom ? textoCustom.titulo : 'Sua empresa aqui';
+  const sub = textoCustom ? textoCustom.sub : `Alcance motoristas de ${categoria} na sua região`;
+
   container.innerHTML = `
     
       <a
@@ -88,8 +101,8 @@ function renderPlaceholder(container, categoria) {
       class="carrossel-placeholder"
     >
       <span class="carrossel-placeholder__tag">ESPAÇO PUBLICITÁRIO</span>
-      <span class="carrossel-placeholder__titulo">Sua empresa aqui</span>
-      <span class="carrossel-placeholder__sub">Alcance motoristas de ${categoria} na sua região</span>
+      <span class="carrossel-placeholder__titulo">${titulo}</span>
+      <span class="carrossel-placeholder__sub">${sub}</span>
     </a>
   `;
 }

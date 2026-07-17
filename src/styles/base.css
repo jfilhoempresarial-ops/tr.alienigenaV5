@@ -740,9 +740,11 @@ button {
   background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
   color: #fff;
   border-radius: var(--radius);
-  padding: 24px 16px;
+  aspect-ratio: 2.4 / 1;
+  padding: 16px;
   text-decoration: none;
   border: 2px dashed #7ed321;
+  margin-bottom: 16px;
 }
 
 .carrossel-placeholder__tag {
