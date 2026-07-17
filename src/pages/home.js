@@ -2,7 +2,6 @@ import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 import { buscarEmpresasDestaque } from '../services/empresas.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
-import { buscarVitrineAtiva } from '../services/vitrine.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
 
@@ -102,15 +101,7 @@ export function renderHome(container) {
 
       <div id="carrossel-banners-marcas"></div>
 
-      <div class="home-secao" id="secao-vitrine">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🏷️ Marcas parceiras</h2>
-        </div>
-        <div class="home-secao__lista" id="lista-vitrine">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
-
+     
       <div class="home-secao" id="secao-aniversariantes">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">🎂 Motoristas clientes da Loja do Alienígena</h2>
@@ -140,7 +131,6 @@ export function renderHome(container) {
   carregarFretesResumo(container);
   carregarPertoDeVoce(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
-  carregarVitrine(container);
   carregarAniversariantes(container);
   carregarManchetes(container);
 }
@@ -304,32 +294,6 @@ function renderMiniCardVaga(vaga) {
       <p class="mini-card__sub">📍 ${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</p>
       <a href="/vagas" class="mini-card__acao">Ver detalhes</a>
     </div>
-  `;
-}
-
-async function carregarVitrine(container) {
-  const secao = container.querySelector('#secao-vitrine');
-  const alvo = container.querySelector('#lista-vitrine');
-  try {
-    const itens = await buscarVitrineAtiva();
-    if (itens.length === 0) {
-      secao.style.display = 'none';
-      return;
-    }
-    alvo.innerHTML = itens.map(renderCardVitrine).join('');
-  } catch (erro) {
-    secao.style.display = 'none';
-    console.error(erro);
-  }
-}
-
-function renderCardVitrine(item) {
-  const imagem = item.imagemUrl || '';
-  return `
-    <a href="${item.link}" target="_blank" rel="noopener" class="vitrine-card" style="background-image: url('${imagem}')">
-      <span class="vitrine-card__overlay"></span>
-      <span class="vitrine-card__nome">${item.nome}</span>
-    </a>
   `;
 }
 
