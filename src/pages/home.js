@@ -90,13 +90,8 @@ export function renderHome(container) {
         </div>
       </div>
 
-      <a href="/grupos-whatsapp" class="banner-grupos">
-        <span class="banner-grupos__icone">📱</span>
-        <span class="banner-grupos__texto">
-          <strong>Quer participar de grupo de WhatsApp de caminhoneiro?</strong>
-          Veja os grupos parceiros por cidade e fale direto com o admin
-        </span>
-        <span class="banner-grupos__seta">›</span>
+      <a href="/grupos-whatsapp" class="banner-grupos-imagem">
+        <img src="/images/whatsapp-grupos.png" alt="Participe dos grupos de WhatsApp de caminhoneiro" />
       </a>
 
       <div id="carrossel-banners-marcas"></div>

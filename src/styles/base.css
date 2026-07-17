@@ -948,6 +948,20 @@ button {
   color: #7ed321;
 }
 
+.banner-grupos-imagem {
+  display: block;
+  margin: 4px 0 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.banner-grupos-imagem img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .grupos-whatsapp__header {
   margin-bottom: 16px;
 }
