@@ -1135,21 +1135,73 @@ button {
 }
 
 .aniversario-card__lista {
-  list-style: none;
   margin: 0;
   padding: 0;
   max-height: 200px;
   overflow-y: auto;
 }
 
-.aniversario-card__lista li {
-  padding: 7px 0;
+.aniversario-card__grupo {
+  margin-bottom: 10px;
+}
+
+.aniversario-card__grupo:last-child {
+  margin-bottom: 0;
+}
+
+.aniversario-card__grupo-data {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6d00;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0 0 4px;
+}
+
+.aniversario-card__grupo-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aniversario-card__grupo-lista li {
+  padding: 6px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   font-size: 14px;
 }
 
-.aniversario-card__lista li:last-child {
+.aniversario-card__grupo-lista li:last-child {
   border-bottom: none;
+}
+
+.aniversario-publicidade {
+  flex: 0 0 auto;
+  width: 260px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  border: 2px dashed #7ed321;
+  padding: 16px;
+  text-decoration: none;
+}
+
+.aniversario-publicidade__tag {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #7ed321;
+}
+
+.aniversario-publicidade__titulo {
+  font-size: 15px;
+  font-weight: bold;
 }
 
 .aniversario-card__vazio {

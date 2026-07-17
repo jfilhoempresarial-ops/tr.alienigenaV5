@@ -28,6 +28,41 @@ function capitalizarNome(txt) {
     .replace(/(^|\s|\()\S/g, (letra) => letra.toUpperCase());
 }
 
+// Reduz o nome completo para "Primeiro Nome + Último Sobrenome"
+// (ex: "Victor Vinicius Lins Da Silva" -> "Victor Silva")
+function nomeCurto(nomeCompleto) {
+  const partes = capitalizarNome(nomeCompleto).split(' ').filter(Boolean);
+  if (partes.length <= 2) return partes.join(' ');
+  return `${partes[0]} ${partes[partes.length - 1]}`;
+}
+
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+function diaSemanaAbrev(dia, mes) {
+  const hoje = new Date();
+  let ano = hoje.getFullYear();
+  let data = new Date(ano, mes - 1, dia);
+  // Corrige virada de ano (ex: hoje é 30/12 e o aniversário é 02/01)
+  if (data < hoje && hoje.getMonth() === 11 && mes === 1) {
+    data = new Date(ano + 1, mes - 1, dia);
+  }
+  return DIAS_SEMANA[data.getDay()];
+}
+
+// Agrupa a lista (já ordenada por data) em blocos por dia/mês
+function agruparPorData(pessoas) {
+  const grupos = [];
+  pessoas.forEach((p) => {
+    const grupoAtual = grupos[grupos.length - 1];
+    if (grupoAtual && grupoAtual.dia === p.dia && grupoAtual.mes === p.mes) {
+      grupoAtual.pessoas.push(p);
+    } else {
+      grupos.push({ dia: p.dia, mes: p.mes, pessoas: [p] });
+    }
+  });
+  return grupos;
+}
+
 export function renderHome(container) {
   container.innerHTML = `
     <section class="home">
@@ -240,22 +275,40 @@ async function carregarAniversariantes(container) {
     const diaHoje = hoje.getDate();
     const mesHoje = hoje.getMonth() + 1;
 
+    const grupos = agruparPorData(semana);
+
     alvo.innerHTML = `
       <div class="aniversario-card">
         <div class="aniversario-card__header-linha">
           <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
           <span class="aniversario-card__contador">${semana.length}</span>
         </div>
-        <ul class="aniversario-card__lista">
-          ${semana
-            .map((p) => {
-              const ehHoje = p.dia === diaHoje && p.mes === mesHoje;
-              return `<li class="${ehHoje ? 'aniversario-card__item--hoje' : ''}">${ehHoje ? '🎉 ' : ''}${capitalizarNome(p.nome)} — ${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}</li>`;
+        <div class="aniversario-card__lista">
+          ${grupos
+            .map((grupo) => {
+              const dataLabel = `${diaSemanaAbrev(grupo.dia, grupo.mes)}, ${String(grupo.dia).padStart(2, '0')}/${String(grupo.mes).padStart(2, '0')}`;
+              return `
+                <div class="aniversario-card__grupo">
+                  <p class="aniversario-card__grupo-data">${dataLabel}</p>
+                  <ul class="aniversario-card__grupo-lista">
+                    ${grupo.pessoas
+                      .map((p) => {
+                        const ehHoje = p.dia === diaHoje && p.mes === mesHoje;
+                        return `<li class="${ehHoje ? 'aniversario-card__item--hoje' : ''}">${ehHoje ? '🎉 ' : ''}${nomeCurto(p.nome)}</li>`;
+                      })
+                      .join('')}
+                  </ul>
+                </div>
+              `;
             })
             .join('')}
-        </ul>
+        </div>
         <a href="/aniversariantes-mes" class="aniversario-card__botao-mes">Ver ${mes.length} aniversariante${mes.length !== 1 ? 's' : ''} do mês</a>
       </div>
+      <a href="#" class="aniversario-publicidade">
+        <span class="aniversario-publicidade__tag">ESPAÇO PUBLICITÁRIO</span>
+        <span class="aniversario-publicidade__titulo">Anuncie aqui</span>
+      </a>
     `;
   } catch (erro) {
     secao.style.display = 'none';
