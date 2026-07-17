@@ -5,6 +5,8 @@ const LINKS_MENU = [
   { href: '/fretes', label: 'Fretes' },
   { href: '/eventos', label: 'Eventos' },
   { href: '/caminhoes', label: 'Caminhões' },
+  { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
+  { href: '/cursos', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
 ];
 
