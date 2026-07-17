@@ -1290,3 +1290,443 @@ button {
   color: #111;
   margin-top: 2px;
 }
+/* ===== Rodapé institucional ===== */
+
+.footer {
+  background: #0f2d1a;
+  color: #ddd;
+  padding: 32px 20px 20px;
+  margin-top: 40px;
+}
+
+.footer__coluna {
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.footer__logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.footer__titulo {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.footer__texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #bbb;
+  margin: 0;
+}
+
+.footer__whatsapp {
+  display: inline-block;
+  margin-top: 10px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.footer__base {
+  max-width: 480px;
+  margin: 24px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.footer__base p {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+}
+
+/* ===== Botão flutuante de WhatsApp ===== */
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: #25d366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+.aniversario-card__item--hoje {
+  font-weight: 700;
+  color: #0f2d1a;
+  background: #fff0c2;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: 2px -8px;
+}
+/* ===== Newsletter no rodapé ===== */
+
+.footer__coluna--newsletter {
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.footer__newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.footer__newsletter-input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 14px;
+}
+
+.footer__newsletter-input::placeholder {
+  color: #999;
+}
+
+.footer__newsletter-input:focus {
+  outline: none;
+  border-color: #7ed321;
+}
+
+.footer__newsletter-botao {
+  background: #7ed321;
+  color: #0f2d1a;
+  font-weight: 700;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.footer__newsletter-botao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footer__newsletter-mensagem {
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.footer__newsletter-mensagem--sucesso {
+  color: #7ed321;
+}
+
+.footer__newsletter-mensagem--erro {
+  color: #ff6b6b;
+}
+/* ===== Menu hambúrguer e menu lateral ===== */
+
+.navbar {
+  gap: 12px;
+}
+
+.navbar__hamburguer {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.navbar__hamburguer span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--cor-primaria-escura);
+  border-radius: 2px;
+}
+
+.menu-lateral__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 200;
+}
+
+.menu-lateral__overlay--visivel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: #0f2d1a;
+  color: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-lateral--aberto {
+  transform: translateX(0);
+}
+
+.menu-lateral__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-lateral__logo {
+  height: 40px;
+  width: auto;
+}
+
+.menu-lateral__fechar {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.menu-lateral__links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.menu-lateral__link {
+  padding: 14px 20px;
+  color: #eee;
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.menu-lateral__link:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+.mini-card__avaliacao {
+  font-size: 13px;
+  margin: 6px 0 0;
+  color: #333;
+}
+
+.mini-card__avaliacao-total {
+  font-size: 11px;
+  color: #999;
+}
+/* ===== Avaliação de empresas ===== */
+
+.card-empresa__avaliacao {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.card-empresa__nota {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.card-empresa__nota-total {
+  font-size: 12px;
+  color: #888;
+}
+
+.card-empresa__avaliar-btn {
+  background: #eef1ee;
+  color: #333;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.card-empresa__avaliar-notas {
+  margin-top: 10px;
+}
+
+.card-empresa__avaliar-instrucao {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.card-empresa__avaliar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nota-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nota-btn:active {
+  background: var(--cor-primaria);
+  color: #fff;
+}
+
+.card-empresa__avaliar-obrigado {
+  font-size: 13px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+/* ===== Cursos ===== */
+
+.cursos-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.cursos-pagina__destaque {
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.cursos-pagina__destaque-titulo {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.cursos-pagina__destaque-texto {
+  font-size: 13px;
+  color: #ddd;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.cursos-pagina__destaque-link {
+  color: #7ed321;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.cursos-pagina__secao-titulo {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.cursos-pagina__secao-sub {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 16px;
+}
+
+.cursos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.curso-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.curso-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.curso-card__descricao {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cursos-pagina__botao-todos {
+  display: block;
+  text-align: center;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* ===== Empresas parceiras ===== */
+
+.parceiras-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.parceiras-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.parceira-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.parceira-card__nome {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.parceira-card__descricao {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}

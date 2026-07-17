@@ -46,16 +46,6 @@ export function renderHome(container) {
         <button type="submit" class="busca-home__botao" aria-label="Buscar">🔍</button>
       </form>
 
-<div class="home-secao">
-  <div class="home-secao__header">
-    <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
-    <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
-  </div>
-  <div id="manchetes-home" class="manchetes-home">
-    <p class="home-secao__vazio">Carregando...</p>
-  </div>
-</div>
-
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
         <div class="categorias-carrossel__trilho" id="categorias-trilho">
@@ -130,6 +120,16 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
+          <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
+        </div>
+        <div id="manchetes-home" class="manchetes-home">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
     </section>
   `;
 
@@ -195,7 +195,15 @@ async function carregarManchetes(container) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma notícia no momento.</p>`;
       return;
     }
-    const TAG_CATEGORIA = { autonomo: 'Autônomo', clt: 'CLT', agregado: 'Agregado' };
+    
+    const TAG_CATEGORIA = {
+  mobilizacao: 'Mobilização',
+  rodovia: 'Rodovia',
+  seguranca: 'Segurança',
+  direitos: 'Direitos',
+  geral: 'Geral',
+};
+    
     alvo.innerHTML = manchetes
       .map(
         (n) => `
@@ -231,7 +239,7 @@ async function carregarAniversariantes(container) {
   try {
     const [semana, mes] = await Promise.all([buscarAniversariantesDaSemana(), buscarAniversariantesDoMes()]);
 
-    if (semana.length === 0 && mes.length === 0) {
+    if (semana.length === 0) {
       secao.style.display = 'none';
       return;
     }
@@ -239,19 +247,8 @@ async function carregarAniversariantes(container) {
     const hoje = new Date();
     const diaHoje = hoje.getDate();
     const mesHoje = hoje.getMonth() + 1;
-    const deHoje = semana.filter((a) => a.dia === diaHoje && a.mes === mesHoje);
 
     alvo.innerHTML = `
-      <div class="aniversario-card">
-        <h3 class="aniversario-card__titulo">🎉 Aniversariantes de hoje</h3>
-        ${
-          deHoje.length
-            ? `<ul class="aniversario-card__lista">${deHoje
-                .map((p) => `<li>${capitalizarNome(p.nome)}</li>`)
-                .join('')}</ul>`
-            : '<p class="aniversario-card__vazio">Ninguém faz aniversário hoje.</p>'
-        }
-      </div>
       <div class="aniversario-card">
         <div class="aniversario-card__header-linha">
           <h3 class="aniversario-card__titulo">📅 Aniversariantes da semana</h3>
@@ -259,10 +256,10 @@ async function carregarAniversariantes(container) {
         </div>
         <ul class="aniversario-card__lista">
           ${semana
-            .map(
-              (p) =>
-                `<li>${capitalizarNome(p.nome)} — ${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}</li>`
-            )
+            .map((p) => {
+              const ehHoje = p.dia === diaHoje && p.mes === mesHoje;
+              return `<li class="${ehHoje ? 'aniversario-card__item--hoje' : ''}">${ehHoje ? '🎉 ' : ''}${capitalizarNome(p.nome)} — ${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}</li>`;
+            })
             .join('')}
         </ul>
         <a href="/aniversariantes-mes" class="aniversario-card__botao-mes">Ver ${mes.length} aniversariante${mes.length !== 1 ? 's' : ''} do mês</a>

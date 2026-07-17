@@ -13,6 +13,9 @@ import { renderBusca } from './pages/busca.js';
 import { renderGruposWhatsapp } from './pages/grupos-whatsapp.js';
 import { renderFretes } from './pages/fretes.js';
 import { renderAniversariantesMes } from './pages/aniversariantes-mes.js';
+import { renderFooter, renderWhatsappFloat } from './components/footer.js';
+import { renderCursos } from './pages/cursos.js';
+import { renderEmpresasParceiras } from './pages/empresas-parceiras.js';
 
 const app = document.getElementById('app');
 
@@ -27,6 +30,8 @@ const ROTAS_FIXAS = {
   vagas: renderVagas,
   'grupos-whatsapp': renderGruposWhatsapp,
   'aniversariantes-mes': renderAniversariantesMes,
+  cursos: renderCursos,
+  'empresas-parceiras': renderEmpresasParceiras,
 };
 
 function router() {
@@ -67,4 +72,6 @@ document.addEventListener('click', (e) => {
 window.addEventListener('popstate', router);
 
 renderNavbar();
+renderFooter();
+renderWhatsappFloat();
 router();

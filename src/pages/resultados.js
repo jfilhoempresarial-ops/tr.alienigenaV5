@@ -3,6 +3,7 @@ import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { ordenarPorDistancia } from '../utils/distancia.js';
 import { renderCardEmpresa } from '../components/card-empresa.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
+import { avaliarEmpresa } from '../services/avaliacoes.service.js';
 
 // Texto de exemplo (placeholder) da busca em cada categoria.
 // Categorias que NÃO aparecem aqui (ex: "posto") não mostram caixa de busca —
@@ -136,7 +137,48 @@ export async function renderResultados(container, categoria) {
         alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
       });
     }
+
+    configurarAvaliacoes(container);
   }
 
   render();
+}
+
+function configurarAvaliacoes(container) {
+  container.querySelectorAll('.card-empresa__avaliar-btn').forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const empresaId = botao.dataset.abrirAvaliacao;
+      const painel = container.querySelector(`#avaliar-notas-${empresaId}`);
+      if (painel) painel.hidden = !painel.hidden;
+    });
+  });
+
+  container.querySelectorAll('.nota-btn').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      const empresaId = botao.dataset.empresaAvaliar;
+      const nota = Number(botao.dataset.nota);
+      const chaveLocal = `tra-avaliou-${empresaId}`;
+      const painel = container.querySelector(`#avaliar-notas-${empresaId}`);
+
+      if (localStorage.getItem(chaveLocal)) {
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Você já avaliou esta empresa neste dispositivo. Obrigado! 🙌</p>`;
+        }
+        return;
+      }
+
+      try {
+        await avaliarEmpresa(empresaId, nota);
+        localStorage.setItem(chaveLocal, '1');
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Obrigado pela avaliação! 🙌</p>`;
+        }
+      } catch (erro) {
+        console.error(erro);
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Não foi possível registrar agora. Tente novamente.</p>`;
+        }
+      }
+    });
+  });
 }
