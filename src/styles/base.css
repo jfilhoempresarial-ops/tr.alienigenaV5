@@ -1613,3 +1613,120 @@ button {
   font-weight: 600;
   margin: 8px 0 0;
 }
+/* ===== Cursos ===== */
+
+.cursos-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.cursos-pagina__destaque {
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.cursos-pagina__destaque-titulo {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.cursos-pagina__destaque-texto {
+  font-size: 13px;
+  color: #ddd;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.cursos-pagina__destaque-link {
+  color: #7ed321;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.cursos-pagina__secao-titulo {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.cursos-pagina__secao-sub {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 16px;
+}
+
+.cursos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.curso-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.curso-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.curso-card__descricao {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cursos-pagina__botao-todos {
+  display: block;
+  text-align: center;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* ===== Empresas parceiras ===== */
+
+.parceiras-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.parceiras-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.parceira-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.parceira-card__nome {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.parceira-card__descricao {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
