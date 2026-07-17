@@ -1534,3 +1534,13 @@ button {
 .menu-lateral__link:active {
   background: rgba(255, 255, 255, 0.05);
 }
+.mini-card__avaliacao {
+  font-size: 13px;
+  margin: 6px 0 0;
+  color: #333;
+}
+
+.mini-card__avaliacao-total {
+  font-size: 11px;
+  color: #999;
+}
