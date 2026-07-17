@@ -3,9 +3,11 @@ import { formatarDataEvento } from '../utils/formatters.js';
 
 const CATEGORIAS = [
   { id: '', label: '🌐 Todas' },
-  { id: 'autonomo', label: '🚚 Autônomo' },
-  { id: 'clt', label: '📋 CLT' },
-  { id: 'agregado', label: '🤝 Agregado' },
+  { id: 'mobilizacao', label: '📢 Mobilização' },
+  { id: 'rodovia', label: '🛣️ Rodovia' },
+  { id: 'seguranca', label: '🚨 Segurança' },
+  { id: 'direitos', label: '📋 Direitos' },
+  { id: 'geral', label: '📰 Geral' },
 ];
 
 const POR_PAGINA = 10;
