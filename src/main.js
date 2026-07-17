@@ -30,6 +30,8 @@ const ROTAS_FIXAS = {
   vagas: renderVagas,
   'grupos-whatsapp': renderGruposWhatsapp,
   'aniversariantes-mes': renderAniversariantesMes,
+  cursos: renderCursos,
+  'empresas-parceiras': renderEmpresasParceiras,
 };
 
 function router() {
