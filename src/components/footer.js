@@ -28,7 +28,7 @@ export function renderFooter() {
     <footer class="footer">
       <div class="footer__grid">
         <div class="footer__coluna footer__coluna--logo">
-          <img src="/images/logo/Logo-tra.png" alt="TRA da Estrada" class="footer__logo" />
+          <img src="/images/logo-tra.png" alt="TRA da Estrada" class="footer__logo" />
           <p class="footer__texto">
             Feito por caminhoneiro pra caminhoneiro.
           </p>

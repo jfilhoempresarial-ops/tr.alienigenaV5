@@ -118,7 +118,7 @@ export async function renderResultados(container, categoria) {
             : ''
         }
 
-        <h2>${localizacao ? 'Resultados perto de você' : 'Resultados disponíveis'}</h2>
+        <h2>${localizacao ? `${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} perto de você` : `${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} disponíve${listaFinal.length !== 1 ? 'is' : 'l'}`}</h2>
         ${avisoLocalizacao}
         <div class="resultados-lista">
           ${

@@ -336,24 +336,75 @@ main {
 .card-empresa {
   background: var(--cor-branco);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.card-empresa__header {
+.card-empresa__topo {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
 
-.card-empresa__whatsapp {
-  display: inline-block;
-  margin-top: 10px;
-  background: #25d366;
-  color: white;
-  padding: 8px 14px;
-  border-radius: var(--radius);
+.card-empresa__nome {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.card-empresa__distancia {
+  font-size: 12px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-empresa__endereco {
+  font-size: 12px;
+  color: #777;
+  margin: 2px 0 8px;
+  line-height: 1.3;
+}
+
+.card-empresa__linha {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tag--pequena {
+  font-size: 11px;
+  padding: 1px 7px;
+}
+
+.card-empresa__acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.card-empresa__botao {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-radius: 8px;
   text-decoration: none;
-  font-size: 14px;
+}
+
+.card-empresa__botao--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.card-empresa__botao--mapa {
+  background: #eef1ee;
+  color: #333;
 }
 
 .tag {
@@ -1948,15 +1999,10 @@ button {
 }
 /* ===== Avaliação de empresas ===== */
 
-.card-empresa__avaliacao {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-}
-
 .card-empresa__nota {
-  font-size: 14px;
-  margin: 0 0 8px;
+  font-size: 12px;
+  margin: 0;
+  margin-left: auto;
 }
 
 .card-empresa__nota-total {
@@ -1973,6 +2019,7 @@ button {
   padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 10px;
 }
 
 .card-empresa__avaliar-notas {
@@ -2131,6 +2178,15 @@ button {
   font-size: 13px;
   color: #888;
   margin: 0;
+}
+
+.parceira-card__link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-primaria);
+  text-decoration: none;
 }
 
 /* ===== Ajuste rápido de largura para telas maiores (PC/tablet) =====

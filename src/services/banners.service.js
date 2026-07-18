@@ -35,6 +35,31 @@ export async function buscarBannersAtivos() {
 }
 
 /**
+ * Busca a lista de empresas parceiras: pega TODOS os banners ativos
+ * (de qualquer categoria/posição do site) e retorna os nomes distintos,
+ * sem repetir — usado na página "Empresas Parceiras".
+ */
+export async function buscarEmpresasParceiras() {
+  const ref = collection(db, COLLECTION);
+  const q = query(ref, where('ativo', '==', true));
+  const snapshot = await getDocs(q);
+
+  const vistos = new Map();
+  snapshot.docs.forEach((doc) => {
+    const dados = doc.data();
+    const nome = (dados.empresaNome || '').trim();
+    if (nome && !vistos.has(nome)) {
+      vistos.set(nome, {
+        nome,
+        link: dados.link || null,
+      });
+    }
+  });
+
+  return Array.from(vistos.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+/**
  * Registra um clique no banner: soma +1 no contador do banner
  * E grava um evento individual (com data) para o relatório mensal.
  * "Fire and forget" — não trava a navegação do usuário pro WhatsApp/site.
