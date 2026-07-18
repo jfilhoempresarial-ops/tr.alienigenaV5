@@ -1,10 +1,10 @@
 [
   {
-    "id": "exemplo-noticia-propria",
-    "titulo": "Título de exemplo — apague este item e coloque o seu",
-    "texto": "Escreva aqui o texto completo da notícia. Pode ter vários parágrafos: para separar um parágrafo do outro, deixe uma linha em branco entre eles, assim como está sendo feito aqui.\n\nEste é o segundo parágrafo, só como exemplo.",
-    "imagemUrl": "/images/noticias/exemplo.jpg",
-    "categoria": "geral",
+    "id": "aet-emissao-digital-2026",
+    "titulo": "Vai tirar AET? Tecnologia promete emissão mais rápida e menos burocracia",
+    "texto": "Empresas que trabalham com cargas especiais estão adotando plataformas digitais para agilizar a emissão da Autorização Especial de Trânsito (AET). A proposta é reduzir a burocracia, organizar a documentação e acelerar a liberação das autorizações exigidas para veículos e combinações de carga com dimensões ou peso acima dos limites permitidos.\n\nCom a digitalização do processo, transportadoras ganham mais controle sobre prazos e documentos, diminuindo o risco de atrasos nas viagens e problemas durante a fiscalização. A tendência é que a tecnologia facilite cada vez mais a rotina de quem trabalha com transporte de cargas especiais.\n\nEm breve daremos mais informações.",
+    "imagemUrl": "/images/noticias/aet1.jpg",
+    "categoria": "legislacao",
     "data": "2026-07-17"
   }
 ]
