@@ -82,6 +82,7 @@ export function renderFooter() {
 
       <div class="footer__base">
         <p>© ${new Date().getFullYear()} TRA da Estrada. Todos os direitos reservados.</p>
+        <a href="/admin" class="footer__admin-link" title="Área do admin">🔒</a>
       </div>
     </footer>
   `;

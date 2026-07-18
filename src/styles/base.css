@@ -1808,6 +1808,19 @@ button {
   margin: 0;
 }
 
+.footer__admin-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.35;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.footer__admin-link:hover {
+  opacity: 0.7;
+}
+
 /* ===== Páginas institucionais (Quem Somos, Contato, etc) ===== */
 
 .institucional-pagina h1 {
