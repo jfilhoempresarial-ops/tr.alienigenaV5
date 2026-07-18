@@ -175,7 +175,7 @@ main {
 
 .admin-login,
 .admin-painel {
-  max-width: 400px;
+  max-width: 480px;
 }
 
 .admin-painel__header {
@@ -193,6 +193,52 @@ main {
   padding: 6px 12px;
   border-radius: var(--radius);
   font-size: 13px;
+}
+
+.admin-painel__titulo-cobertura {
+  margin-top: 32px;
+}
+
+.admin-painel__subtitulo-cobertura {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.cobertura-tabela-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.cobertura-tabela {
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cobertura-tabela th,
+.cobertura-tabela td {
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.cobertura-tabela th {
+  background: var(--cor-fundo);
+  font-weight: 600;
+}
+
+.cobertura-tabela__cidade {
+  text-align: left;
+  font-weight: 600;
+  background: #fafafa;
+}
+
+.cobertura-tabela__vazio {
+  background: #fdecea;
+  color: #c0392b;
+  font-weight: 700;
 }
 
 .card-noticia {

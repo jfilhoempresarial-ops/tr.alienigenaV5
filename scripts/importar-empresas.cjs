@@ -1,11 +1,17 @@
 /**
  * Script de importação: lê o CSV de prestadores de serviço
- * (scripts/prestadores.csv) e cadastra cada linha COMPLETA na
- * coleção "empresas" do Firestore.
+ * (scripts/prestadores.csv) e cadastra/atualiza cada linha COMPLETA
+ * na coleção "empresas" do Firestore.
  *
  * Uma linha só é importada se tiver: Setor, Empresa, Endereço e
  * Telefone/Whatssap preenchidos. Linhas faltando qualquer um desses
  * são ignoradas (ficam na planilha como "pendente de completar").
+ *
+ * SEGURO RODAR DE NOVO: cada empresa recebe um ID fixo (gerado a
+ * partir do nome + cidade), então rodar o script de novo com a
+ * planilha atualizada ATUALIZA a empresa já existente em vez de
+ * duplicar. Campos que não vêm da planilha (avaliações, notaMedia,
+ * totalAvaliacoes) são preservados.
  *
  * Se a coluna "Latitude/Longitude" já vier preenchida (formato
  * "lat, lng"), o script já salva lat/lng direto — sem precisar
@@ -29,7 +35,7 @@ const { getFirestore } = require('firebase-admin/firestore');
 const CAMINHO_CSV = path.join(__dirname, 'prestadores.csv');
 const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
 
-// Se true, as empresas já entram como aprovadas (aparecem no site na hora).
+// Se true, as empresas já entram/continuam como aprovadas (aparecem no site na hora).
 // Se false, entram pendentes (precisam ser aprovadas no painel admin).
 const MARCAR_COMO_VERIFICADO = true;
 
@@ -70,6 +76,17 @@ function parseLatLng(texto) {
   return { lat: partes[0], lng: partes[1] };
 }
 
+/** Gera um ID de documento estável a partir do nome + cidade (evita duplicar em reimportações). */
+function gerarIdEmpresa(nome, cidade) {
+  const texto = `${nome} ${cidade || ''}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return texto || `empresa-${Date.now()}`;
+}
+
 async function main() {
   const conteudoCsv = fs.readFileSync(CAMINHO_CSV, 'utf-8');
   const linhas = parse(conteudoCsv, {
@@ -78,8 +95,8 @@ async function main() {
     trim: true,
   });
 
-  // Agrupa por nome da empresa (uma empresa pode aparecer 2x com setores diferentes)
-  const empresasPorNome = new Map();
+  // Agrupa por nome+cidade da empresa (uma empresa pode aparecer 2x com setores diferentes)
+  const empresasPorId = new Map();
   let puladas = 0;
 
   for (const linha of linhas) {
@@ -87,6 +104,7 @@ async function main() {
     const endereco = linha['Endereço'];
     const setor = linha['Setor'];
     const telefone = linha['Telefone/Whatssap'];
+    const cidade = (linha['Cidade'] || '').trim();
 
     // Linha "completa" exige os 4 campos principais preenchidos.
     // O que não estiver completo fica pra você terminar de preencher depois.
@@ -100,37 +118,39 @@ async function main() {
       console.warn(`⚠️  Setor não mapeado: "${setor}" (empresa: ${nome}) — pulando categoria, mas mantendo empresa.`);
     }
 
-    const chave = nome.trim().toLowerCase();
-    if (!empresasPorNome.has(chave)) {
-      empresasPorNome.set(chave, {
+    const id = gerarIdEmpresa(nome, cidade);
+    if (!empresasPorId.has(id)) {
+      empresasPorId.set(id, {
+        id,
         nome: nome.trim(),
         whatsapp: normalizarTelefone(telefone),
         endereco: endereco.trim(),
-        cidade: (linha['Cidade'] || '').trim(),
+        cidade,
         estado: (linha['Estado'] || '').trim(),
         latLng: parseLatLng(linha['Latitude/Longitude']),
         categorias: new Set(),
       });
     }
     if (categoria) {
-      empresasPorNome.get(chave).categorias.add(categoria);
+      empresasPorId.get(id).categorias.add(categoria);
     }
   }
 
-  console.log(`\nTotal de empresas únicas encontradas: ${empresasPorNome.size}`);
+  console.log(`\nTotal de empresas únicas encontradas: ${empresasPorId.size}`);
   console.log(`Linhas puladas (incompletas): ${puladas}\n`);
 
-  let enviadas = 0;
+  let novas = 0;
+  let atualizadas = 0;
   let comCoordenadas = 0;
 
-  for (const empresa of empresasPorNome.values()) {
+  for (const empresa of empresasPorId.values()) {
     const dados = {
       nome: empresa.nome,
       whatsapp: empresa.whatsapp,
       endereco: `${empresa.endereco}${empresa.cidade ? ' - ' + empresa.cidade : ''}${empresa.estado ? '/' + empresa.estado : ''}`,
+      cidade: empresa.cidade || '',
       categorias: Array.from(empresa.categorias),
       verificado: MARCAR_COMO_VERIFICADO,
-      criadoEm: new Date().toISOString(),
       origem: 'importacao-csv',
     };
 
@@ -140,18 +160,26 @@ async function main() {
       comCoordenadas++;
     }
 
-    await db.collection('empresas').add(dados);
-    enviadas++;
-    console.log(
-      `✅ (${enviadas}) ${dados.nome} — categorias: [${dados.categorias.join(', ') || 'nenhuma'}]${
-        empresa.latLng ? ' — com coordenadas' : ''
-      }`
-    );
+    const docRef = db.collection('empresas').doc(empresa.id);
+    const existente = await docRef.get();
+
+    if (existente.exists) {
+      // merge: true preserva campos que não vêm da planilha, como
+      // notaMedia/totalAvaliacoes (avaliações já feitas pelos motoristas).
+      await docRef.set(dados, { merge: true });
+      atualizadas++;
+      console.log(`🔄 (${atualizadas + novas}) ${dados.nome} — atualizada`);
+    } else {
+      await docRef.set({ ...dados, criadoEm: new Date().toISOString() });
+      novas++;
+      console.log(`✅ (${atualizadas + novas}) ${dados.nome} — nova`);
+    }
   }
 
-  console.log(`\n🎉 Concluído! ${enviadas} empresas cadastradas no Firestore.`);
-  console.log(`   ${comCoordenadas} já entraram com lat/lng da planilha.`);
-  console.log(`   ${enviadas - comCoordenadas} vão precisar do geocodificar-empresas.cjs.`);
+  console.log(`\n🎉 Concluído!`);
+  console.log(`   ${novas} empresas novas.`);
+  console.log(`   ${atualizadas} empresas já existentes, atualizadas.`);
+  console.log(`   ${comCoordenadas} entraram/atualizaram com lat/lng da planilha.`);
 }
 
 main().catch((erro) => {

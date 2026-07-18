@@ -1,5 +1,21 @@
 import { fazerLogin, fazerLogout, observarAutenticacao } from '../services/auth.service.js';
 import { criarEvento } from '../services/eventos.service.js';
+import { buscarVagas } from '../services/vagas.service.js';
+import { buscarTodasEmpresas } from '../services/empresas.service.js';
+
+// Mesma lista de categorias usada no resto do site (home.js), pra bater
+// certinho com o campo "categorias" salvo em cada empresa.
+const CATEGORIAS_COBERTURA = [
+  { id: 'mecanico', label: 'Mecânico' },
+  { id: 'posto', label: 'Posto' },
+  { id: 'borracharia', label: 'Borracharia' },
+  { id: 'eletrica', label: 'Elétrica' },
+  { id: 'guincho', label: 'Guincho' },
+  { id: 'pontoapoio', label: 'P. Apoio' },
+  { id: 'lavajato', label: 'Lava-Jato' },
+  { id: 'autopecas', label: 'Auto Peças' },
+  { id: 'tacografo', label: 'Tacógrafo' },
+];
 
 export function renderAdmin(container) {
   observarAutenticacao((usuario) => {
@@ -58,6 +74,15 @@ function renderPainel(container, usuario) {
         <button type="submit">Salvar evento</button>
       </form>
       <p id="evento-status"></p>
+
+      <h2 class="admin-painel__titulo-cobertura">📊 Cobertura de prestadores por cidade (SINE)</h2>
+      <p class="admin-painel__subtitulo-cobertura">
+        Cidades que têm vaga de emprego cadastrada, cruzadas com quantos prestadores existem em cada categoria.
+        Células em vermelho = categoria sem nenhum prestador nessa cidade.
+      </p>
+      <div id="cobertura-tabela">
+        <p class="loading">Carregando cobertura...</p>
+      </div>
     </section>
   `;
 
@@ -85,4 +110,76 @@ function renderPainel(container, usuario) {
       console.error(erro);
     }
   });
+
+  carregarCoberturaPorCidade(container);
+}
+
+function normalizarCidade(texto) {
+  return (texto || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+async function carregarCoberturaPorCidade(container) {
+  const alvo = container.querySelector('#cobertura-tabela');
+
+  try {
+    const [dadosVagas, empresas] = await Promise.all([buscarVagas(), buscarTodasEmpresas()]);
+
+    // Lista de cidades únicas que têm vaga no SINE (ordem alfabética).
+    const cidadesSine = [
+      ...new Set((dadosVagas.itens || []).map((v) => (v.cidade || '').trim()).filter(Boolean)),
+    ].sort((a, b) => a.localeCompare(b));
+
+    if (cidadesSine.length === 0) {
+      alvo.innerHTML = `<p class="vazio">Nenhuma cidade com vaga do SINE encontrada ainda.</p>`;
+      return;
+    }
+
+    // Monta um contador: contagem[cidadeNormalizada][categoria] = quantidade
+    const contagem = {};
+    empresas.forEach((empresa) => {
+      const cidadeNorm = normalizarCidade(empresa.cidade);
+      if (!cidadeNorm) return;
+      if (!contagem[cidadeNorm]) contagem[cidadeNorm] = {};
+      (empresa.categorias || []).forEach((cat) => {
+        contagem[cidadeNorm][cat] = (contagem[cidadeNorm][cat] || 0) + 1;
+      });
+    });
+
+    alvo.innerHTML = `
+      <div class="cobertura-tabela-scroll">
+        <table class="cobertura-tabela">
+          <thead>
+            <tr>
+              <th>Cidade</th>
+              ${CATEGORIAS_COBERTURA.map((c) => `<th>${c.label}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${cidadesSine
+              .map((cidade) => {
+                const cidadeNorm = normalizarCidade(cidade);
+                const linha = contagem[cidadeNorm] || {};
+                return `
+                  <tr>
+                    <td class="cobertura-tabela__cidade">${cidade}</td>
+                    ${CATEGORIAS_COBERTURA.map((c) => {
+                      const qtd = linha[c.id] || 0;
+                      return `<td class="${qtd === 0 ? 'cobertura-tabela__vazio' : ''}">${qtd}</td>`;
+                    }).join('')}
+                  </tr>
+                `;
+              })
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (erro) {
+    alvo.innerHTML = `<p class="erro">Não foi possível carregar a cobertura agora.</p>`;
+    console.error(erro);
+  }
 }
