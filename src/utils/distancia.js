@@ -18,17 +18,26 @@ function toRad(graus) {
   return (graus * Math.PI) / 180;
 }
 
-/** Ordena uma lista de empresas por distância até um ponto de referência. */
+/**
+ * Ordena uma lista de empresas por distância até um ponto de referência.
+ * Empresas sem lat/lng (ainda não geocodificadas) não travam a ordenação —
+ * elas simplesmente ficam no final da lista, sem distância calculada.
+ */
 export function ordenarPorDistancia(empresas, origemLat, origemLng) {
   return [...empresas]
-    .map((empresa) => ({
-      ...empresa,
-      distanciaKm: calcularDistanciaKm(
-        origemLat,
-        origemLng,
-        empresa.location.lat,
-        empresa.location.lng
-      ),
-    }))
-    .sort((a, b) => a.distanciaKm - b.distanciaKm);
+    .map((empresa) => {
+      const temCoordenadas = typeof empresa.lat === 'number' && typeof empresa.lng === 'number';
+      return {
+        ...empresa,
+        distanciaKm: temCoordenadas
+          ? calcularDistanciaKm(origemLat, origemLng, empresa.lat, empresa.lng)
+          : null,
+      };
+    })
+    .sort((a, b) => {
+      if (a.distanciaKm === null && b.distanciaKm === null) return 0;
+      if (a.distanciaKm === null) return 1;
+      if (b.distanciaKm === null) return -1;
+      return a.distanciaKm - b.distanciaKm;
+    });
 }
