@@ -7,6 +7,7 @@ const CATEGORIAS = [
   { id: 'rodovia', label: '🛣️ Rodovia' },
   { id: 'seguranca', label: '🚨 Segurança' },
   { id: 'direitos', label: '📋 Direitos' },
+  { id: 'legislacao', label: '⚖️ Legislação' },
   { id: 'geral', label: '📰 Geral' },
 ];
 

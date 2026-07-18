@@ -230,6 +230,7 @@ async function carregarManchetes(container) {
   seguranca: 'Segurança',
   direitos: 'Direitos',
   geral: 'Geral',
+  legislacao: 'Legislação',
   autonomo: 'Autônomo',
   clt: 'CLT',
   agregado: 'Agregado',

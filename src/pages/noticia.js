@@ -6,6 +6,7 @@ const TAG_CATEGORIA = {
   seguranca: 'Segurança',
   direitos: 'Direitos',
   geral: 'Geral',
+  legislacao: 'Legislação',
   autonomo: 'Autônomo',
   clt: 'CLT',
   agregado: 'Agregado',
