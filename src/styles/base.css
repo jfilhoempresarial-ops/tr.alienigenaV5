@@ -1396,6 +1396,23 @@ button {
   margin: 0;
 }
 
+.playlist-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+
+.playlist-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .noticia-completa {
   padding: 8px 0 24px;
 }
