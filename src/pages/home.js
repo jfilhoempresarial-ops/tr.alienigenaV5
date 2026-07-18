@@ -150,6 +150,10 @@ export function renderHome(container) {
         <img src="/images/gif-agrup.gif" alt="Grupos parceiros TRA da Estrada" />
       </a>
 
+      <a href="https://wa.me/558881938793?text=${encodeURIComponent('Olá! Vi o anúncio da Lions Mutual no TRA da Estrada e quero saber mais sobre proteção veicular.')}" target="_blank" rel="noopener" class="banner-lions-mutual">
+        <img src="/images/banner-lions-mutual.jpg" alt="Lions Mutual - Proteção Veicular" />
+      </a>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
