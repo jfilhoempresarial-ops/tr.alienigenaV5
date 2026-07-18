@@ -1465,6 +1465,41 @@ button {
   outline: 2px solid var(--cor-primaria);
 }
 
+.playlist-cta-pendrive {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  margin-top: 16px;
+}
+
+.playlist-cta-pendrive__icone {
+  font-size: 28px;
+}
+
+.playlist-cta-pendrive__texto {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #eee;
+}
+
+.playlist-cta-pendrive__texto strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+  color: #fff;
+}
+
+.playlist-cta-pendrive__seta {
+  font-size: 22px;
+  color: #7ed321;
+}
+
 .noticia-completa {
   padding: 8px 0 24px;
 }

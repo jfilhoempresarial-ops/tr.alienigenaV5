@@ -421,6 +421,14 @@ async function carregarPlaylist(container) {
           )
           .join('')}
       </div>
+      <a href="https://lojadoalienigena.com.br/produtos/pen-drive-caminhoneiro-atualizado-5mil-musicas/" target="_blank" rel="noopener" class="playlist-cta-pendrive">
+        <span class="playlist-cta-pendrive__icone">💾</span>
+        <span class="playlist-cta-pendrive__texto">
+          <strong>Pendrive Atualizado</strong>
+          Leve 5 mil músicas com você na estrada
+        </span>
+        <span class="playlist-cta-pendrive__seta">›</span>
+      </a>
     `;
 
     const player = alvo.querySelector('#playlist-player');
