@@ -437,6 +437,8 @@ async function carregarPlaylist(container) {
     console.error(erro);
   }
 }
+
+async function carregarFretesResumo(container) {
   const alvo = container.querySelector('#lista-fretes');
   const titulo = container.querySelector('#titulo-fretes-resumo');
   try {
