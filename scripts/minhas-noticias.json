@@ -1,0 +1,10 @@
+[
+  {
+    "id": "exemplo-noticia-propria",
+    "titulo": "Título de exemplo — apague este item e coloque o seu",
+    "texto": "Escreva aqui o texto completo da notícia. Pode ter vários parágrafos: para separar um parágrafo do outro, deixe uma linha em branco entre eles, assim como está sendo feito aqui.\n\nEste é o segundo parágrafo, só como exemplo.",
+    "imagemUrl": "/images/noticias/exemplo.jpg",
+    "categoria": "geral",
+    "data": "2026-07-17"
+  }
+]

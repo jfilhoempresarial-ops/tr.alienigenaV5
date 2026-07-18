@@ -86,14 +86,18 @@ export async function renderNoticias(container) {
 }
 
 function renderCardNoticia(noticia) {
+  const ehPropria = Boolean(noticia.texto);
+  const href = ehPropria ? `/noticia/${noticia.id}` : noticia.link;
+  const alvoLink = ehPropria ? '' : 'target="_blank" rel="noopener"';
+
   return `
     <div class="card-noticia">
       ${noticia.imagemUrl ? `<img src="${noticia.imagemUrl}" alt="${noticia.titulo}" class="card-noticia__imagem" loading="lazy" />` : ''}
       <div class="card-noticia__conteudo">
-        <p class="card-noticia__data">${formatarDataEvento(noticia.data)}</p>
+        <p class="card-noticia__data">${formatarDataEvento(noticia.data)}${noticia.autor ? ` · Por ${noticia.autor}` : ''}</p>
         <h3>${noticia.titulo}</h3>
         <p class="card-noticia__resumo">${noticia.resumo ?? ''}</p>
-        ${noticia.link ? `<a href="${noticia.link}" target="_blank" rel="noopener" class="card-noticia__link">Ler mais</a>` : ''}
+        ${href ? `<a href="${href}" ${alvoLink} class="card-noticia__link">Ler mais</a>` : ''}
       </div>
     </div>
   `;

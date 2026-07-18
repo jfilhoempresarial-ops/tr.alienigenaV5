@@ -6,6 +6,7 @@ import { renderRelatorioCliques } from './pages/admin-relatorios.js';
 import { renderEventos } from './pages/eventos.js';
 import { renderAdmin } from './pages/admin.js';
 import { renderNoticias } from './pages/noticias.js';
+import { renderNoticiaCompleta } from './pages/noticia.js';
 import { renderCaminhoes } from './pages/caminhoes.js';
 import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 import { renderVagas } from './pages/vagas.js';
@@ -44,7 +45,7 @@ const ROTAS_FIXAS = {
 
 function router() {
   const caminho = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  const [rota] = caminho.split('/');
+  const [rota, subrota] = caminho.split('/');
   const params = new URLSearchParams(window.location.search);
 
   window.scrollTo(0, 0);
@@ -55,6 +56,8 @@ function router() {
   renderBusca(app, params.get('q') || '');
 } else if (rota === 'fretes') {
   renderFretes(app, params.get('estado'));
+} else if (rota === 'noticia' && subrota) {
+  renderNoticiaCompleta(app, subrota);
 } else if (ROTAS_FIXAS[rota]) {
     ROTAS_FIXAS[rota](app);
   } else {

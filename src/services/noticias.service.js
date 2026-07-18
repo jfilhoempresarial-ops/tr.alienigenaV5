@@ -1,8 +1,8 @@
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 
 const COLLECTION = 'noticias';
-const DIAS_MAXIMOS = 30;
+const DIAS_MAXIMOS = 7;
 
 /** Retorna a data de corte (AAAA-MM-DD) de N dias atrás. */
 function dataDeCorte(dias) {
@@ -11,7 +11,7 @@ function dataDeCorte(dias) {
   return d.toISOString().slice(0, 10); // "AAAA-MM-DD"
 }
 
-/** Busca notícias ativas dos últimos 30 dias, mais recente primeiro. */
+/** Busca notícias ativas dos últimos 7 dias, mais recente primeiro. */
 export async function buscarNoticiasAtivas() {
   const ref = collection(db, COLLECTION);
   const q = query(
@@ -24,7 +24,7 @@ export async function buscarNoticiasAtivas() {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-/** Busca as N manchetes mais recentes (últimos 30 dias) para exibir na home. */
+/** Busca as N manchetes mais recentes (últimos 7 dias) para exibir na home. */
 export async function buscarManchetesHome(qtd = 3) {
   const ref = collection(db, COLLECTION);
   const q = query(
@@ -36,4 +36,12 @@ export async function buscarManchetesHome(qtd = 3) {
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/** Busca uma notícia específica pelo ID (usada na página de notícia completa). */
+export async function buscarNoticiaPorId(id) {
+  const ref = doc(db, COLLECTION, id);
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() };
 }

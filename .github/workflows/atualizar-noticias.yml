@@ -1,0 +1,24 @@
+name: Atualizar minhas noticias
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/minhas-noticias.json'  # dispara automaticamente sempre que esse arquivo mudar
+  workflow_dispatch: {}                 # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependências
+        run: npm install firebase-admin
+      - name: Importar minhas notícias
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/importar-minhas-noticias.cjs

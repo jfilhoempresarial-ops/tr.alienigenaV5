@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Todas as chaves vêm do .env (nunca hardcoded aqui).
@@ -13,5 +13,15 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// experimentalAutoDetectLongPolling: detecta automaticamente quando a conexão
+// em streaming (WebChannel) padrão do Firestore está sendo bloqueada — comum
+// em redes de operadora móvel/proxies restritivos — e troca para long polling
+// nesses casos, sem prejudicar a performance em redes normais (Wi-Fi, etc).
+// Isso resolve o site "carregando pra sempre" em alguns celulares (ex: iPhone
+// em 4G/5G) sem precisar forçar long polling o tempo todo.
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+});
+
 export const auth = getAuth(app);
