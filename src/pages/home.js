@@ -4,6 +4,7 @@ import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
+import { buscarPlaylist } from '../services/playlist.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -163,15 +164,8 @@ export function renderHome(container) {
         <div class="home-secao__header">
           <h2 class="home-secao__titulo">🎶 Playlist do Motorista</h2>
         </div>
-        <div class="playlist-embed">
-          <iframe
-            src="https://www.youtube.com/embed/videoseries?list=PLTSwVGOcyE2YhpBBtC62aI0JFe33TWpYt"
-            title="Playlist do Motorista"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-            loading="lazy"
-          ></iframe>
+        <div id="playlist-motorista">
+          <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
     </section>
@@ -188,6 +182,7 @@ export function renderHome(container) {
   carregarAniversariantes(container);
   renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
   carregarManchetes(container);
+  carregarPlaylist(container);
 }
 
 function configurarBuscaHome(container) {
@@ -391,7 +386,57 @@ function renderMiniCardVaga(vaga) {
   `;
 }
 
-async function carregarFretesResumo(container) {
+async function carregarPlaylist(container) {
+  const alvo = container.querySelector('#playlist-motorista');
+  try {
+    const musicas = await buscarPlaylist();
+    if (musicas.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Playlist indisponível no momento.</p>`;
+      return;
+    }
+
+    const primeira = musicas[0];
+
+    alvo.innerHTML = `
+      <div class="playlist-embed">
+        <iframe
+          id="playlist-player"
+          src="https://www.youtube.com/embed/${primeira.id}"
+          title="Playlist do Motorista"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+      <div class="playlist-lista">
+        ${musicas
+          .map(
+            (m, i) => `
+          <button class="playlist-item ${i === 0 ? 'playlist-item--ativo' : ''}" data-video-id="${m.id}">
+            <img src="${m.miniatura}" alt="" class="playlist-item__miniatura" loading="lazy" />
+            <span class="playlist-item__titulo">${m.titulo}</span>
+          </button>
+        `
+          )
+          .join('')}
+      </div>
+    `;
+
+    const player = alvo.querySelector('#playlist-player');
+    alvo.querySelectorAll('.playlist-item').forEach((botao) => {
+      botao.addEventListener('click', () => {
+        const videoId = botao.dataset.videoId;
+        player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        alvo.querySelectorAll('.playlist-item').forEach((b) => b.classList.remove('playlist-item--ativo'));
+        botao.classList.add('playlist-item--ativo');
+      });
+    });
+  } catch (erro) {
+    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar a playlist agora.</p>`;
+    console.error(erro);
+  }
+}
   const alvo = container.querySelector('#lista-fretes');
   const titulo = container.querySelector('#titulo-fretes-resumo');
   try {
