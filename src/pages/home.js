@@ -17,6 +17,7 @@ const CATEGORIAS = [
   { id: 'fretes', label: 'Fretes', icone: '📦' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
+  { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
   { id: 'caminhoes', label: 'Compra e Venda', icone: '🚛', rotaInterna: '/caminhoes' },
   { id: 'noticias', label: 'Notícias', icone: '📰', rotaInterna: '/noticias' },
 ];

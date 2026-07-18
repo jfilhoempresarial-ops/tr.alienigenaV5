@@ -15,6 +15,7 @@ const PLACEHOLDER_BUSCA = {
   guincho: 'Digite sua emergência (ex: pane, acidente, atolado)',
   pontoapoio: 'Digite o que você procura',
   autopecas: 'Digite a peça que você procura',
+  tacografo: 'Digite o que você precisa (ex: aferição, calibração, cronotacógrafo)',
 };
 
 function normalizar(txt) {

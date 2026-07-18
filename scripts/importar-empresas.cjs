@@ -1,17 +1,22 @@
 /**
- * Script de importação: lê um CSV de prestadores de serviço
- * e cadastra cada um na coleção "empresas" do Firestore.
+ * Script de importação: lê o CSV de prestadores de serviço
+ * (scripts/prestadores.csv) e cadastra cada linha COMPLETA na
+ * coleção "empresas" do Firestore.
+ *
+ * Uma linha só é importada se tiver: Setor, Empresa, Endereço e
+ * Telefone/Whatssap preenchidos. Linhas faltando qualquer um desses
+ * são ignoradas (ficam na planilha como "pendente de completar").
+ *
+ * Se a coluna "Latitude/Longitude" já vier preenchida (formato
+ * "lat, lng"), o script já salva lat/lng direto — sem precisar
+ * rodar o geocodificar-empresas.cjs pra essas.
  *
  * COMO USAR:
- * 1. Coloque este arquivo dentro da pasta "scripts/" do projeto.
- * 2. Coloque seu CSV exportado (Google Sheets > Arquivo > Download > CSV)
- *    também dentro de "scripts/", com o nome "prestadores.csv".
- * 3. No terminal, dentro da pasta do projeto, rode:
- *      npm install firebase-admin csv-parse
- *      node scripts/importar-empresas.js
- *
- * O script mostra no terminal cada empresa que está subindo,
- * e um resumo no final (quantas subiram, quantas foram puladas).
+ * 1. Atualize o scripts/prestadores.csv com as novas informações.
+ * 2. No terminal, dentro da pasta do projeto, rode:
+ *      node scripts/importar-empresas.cjs
+ * 3. Depois, se quiser preencher lat/lng das que ficaram sem, rode:
+ *      node scripts/geocodificar-empresas.cjs
  */
 
 const fs = require('fs');
@@ -38,6 +43,7 @@ const MAPA_CATEGORIAS = {
   'Posto de Combustível': 'posto',
   'Posto de Combu': 'posto', // caso a coluna venha cortada
   'Auto Peças': 'autopecas',
+  'Tacógrafo': 'tacografo',
 };
 // -----------------------------------
 
@@ -56,6 +62,14 @@ function mapearCategoria(setor) {
   return MAPA_CATEGORIAS[chave] || null;
 }
 
+/** Converte "lat, lng" (string da coluna Latitude/Longitude) em { lat, lng } numéricos. */
+function parseLatLng(texto) {
+  if (!texto || !texto.trim()) return null;
+  const partes = texto.split(',').map((p) => parseFloat(p.trim()));
+  if (partes.length !== 2 || partes.some((n) => Number.isNaN(n))) return null;
+  return { lat: partes[0], lng: partes[1] };
+}
+
 async function main() {
   const conteudoCsv = fs.readFileSync(CAMINHO_CSV, 'utf-8');
   const linhas = parse(conteudoCsv, {
@@ -72,8 +86,11 @@ async function main() {
     const nome = linha['Empresa'];
     const endereco = linha['Endereço'];
     const setor = linha['Setor'];
+    const telefone = linha['Telefone/Whatssap'];
 
-    if (!nome || !endereco) {
+    // Linha "completa" exige os 4 campos principais preenchidos.
+    // O que não estiver completo fica pra você terminar de preencher depois.
+    if (!setor || !nome || !endereco || !telefone) {
       puladas++;
       continue;
     }
@@ -87,10 +104,11 @@ async function main() {
     if (!empresasPorNome.has(chave)) {
       empresasPorNome.set(chave, {
         nome: nome.trim(),
-        whatsapp: normalizarTelefone(linha['Telefone']),
+        whatsapp: normalizarTelefone(telefone),
         endereco: endereco.trim(),
         cidade: (linha['Cidade'] || '').trim(),
         estado: (linha['Estado'] || '').trim(),
+        latLng: parseLatLng(linha['Latitude/Longitude']),
         categorias: new Set(),
       });
     }
@@ -103,6 +121,8 @@ async function main() {
   console.log(`Linhas puladas (incompletas): ${puladas}\n`);
 
   let enviadas = 0;
+  let comCoordenadas = 0;
+
   for (const empresa of empresasPorNome.values()) {
     const dados = {
       nome: empresa.nome,
@@ -114,12 +134,24 @@ async function main() {
       origem: 'importacao-csv',
     };
 
+    if (empresa.latLng) {
+      dados.lat = empresa.latLng.lat;
+      dados.lng = empresa.latLng.lng;
+      comCoordenadas++;
+    }
+
     await db.collection('empresas').add(dados);
     enviadas++;
-    console.log(`✅ (${enviadas}) ${dados.nome} — categorias: [${dados.categorias.join(', ') || 'nenhuma'}]`);
+    console.log(
+      `✅ (${enviadas}) ${dados.nome} — categorias: [${dados.categorias.join(', ') || 'nenhuma'}]${
+        empresa.latLng ? ' — com coordenadas' : ''
+      }`
+    );
   }
 
   console.log(`\n🎉 Concluído! ${enviadas} empresas cadastradas no Firestore.`);
+  console.log(`   ${comCoordenadas} já entraram com lat/lng da planilha.`);
+  console.log(`   ${enviadas - comCoordenadas} vão precisar do geocodificar-empresas.cjs.`);
 }
 
 main().catch((erro) => {

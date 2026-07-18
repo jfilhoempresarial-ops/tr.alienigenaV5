@@ -383,6 +383,12 @@ form textarea {
   font-family: inherit;
 }
 
+.cadastro__ajuda-endereco {
+  font-size: 12px;
+  color: #888;
+  margin: -8px 0 14px;
+}
+
 button {
   background: var(--cor-primaria);
   color: white;
