@@ -1,0 +1,27 @@
+name: Atualizar playlist do motorista
+on:
+  schedule:
+    - cron: '0 6 * * *'  # uma vez por dia, aprox. 03:00 no horário de Brasília (UTC-3)
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar yt-dlp
+        run: pip install yt-dlp
+      - name: Instalar dependências
+        run: npm install firebase-admin
+      - name: Importar playlist
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/importar-playlist.cjs
