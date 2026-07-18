@@ -56,9 +56,11 @@ export async function renderResultados(container, categoria) {
     return;
   }
 
+  const RAIO_KM = 20;
+
   // A localização é só um "bônus" para ordenar por distância.
   // Se falhar ou demorar demais (permissão negada, sem GPS, timeout),
-  // mostramos a lista mesmo assim, sem ordenar.
+  // mostramos a lista mesmo assim, sem ordenar nem filtrar por raio.
   let localizacao = null;
   try {
     localizacao = await obterLocalizacaoComTimeout();
@@ -66,9 +68,15 @@ export async function renderResultados(container, categoria) {
     console.warn('Localização indisponível, mostrando lista sem ordenar por distância.', erro);
   }
 
-  const listaBase = localizacao
+  const listaOrdenada = localizacao
     ? ordenarPorDistancia(empresas, localizacao.lat, localizacao.lng)
     : empresas;
+
+  // Com localização disponível, só mantém prestadores dentro de 20km
+  // (empresas sem coordenadas ainda não entram, pois não dá pra confirmar a distância).
+  const listaBase = localizacao
+    ? listaOrdenada.filter((empresa) => empresa.distanciaKm !== null && empresa.distanciaKm <= RAIO_KM)
+    : listaOrdenada;
 
   const avisoLocalizacao = !localizacao
     ? `<p class="aviso-localizacao">
@@ -124,6 +132,8 @@ export async function renderResultados(container, categoria) {
           ${
             listaFinal.length
               ? listaFinal.map(renderCardEmpresa).join('')
+              : localizacao && !filtroTexto
+              ? `<p class="vazio">Nenhum prestador encontrado num raio de 20km da sua localização nessa categoria.</p>`
               : '<p class="vazio">Nenhum resultado encontrado com esse filtro.</p>'
           }
         </div>
