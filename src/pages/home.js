@@ -158,6 +158,22 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎶 Playlist do Motorista</h2>
+        </div>
+        <div class="playlist-embed">
+          <iframe
+            src="https://www.youtube.com/embed/videoseries?list=PLTSwVGOcyE2YhpBBtC62aI0JFe33TWpYt"
+            title="Playlist do Motorista"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
     </section>
   `;
 
