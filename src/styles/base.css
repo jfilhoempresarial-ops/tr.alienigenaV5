@@ -1148,7 +1148,7 @@ button {
   width: 45%;
   height: 100%;
   background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.4), transparent);
-  animation: brilho-pill 3.2s ease-in-out infinite;
+  animation: brilho-pill 4.5s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -1257,8 +1257,9 @@ button {
 }
 
 .mapa-cluster-pino__logo {
-  width: 22px;
-  height: auto;
+  width: 22px !important;
+  height: auto !important;
+  max-width: 22px !important;
   margin-bottom: -3px;
   filter: brightness(0) invert(1); /* deixa a logo branca, pra contrastar com o fundo verde */
 }

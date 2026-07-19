@@ -64,7 +64,7 @@ export async function renderMapa(container) {
       return L.divIcon({
         html: `
           <div class="mapa-cluster-pino">
-            <img src="/images/logo-tra.png" alt="" class="mapa-cluster-pino__logo" />
+            <img src="/images/logo-tra.png" alt="" class="mapa-cluster-pino__logo" style="width:20px;height:auto;display:block;max-width:20px;" />
             <span class="mapa-cluster-pino__numero">${quantidade}</span>
           </div>
         `,
