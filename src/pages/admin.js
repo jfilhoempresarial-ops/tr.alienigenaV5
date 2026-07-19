@@ -77,8 +77,8 @@ function renderPainel(container, usuario) {
 
       <h2 class="admin-painel__titulo-cobertura">📊 Cobertura de prestadores por cidade (SINE)</h2>
       <p class="admin-painel__subtitulo-cobertura">
-        Cidades que têm vaga de emprego cadastrada, cruzadas com quantos prestadores existem em cada categoria.
-        Células em vermelho = categoria sem nenhum prestador nessa cidade.
+        Cidades com vaga do SINE + cidades que já têm prestador cadastrado, cruzadas com quantos
+        prestadores existem em cada categoria. Células em vermelho = categoria sem nenhum prestador nessa cidade.
       </p>
       <div id="cobertura-tabela">
         <p class="loading">Carregando cobertura...</p>
@@ -122,26 +122,38 @@ function normalizarCidade(texto) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+// A cidade do SINE às vezes vem como "Fortaleza - U.a. Messejana" (cidade + unidade/bairro).
+// Aqui ficamos só com a parte antes do " - ", que é a cidade de verdade.
+function extrairCidadeBase(texto) {
+  return (texto || '').split(' - ')[0].trim();
+}
+
 async function carregarCoberturaPorCidade(container) {
   const alvo = container.querySelector('#cobertura-tabela');
 
   try {
     const [dadosVagas, empresas] = await Promise.all([buscarVagas(), buscarTodasEmpresas()]);
 
-    // Lista de cidades únicas que têm vaga no SINE (ordem alfabética).
-    const cidadesSine = [
-      ...new Set((dadosVagas.itens || []).map((v) => (v.cidade || '').trim()).filter(Boolean)),
-    ].sort((a, b) => a.localeCompare(b));
+    // Cidades do SINE (só o nome da cidade, sem bairro/unidade)
+    const cidadesSine = (dadosVagas.itens || []).map((v) => extrairCidadeBase(v.cidade)).filter(Boolean);
 
-    if (cidadesSine.length === 0) {
-      alvo.innerHTML = `<p class="vazio">Nenhuma cidade com vaga do SINE encontrada ainda.</p>`;
+    // Cidades que já têm pelo menos uma empresa cadastrada
+    const cidadesComEmpresa = empresas.map((e) => extrairCidadeBase(e.cidade)).filter(Boolean);
+
+    // União das duas listas (SINE + cidades com empresa), sem repetir, ordenada
+    const todasCidades = [...new Set([...cidadesSine, ...cidadesComEmpresa])].sort((a, b) =>
+      a.localeCompare(b)
+    );
+
+    if (todasCidades.length === 0) {
+      alvo.innerHTML = `<p class="vazio">Nenhuma cidade encontrada ainda (nem em vagas, nem em empresas).</p>`;
       return;
     }
 
     // Monta um contador: contagem[cidadeNormalizada][categoria] = quantidade
     const contagem = {};
     empresas.forEach((empresa) => {
-      const cidadeNorm = normalizarCidade(empresa.cidade);
+      const cidadeNorm = normalizarCidade(extrairCidadeBase(empresa.cidade));
       if (!cidadeNorm) return;
       if (!contagem[cidadeNorm]) contagem[cidadeNorm] = {};
       (empresa.categorias || []).forEach((cat) => {
@@ -159,7 +171,7 @@ async function carregarCoberturaPorCidade(container) {
             </tr>
           </thead>
           <tbody>
-            ${cidadesSine
+            ${todasCidades
               .map((cidade) => {
                 const cidadeNorm = normalizarCidade(cidade);
                 const linha = contagem[cidadeNorm] || {};
