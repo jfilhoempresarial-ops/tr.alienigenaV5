@@ -1,9 +1,25 @@
 import { buscarBannersAtivos, buscarBannersPorCategoria, registrarClique } from '../services/banners.service.js';
+import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 
 const INTERVALO_MS = 3000;
 let timerAtual = null;
 
 const NUMERO_COMERCIAL = '5588988621481'; // TODO: troque pelo seu número real de WhatsApp comercial
+
+/**
+ * Gera o link do banner: se o documento tiver o campo "whatsapp" (só o número,
+ * com DDI+DDD, ex: "5588994371661"), monta o link do WhatsApp já com uma
+ * mensagem pronta. Senão, usa o campo "link" normalmente (site, Instagram, etc).
+ */
+function gerarHrefBanner(banner) {
+  if (banner.whatsapp) {
+    return gerarLinkWhatsapp(
+      banner.whatsapp,
+      `Olá! Vi o anúncio da ${banner.empresaNome} no TRA da Estrada e quero saber mais.`
+    );
+  }
+  return banner.link;
+}
 
 // Texto customizado do placeholder por categoria. Categorias que não estão
 // aqui caem no texto genérico "Alcance motoristas de {categoria} na sua região".
@@ -49,7 +65,7 @@ export async function renderCarrosselBanners(containerId = 'carrossel-banners', 
           (banner, i) => `
         
           <a
-          href="${banner.link}"
+          href="${gerarHrefBanner(banner)}"
           target="_blank"
           rel="noopener sponsored"
           class="carrossel__slide ${i === 0 ? 'carrossel__slide--ativo' : ''}"
