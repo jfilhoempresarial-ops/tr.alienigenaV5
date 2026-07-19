@@ -64,12 +64,12 @@ export async function renderMapa(container) {
       return L.divIcon({
         html: `
           <div class="mapa-cluster-pino">
-            <img src="/images/logo-tra.png" alt="" class="mapa-cluster-pino__logo" style="width:20px;height:auto;display:block;max-width:20px;" />
+            <img src="/images/logo-tra.png" alt="" class="mapa-cluster-pino__logo" style="width:28px;height:auto;display:block;max-width:28px;" />
             <span class="mapa-cluster-pino__numero">${quantidade}</span>
           </div>
         `,
         className: 'mapa-cluster-icone',
-        iconSize: L.point(48, 48),
+        iconSize: L.point(54, 54),
       });
     },
   });
