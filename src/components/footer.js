@@ -131,7 +131,7 @@ export function renderWhatsappFloat() {
       class="whatsapp-float"
       aria-label="Falar no WhatsApp"
     >
-      💬
+      👽
     </a>
   `;
 }
