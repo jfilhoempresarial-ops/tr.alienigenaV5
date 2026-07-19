@@ -84,7 +84,7 @@ export function renderHome(container) {
       <div class="categorias-carrossel">
         <button class="categorias-carrossel__seta categorias-carrossel__seta--esquerda" aria-label="Categorias anteriores">‹</button>
         <div class="categorias-carrossel__trilho" id="categorias-trilho">
-          ${CATEGORIAS.map((cat) => {
+          ${[...CATEGORIAS, ...CATEGORIAS].map((cat) => {
             const href = cat.externo ?? cat.rotaInterna ?? `/${cat.id}`;
             const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
             return `
@@ -209,11 +209,63 @@ function configurarCarrosselCategorias(container) {
   const distanciaScroll = () => trilho.clientWidth * 0.7;
 
   setaEsquerda.addEventListener('click', () => {
+    pausarAutoScroll();
     trilho.scrollBy({ left: -distanciaScroll(), behavior: 'smooth' });
+    agendarRetomada();
   });
   setaDireita.addEventListener('click', () => {
+    pausarAutoScroll();
     trilho.scrollBy({ left: distanciaScroll(), behavior: 'smooth' });
+    agendarRetomada();
   });
+
+  // ----- Rolagem automática (efeito "esteira") -----
+  // A lista de categorias está duplicada no HTML (ver home.js), então quando
+  // o scroll passa da metade, voltamos pro início sem dar salto visual —
+  // a segunda metade é idêntica à primeira, então o "reset" é imperceptível.
+  const VELOCIDADE_PX = 0.5; // pixels por frame (~30px/s)
+  let pausado = false;
+  let animando = true;
+  let timeoutRetomada = null;
+
+  function passoAutoScroll() {
+    if (!animando) return;
+    if (!pausado) {
+      trilho.scrollLeft += VELOCIDADE_PX;
+      const metade = trilho.scrollWidth / 2;
+      if (trilho.scrollLeft >= metade) {
+        trilho.scrollLeft -= metade;
+      }
+    }
+    requestAnimationFrame(passoAutoScroll);
+  }
+
+  function pausarAutoScroll() {
+    pausado = true;
+    if (timeoutRetomada) clearTimeout(timeoutRetomada);
+  }
+
+  function agendarRetomada(delayMs = 1500) {
+    if (timeoutRetomada) clearTimeout(timeoutRetomada);
+    timeoutRetomada = setTimeout(() => {
+      pausado = false;
+    }, delayMs);
+  }
+
+  // Toca/segura: pausa. Solta: retoma depois de um tempinho.
+  trilho.addEventListener('pointerdown', pausarAutoScroll);
+  trilho.addEventListener('pointerup', () => agendarRetomada());
+  trilho.addEventListener('pointercancel', () => agendarRetomada());
+  trilho.addEventListener('mouseenter', pausarAutoScroll);
+  trilho.addEventListener('mouseleave', () => agendarRetomada(300));
+
+  // Para de animar se a aba não estiver visível (economiza bateria/CPU).
+  document.addEventListener('visibilitychange', () => {
+    animando = !document.hidden;
+    if (animando) requestAnimationFrame(passoAutoScroll);
+  });
+
+  requestAnimationFrame(passoAutoScroll);
 }
 
 async function carregarPertoDeVoce(container) {

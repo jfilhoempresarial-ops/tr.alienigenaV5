@@ -105,8 +105,6 @@ main {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
