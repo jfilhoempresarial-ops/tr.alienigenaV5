@@ -223,7 +223,7 @@ function configurarCarrosselCategorias(container) {
   // A lista de categorias está duplicada no HTML (ver home.js), então quando
   // o scroll passa da metade, voltamos pro início sem dar salto visual —
   // a segunda metade é idêntica à primeira, então o "reset" é imperceptível.
-  const VELOCIDADE_PX = 0.5; // pixels por frame (~30px/s)
+  const VELOCIDADE_PX = 0.9; // pixels por frame (~54px/s)
   let pausado = false;
   let animando = true;
   let timeoutRetomada = null;

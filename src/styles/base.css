@@ -115,6 +115,7 @@ main {
 }
 
 .categoria-card {
+  position: relative;
   flex: 0 0 auto;
   width: 96px;
   scroll-snap-align: start;
@@ -125,6 +126,23 @@ main {
   text-decoration: none;
   color: var(--cor-texto);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.categoria-card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 60%;
+  height: 3px;
+  border-radius: 2px;
+  background: #7ed321;
+  transform: translateX(-50%) scaleX(0);
+  transition: transform 0.15s ease;
+}
+
+.categoria-card:active::after {
+  transform: translateX(-50%) scaleX(1);
 }
 
 .categoria-card__icone {
