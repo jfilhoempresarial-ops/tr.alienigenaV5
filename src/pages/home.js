@@ -98,13 +98,10 @@ export function renderHome(container) {
         <button class="categorias-carrossel__seta categorias-carrossel__seta--direita" aria-label="Próximas categorias">›</button>
       </div>
 
-      <a href="/mapa" class="banner-mapa">
-        <span class="banner-mapa__icone">🗺️</span>
-        <span class="banner-mapa__texto">
-          <strong>Mapa de Prestadores</strong>
-          Veja no mapa onde tem ajuda cadastrada perto de você
-        </span>
-        <span class="banner-mapa__seta">›</span>
+      <a href="/mapa" class="banner-mapa-pill">
+        <span class="banner-mapa-pill__icone">🗺️</span>
+        <span class="banner-mapa-pill__texto">Ver mapa de prestadores</span>
+        <span class="banner-mapa-pill__seta">›</span>
       </a>
 
       <div class="home-secao">

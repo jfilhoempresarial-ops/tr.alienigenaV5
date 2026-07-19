@@ -56,8 +56,22 @@ export async function renderMapa(container) {
 
   // zoomToBoundsOnClick: false — controlamos o clique manualmente (ver abaixo),
   // pra mostrar o resumo por categoria antes de dar zoom, em vez de já zoomar direto.
+  // iconCreateFunction: customiza o "bolinha com número" pra incluir a logo TRA.
   const grupoPinos = L.markerClusterGroup({
     zoomToBoundsOnClick: false,
+    iconCreateFunction: function (cluster) {
+      const quantidade = cluster.getChildCount();
+      return L.divIcon({
+        html: `
+          <div class="mapa-cluster-pino">
+            <img src="/images/logo-tra.png" alt="" class="mapa-cluster-pino__logo" />
+            <span class="mapa-cluster-pino__numero">${quantidade}</span>
+          </div>
+        `,
+        className: 'mapa-cluster-icone',
+        iconSize: L.point(48, 48),
+      });
+    },
   });
 
   try {

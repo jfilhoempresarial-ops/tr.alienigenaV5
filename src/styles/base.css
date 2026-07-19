@@ -524,6 +524,50 @@ form textarea {
   min-height: 14px;
 }
 
+.cadastro__categoria-travada {
+  background: #eef1ee;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin: 4px 0 16px;
+}
+
+.cadastro__label-extra {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin: 0 0 8px;
+}
+
+.cadastro__categorias-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cadastro__categoria-extra-item {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+}
+
+.cadastro__categoria-extra-item input {
+  width: auto !important;
+  margin: 0 !important;
+}
+
 button {
   background: var(--cor-primaria);
   color: white;
@@ -1066,39 +1110,58 @@ button {
   margin: 4px 0 20px;
 }
 
-.banner-mapa {
+.banner-mapa-pill {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
-  color: #fff;
-  border-radius: var(--radius);
-  padding: 16px;
+  gap: 8px;
+  background: #eef1ee;
+  border: 1px solid #d8ded8;
+  border-radius: 999px;
+  padding: 10px 16px;
   text-decoration: none;
   margin: 4px 0 20px;
+  width: fit-content;
 }
 
-.banner-mapa__icone {
-  font-size: 28px;
+.banner-mapa-pill__icone {
+  font-size: 18px;
 }
 
-.banner-mapa__texto {
-  flex: 1;
+.banner-mapa-pill__texto {
   font-size: 13px;
-  line-height: 1.4;
-  color: #eee;
+  font-weight: 600;
+  color: #0f2d1a;
 }
 
-.banner-mapa__texto strong {
-  display: block;
-  font-size: 15px;
-  margin-bottom: 2px;
-  color: #fff;
-}
-
-.banner-mapa__seta {
-  font-size: 22px;
+.banner-mapa-pill__seta {
   color: #7ed321;
+  font-size: 16px;
+}
+
+.banner-mapa-pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.4), transparent);
+  animation: brilho-pill 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes brilho-pill {
+  0% {
+    left: -60%;
+  }
+  45% {
+    left: 130%;
+  }
+  100% {
+    left: 130%;
+  }
 }
 
 .mapa-pagina__header {
@@ -1173,6 +1236,38 @@ button {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.mapa-cluster-icone {
+  background: transparent;
+  border: none;
+}
+
+.mapa-cluster-pino {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--cor-primaria);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.mapa-cluster-pino__logo {
+  width: 22px;
+  height: auto;
+  margin-bottom: -3px;
+  filter: brightness(0) invert(1); /* deixa a logo branca, pra contrastar com o fundo verde */
+}
+
+.mapa-cluster-pino__numero {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
 }
 
 .banner-grupos__icone {
