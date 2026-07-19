@@ -98,6 +98,15 @@ export function renderHome(container) {
         <button class="categorias-carrossel__seta categorias-carrossel__seta--direita" aria-label="Próximas categorias">›</button>
       </div>
 
+      <a href="/mapa" class="banner-mapa">
+        <span class="banner-mapa__icone">🗺️</span>
+        <span class="banner-mapa__texto">
+          <strong>Mapa de Prestadores</strong>
+          Veja no mapa onde tem ajuda cadastrada perto de você
+        </span>
+        <span class="banner-mapa__seta">›</span>
+      </a>
+
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>

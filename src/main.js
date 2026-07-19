@@ -7,6 +7,7 @@ import { renderEventos } from './pages/eventos.js';
 import { renderAdmin } from './pages/admin.js';
 import { renderNoticias } from './pages/noticias.js';
 import { renderNoticiaCompleta } from './pages/noticia.js';
+import { renderMapa } from './pages/mapa.js';
 import { renderCaminhoes } from './pages/caminhoes.js';
 import { renderCadastroCaminhao } from './pages/cadastro-caminhao.js';
 import { renderVagas } from './pages/vagas.js';
@@ -41,6 +42,7 @@ const ROTAS_FIXAS = {
   'o-que-fazemos': renderOQueFazemos,
   'onde-estamos': renderOndeEstamos,
   contato: renderContato,
+  mapa: renderMapa,
 };
 
 function router() {
