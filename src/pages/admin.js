@@ -7,7 +7,7 @@ import { buscarTodasEmpresas } from '../services/empresas.service.js';
 // certinho com o campo "categorias" salvo em cada empresa.
 const CATEGORIAS_COBERTURA = [
   { id: 'mecanico', label: 'Mecânico' },
-  { id: 'posto', label: 'Posto' },
+  { id: 'posto', label: 'Posto/Conveniência' },
   { id: 'borracharia', label: 'Borracharia' },
   { id: 'eletrica', label: 'Elétrica' },
   { id: 'guincho', label: 'Guincho' },
@@ -128,6 +128,15 @@ function extrairCidadeBase(texto) {
   return (texto || '').split(' - ')[0].trim();
 }
 
+// Padroniza a capitalização (ex: "juazeiro do norte" -> "Juazeiro Do Norte"), pra
+// duas grafias diferentes da mesma cidade não virarem duas linhas na tabela.
+function capitalizarCidade(texto) {
+  return (texto || '')
+    .trim()
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (letra) => letra.toUpperCase());
+}
+
 async function carregarCoberturaPorCidade(container) {
   const alvo = container.querySelector('#cobertura-tabela');
 
@@ -140,10 +149,18 @@ async function carregarCoberturaPorCidade(container) {
     // Cidades que já têm pelo menos uma empresa cadastrada
     const cidadesComEmpresa = empresas.map((e) => extrairCidadeBase(e.cidade)).filter(Boolean);
 
-    // União das duas listas (SINE + cidades com empresa), sem repetir, ordenada
-    const todasCidades = [...new Set([...cidadesSine, ...cidadesComEmpresa])].sort((a, b) =>
-      a.localeCompare(b)
-    );
+    // União das duas listas, agrupando por nome normalizado (sem acento/maiúscula)
+    // pra "Juazeiro do norte" e "Juazeiro do Norte" virarem uma linha só.
+    const cidadesMapa = new Map(); // chave normalizada -> nome padronizado pra exibir
+    [...cidadesSine, ...cidadesComEmpresa].forEach((cidadeBruta) => {
+      const nomePadronizado = capitalizarCidade(cidadeBruta);
+      const chave = normalizarCidade(nomePadronizado);
+      if (chave && !cidadesMapa.has(chave)) {
+        cidadesMapa.set(chave, nomePadronizado);
+      }
+    });
+
+    const todasCidades = Array.from(cidadesMapa.values()).sort((a, b) => a.localeCompare(b));
 
     if (todasCidades.length === 0) {
       alvo.innerHTML = `<p class="vazio">Nenhuma cidade encontrada ainda (nem em vagas, nem em empresas).</p>`;

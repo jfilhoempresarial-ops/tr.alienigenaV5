@@ -8,7 +8,7 @@ import { buscarPlaylist } from '../services/playlist.service.js';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
-  { id: 'posto', label: 'Postos', icone: '⛽' },
+  { id: 'posto', label: 'Posto/Conveniência', icone: '⛽' },
   { id: 'borracharia', label: 'Borracharia', icone: '🛞' },
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },

@@ -24,7 +24,7 @@ const ZOOM_INICIAL = 4;
 // mostrar o nome bonito em vez do código interno (ex: "mecanico" -> "Mecânico").
 const LABEL_CATEGORIA = {
   mecanico: 'Mecânico',
-  posto: 'Posto',
+  posto: 'Posto/Conveniência',
   borracharia: 'Borracharia',
   eletrica: 'Elétrica',
   guincho: 'Guincho',

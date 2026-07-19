@@ -502,6 +502,28 @@ form textarea {
   margin: -8px 0 14px;
 }
 
+.cadastro__botao-localizacao {
+  display: block;
+  width: 100%;
+  background: #eef1ee;
+  color: var(--cor-primaria-escura);
+  border: 1px dashed var(--cor-primaria);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: -4px;
+  margin-bottom: 6px;
+}
+
+.cadastro__localizacao-status {
+  font-size: 12px;
+  color: var(--cor-primaria);
+  margin: -4px 0 14px;
+  min-height: 14px;
+}
+
 button {
   background: var(--cor-primaria);
   color: white;
