@@ -13,14 +13,30 @@ function normalizar(txt) {
 
 const LABEL_CATEGORIA = {
   mecanico: 'Mecânico',
-  posto: 'Posto',
+  posto: 'Posto Conveniência',
   borracharia: 'Borracharia',
   eletrica: 'Elétrica',
   guincho: 'Guincho Socorro',
   pontoapoio: 'Ponto de Apoio',
   autopecas: 'Auto Peças',
   lavajato: 'Lava-Jato',
+  tacografo: 'Tacógrafo',
 };
+
+// Palavras pequenas/comuns que a gente ignora ao separar a busca em partes
+// (ex: "borracharia EM sobral" -> ["borracharia", "sobral"], ignorando "em").
+const STOPWORDS_BUSCA = new Set([
+  'em', 'de', 'do', 'da', 'dos', 'das', 'para', 'pra', 'com', 'e', 'a', 'o',
+  'os', 'as', 'um', 'uma', 'no', 'na', 'nos', 'nas', 'por', 'que', 'perto',
+  'aqui', 'algum', 'alguma', 'preciso', 'quero', 'procuro',
+]);
+
+/** Separa o termo digitado em palavras relevantes (ignora conectivos curtos). */
+function tokenizar(termo) {
+  return normalizar(termo)
+    .split(/[^a-z0-9]+/)
+    .filter((palavra) => palavra.length > 2 && !STOPWORDS_BUSCA.has(palavra));
+}
 
 /**
  * Busca global: procura o termo digitado em empresas, vagas, fretes,
@@ -32,6 +48,8 @@ export async function buscarNoSite(termo) {
     return { empresas: [], vagas: [], fretes: [], grupos: [], aniversariantes: [] };
   }
 
+  const tokens = tokenizar(termo);
+
   const [empresasR, vagasR, fretesR, gruposR, aniversariantesR] = await Promise.allSettled([
     buscarTodasEmpresas(),
     buscarVagas(),
@@ -42,10 +60,19 @@ export async function buscarNoSite(termo) {
 
   const todasEmpresas = empresasR.status === 'fulfilled' ? empresasR.value : [];
   const empresas = todasEmpresas.filter((e) => {
-    const nome = normalizar(e.nome);
-    const endereco = normalizar(e.endereco);
-    const categorias = (e.categorias || []).map((c) => normalizar(LABEL_CATEGORIA[c] || c));
-    return nome.includes(qn) || endereco.includes(qn) || categorias.some((c) => c.includes(qn));
+    const categoriasLabel = (e.categorias || []).map((c) => LABEL_CATEGORIA[c] || c);
+    const textoCompleto = normalizar(
+      [e.nome, e.endereco, e.cidade, ...categoriasLabel, ...(e.palavrasChave || [])].join(' ')
+    );
+
+    // "Borracharia em Sobral" vira ["borracharia", "sobral"] — a empresa
+    // só aparece se TODAS as palavras relevantes baterem em algum campo dela
+    // (categoria, nome, endereço, cidade ou palavras-chave do cadastro).
+    if (tokens.length > 0) {
+      return tokens.every((token) => textoCompleto.includes(token));
+    }
+    // Termo era só conectivos/muito curto: cai no modo antigo, busca a frase inteira.
+    return textoCompleto.includes(qn);
   });
 
   const todasVagas = vagasR.status === 'fulfilled' ? vagasR.value.itens || [] : [];

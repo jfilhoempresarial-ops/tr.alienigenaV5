@@ -17,8 +17,17 @@ const CATEGORIAS_CADASTRO = [
 ];
 
 const MAX_FOTOS = 3;
+const MAX_CATEGORIAS_EXTRAS = 3;
 
-export function renderCadastroEmpresa(container) {
+/**
+ * categoriaTravada: vem da URL (?categoria=mecanico), quando o motorista
+ * clica em "cadastre grátis" dentro de uma categoria específica. Nesse
+ * caso essa categoria fica fixa (não pode ser trocada), e ele só escolhe
+ * categorias ADICIONAIS (até 3) nas quais também atua.
+ */
+export function renderCadastroEmpresa(container, categoriaTravada) {
+  const categoriaInfo = CATEGORIAS_CADASTRO.find((c) => c.id === categoriaTravada);
+
   container.innerHTML = `
     <section class="cadastro">
       <h2>Cadastrar minha empresa</h2>
@@ -42,18 +51,44 @@ export function renderCadastroEmpresa(container) {
         </p>
         <p id="localizacao-status" class="cadastro__localizacao-status"></p>
 
+        ${
+          categoriaInfo
+            ? `
+          <label>Categoria principal</label>
+          <div class="cadastro__categoria-travada">${categoriaInfo.label} 🔒</div>
+          <input type="hidden" name="categoriaPrincipal" value="${categoriaInfo.id}" />
+        `
+            : `
+          <label>
+            Categoria principal
+            <select name="categoriaPrincipal" required>
+              ${CATEGORIAS_CADASTRO.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
+            </select>
+          </label>
+        `
+        }
+
+        <p class="cadastro__label-extra">Também atua em outras áreas? Escolha até ${MAX_CATEGORIAS_EXTRAS}:</p>
+        <div class="cadastro__categorias-extras" id="categorias-extras">
+          ${CATEGORIAS_CADASTRO.filter((c) => c.id !== categoriaTravada)
+            .map(
+              (c) => `
+            <label class="cadastro__categoria-extra-item">
+              <input type="checkbox" name="categoriasExtras" value="${c.id}" />
+              ${c.label}
+            </label>
+          `
+            )
+            .join('')}
+        </div>
+
         <label>
-          Categoria
-          <select name="categoria" required>
-            ${CATEGORIAS_CADASTRO.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
-          </select>
+          Especialidades (opcional)
+          <textarea name="especialidades" rows="3" placeholder="Ex: mexo com mola, sou bom em injeção eletrônica, troco embreagem rápido..."></textarea>
         </label>
 
-        <label><input type="checkbox" name="disponivel24h" /> Funciona 24h</label>
-        <label><input type="checkbox" name="atendeCarreta" /> Atende carreta/veículo pesado</label>
-
         <label>
-          Fotos do local (até 3)
+          Fotos do local (até ${MAX_FOTOS})
           <input type="file" name="fotos" id="cadastro-fotos" accept="image/*" multiple />
         </label>
         <p class="cadastro__ajuda-endereco" id="fotos-info"></p>
@@ -65,6 +100,17 @@ export function renderCadastroEmpresa(container) {
   `;
 
   let coordenadasDaLocalizacao = null; // preenchido só se o motorista usar o botão de localização
+
+  // Limita a seleção de categorias extras a MAX_CATEGORIAS_EXTRAS
+  const checkboxesExtras = container.querySelectorAll('input[name="categoriasExtras"]');
+  checkboxesExtras.forEach((checkbox) => {
+    checkbox.addEventListener('change', () => {
+      const marcados = container.querySelectorAll('input[name="categoriasExtras"]:checked');
+      if (marcados.length > MAX_CATEGORIAS_EXTRAS) {
+        checkbox.checked = false;
+      }
+    });
+  });
 
   const inputFotos = document.getElementById('cadastro-fotos');
   const fotosInfo = document.getElementById('fotos-info');
@@ -115,6 +161,10 @@ export function renderCadastroEmpresa(container) {
       try {
         const formData = new FormData(event.target);
         const endereco = formData.get('endereco');
+        const categoriaPrincipal = formData.get('categoriaPrincipal');
+        const categoriasExtras = formData.getAll('categoriasExtras');
+        const categorias = [categoriaPrincipal, ...categoriasExtras];
+        const especialidades = formData.get('especialidades') || '';
 
         // Se o motorista já usou o botão "usar localização atual", usamos essas
         // coordenadas direto. Senão, geocodificamos o endereço digitado.
@@ -125,6 +175,10 @@ export function renderCadastroEmpresa(container) {
         const fotosUrls = await enviarFotos(arquivos);
 
         status.textContent = 'Enviando cadastro...';
+        const labelsCategorias = categorias.map(
+          (id) => CATEGORIAS_CADASTRO.find((c) => c.id === id)?.label || id
+        );
+        const palavrasChave = extrairPalavrasChave(labelsCategorias, especialidades);
 
         await cadastrarEmpresa({
           nome: formData.get('nome'),
@@ -132,9 +186,9 @@ export function renderCadastroEmpresa(container) {
           whatsapp: formData.get('whatsapp'),
           instagram: (formData.get('instagram') || '').replace(/^@/, ''),
           endereco,
-          categorias: [formData.get('categoria')],
-          disponivel24h: formData.get('disponivel24h') === 'on',
-          atendeCarreta: formData.get('atendeCarreta') === 'on',
+          categorias,
+          especialidades,
+          palavrasChave,
           fotos: fotosUrls,
           ...(coordenadas ? { lat: coordenadas.lat, lng: coordenadas.lng } : {}),
         });
@@ -197,4 +251,42 @@ async function enviarFotos(arquivos) {
     urls.push(dados.secure_url);
   }
   return urls;
+}
+
+// Palavras pequenas/comuns que não ajudam na busca (ex: "sou", "com", "muito").
+const STOPWORDS_ESPECIALIDADE = new Set([
+  'sou', 'bom', 'boa', 'muito', 'em', 'de', 'da', 'do', 'com', 'pra', 'para',
+  'e', 'a', 'o', 'os', 'as', 'um', 'uma', 'no', 'na', 'nos', 'nas', 'tambem',
+  'também', 'mexo', 'faco', 'faço', 'sei', 'que', 'mais', 'meu', 'minha',
+]);
+
+/**
+ * Extrai palavras-chave das categorias + do texto de especialidades que o
+ * prestador digitou (ex: "mexo com mola, sou bom em injeção eletrônica"),
+ * sem usar nenhuma IA — só separa as palavras e descarta as mais comuns.
+ * Isso é usado depois na busca da home, pra alguém digitar "borracharia
+ * em sobral" e encontrar prestadores que batem com essas palavras.
+ */
+function extrairPalavrasChave(labelsCategorias, especialidades) {
+  const palavras = new Set();
+
+  labelsCategorias.forEach((label) => {
+    label
+      .toLowerCase()
+      .split(/[^a-zà-ú0-9]+/i)
+      .forEach((p) => {
+        if (p.length > 2) palavras.add(p);
+      });
+  });
+
+  (especialidades || '')
+    .toLowerCase()
+    .split(/[^a-zà-ú0-9]+/i)
+    .forEach((p) => {
+      if (p.length > 2 && !STOPWORDS_ESPECIALIDADE.has(p)) {
+        palavras.add(p);
+      }
+    });
+
+  return Array.from(palavras);
 }
