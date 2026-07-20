@@ -21,4 +21,4 @@ jobs:
       - name: Importar aniversariantes
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
-        run: node scripts/importar-aniversariantes.cjs
+        run: node scripts/importar-aniversariantes.cjs  
