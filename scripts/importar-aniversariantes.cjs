@@ -1,7 +1,7 @@
 /**
  * Script de importação: lê a planilha de aniversariantes em XLSX
- * (aba "Niver Mês", colunas "Cliente" e "Data nascimento") e cadastra
- * cada um na coleção "aniversariantes" do Firestore.
+ * (primeira aba do arquivo, colunas "Nome" e "Data nascimento") e
+ * cadastra cada um na coleção "aniversariantes" do Firestore.
  *
  * COMO USAR:
  * 1. Coloque este arquivo dentro da pasta "scripts/" do projeto.
@@ -24,7 +24,6 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
 const CAMINHO_XLSX = path.join(__dirname, 'aniversariantes.xlsx');
-const NOME_ABA = 'Niver Mês';
 
 // No GitHub Actions, a chave vem da secret em base64. Rodando local no
 // seu PC, usa o arquivo serviceAccountKey.json direto (não versionado).
@@ -65,23 +64,22 @@ async function limparColecao() {
 async function main() {
   const workbook = XLSX.readFile(CAMINHO_XLSX, { cellDates: true });
 
-  if (!workbook.SheetNames.includes(NOME_ABA)) {
-    throw new Error(
-      `Não encontrei a aba "${NOME_ABA}" no arquivo. Abas disponíveis: ${workbook.SheetNames.join(', ')}`
-    );
+  const nomeAba = workbook.SheetNames[0];
+  if (!nomeAba) {
+    throw new Error('A planilha não tem nenhuma aba.');
   }
 
-  const planilha = workbook.Sheets[NOME_ABA];
+  const planilha = workbook.Sheets[nomeAba];
   const linhas = XLSX.utils.sheet_to_json(planilha, { defval: null });
 
-  console.log(`\nTotal de linhas na aba "${NOME_ABA}": ${linhas.length}`);
+  console.log(`\nUsando a aba "${nomeAba}". Total de linhas: ${linhas.length}`);
 
   await limparColecao();
 
   let enviados = 0;
   let puladas = 0;
   for (const linha of linhas) {
-    const nome = linha['Cliente'];
+    const nome = linha['Nome'];
     const dataNascimento = linha['Data nascimento'];
 
     if (!nome || !dataNascimento || !(dataNascimento instanceof Date)) {
