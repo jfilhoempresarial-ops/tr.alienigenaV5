@@ -130,7 +130,7 @@ main {
 
 .categoria-card__contagem {
   position: absolute;
-  top: -6px;
+  bottom: -6px;
   right: -6px;
   background: var(--cor-primaria);
   color: #fff;

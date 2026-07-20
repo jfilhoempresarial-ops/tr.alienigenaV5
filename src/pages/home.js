@@ -17,7 +17,7 @@ const CATEGORIAS = [
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
   { id: 'vagas', label: 'Vagas de Emprego', icone: '💼', rotaInterna: '/vagas' },
   { id: 'fretes', label: 'Fretes', icone: '📦' },
-  { id: 'truckfest', label: 'Truck Fest', icone: '🎪', rotaInterna: '/eventos' },
+  { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
   { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
   { id: 'caminhoes', label: 'Compra e Venda', icone: '🚛', rotaInterna: '/caminhoes' },
