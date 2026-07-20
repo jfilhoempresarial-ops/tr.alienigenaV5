@@ -35,15 +35,17 @@ const LABEL_CATEGORIA = {
 };
 
 // Ícone usado nos marcadores individuais (empresas que não formaram cluster).
-// Mesmo estilo visual do ícone de cluster (alienígena), só que sem o número.
+// Mesmo tamanho e estrutura do ícone de cluster (alienígena + numerozinho),
+// só que com "1" fixo, pra ficar visualmente idêntico aos clusters.
 const iconeEmpresa = L.divIcon({
   html: `
-    <div class="mapa-pino-empresa">
-      <span class="mapa-pino-empresa__emoji">👽</span>
+    <div class="mapa-cluster-pino">
+      <span class="mapa-cluster-pino__emoji">👽</span>
+      <span class="mapa-cluster-pino__numero">1</span>
     </div>
   `,
-  className: 'mapa-pino-empresa-icone',
-  iconSize: L.point(40, 40),
+  className: 'mapa-cluster-icone',
+  iconSize: L.point(54, 54),
 });
 
 export async function renderMapa(container) {
