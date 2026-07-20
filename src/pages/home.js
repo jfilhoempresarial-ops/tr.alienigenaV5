@@ -1,5 +1,5 @@
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { buscarEmpresasDestaque, buscarTodasEmpresas } from '../services/empresas.service.js';
+import { buscarTodasEmpresas } from '../services/empresas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { ordenarPorDistancia } from '../utils/distancia.js';
 import { buscarVagas } from '../services/vagas.service.js';
@@ -71,7 +71,7 @@ export function renderHome(container) {
   container.innerHTML = `
     <section class="home">
       <div id="carrossel-banners"></div>
-      <h1>Motorista, encontre ajuda perto de você</h1>
+      <h1 id="home-titulo-principal">Motorista, encontre ajuda perto de você</h1>
 
       <form id="busca-home-form" class="busca-home">
         <input
@@ -90,9 +90,10 @@ export function renderHome(container) {
             const href = cat.externo ?? cat.rotaInterna ?? `/${cat.id}`;
             const targetBlank = cat.externo ? 'target="_blank" rel="noopener"' : '';
             return `
-            <a href="${href}" ${targetBlank} class="categoria-card">
+            <a href="${href}" ${targetBlank} class="categoria-card" data-categoria-id="${cat.id}">
               <span class="categoria-card__icone">${cat.icone}</span>
               <span class="categoria-card__label">${cat.label}</span>
+              ${!cat.rotaInterna ? `<span class="categoria-card__contagem"></span>` : ''}
             </a>
           `;
           }).join('')}
@@ -121,16 +122,6 @@ export function renderHome(container) {
           <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
-
-      <div id="carrossel-banners-perto"></div>
-      <div class="home-secao">
-        <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-perto-de-voce">📍 Perto de você agora</h2>
-        </div>
-        <div class="home-secao__lista" id="lista-perto-de-voce">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
@@ -185,12 +176,11 @@ export function renderHome(container) {
   `;
 
   renderCarrosselBanners();
-  renderCarrosselBanners('carrossel-banners-perto', 'pertodevoce');
   configurarCarrosselCategorias(container);
   configurarBuscaHome(container);
   carregarVagasDestaque(container);
   carregarFretesResumo(container);
-  carregarPertoDeVoce(container);
+  carregarContagemCategorias(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
   carregarAniversariantes(container);
   renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
@@ -276,13 +266,12 @@ function configurarCarrosselCategorias(container) {
   requestAnimationFrame(passoAutoScroll);
 }
 
-async function carregarPertoDeVoce(container) {
-  const alvo = container.querySelector('#lista-perto-de-voce');
-  const titulo = container.querySelector('#titulo-perto-de-voce');
-  const RAIO_KM = 30;
+async function carregarContagemCategorias(container) {
+  const titulo = container.querySelector('#home-titulo-principal');
+  const RAIO_KM = 20;
 
   // Pede a localização assim que a home carrega. Se demorar demais (>6s) ou
-  // for negada, cai no modo antigo (mostra destaques gerais, sem filtrar).
+  // for negada, cai no modo antigo (título genérico, sem contagem por raio).
   let localizacao = null;
   try {
     localizacao = await Promise.race([
@@ -290,46 +279,46 @@ async function carregarPertoDeVoce(container) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), 6000)),
     ]);
   } catch (erro) {
-    console.warn('Localização indisponível na home, mostrando destaques gerais.', erro);
+    console.warn('Localização indisponível na home, mantendo título genérico.', erro);
+    return;
   }
 
   try {
-    if (!localizacao) {
-      const empresas = await buscarEmpresasDestaque(6);
-      if (empresas.length === 0) {
-        alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma empresa cadastrada ainda.</p>`;
-        return;
-      }
-      alvo.innerHTML = empresas.map(renderMiniCardEmpresa).join('');
-      return;
-    }
-
     const todasEmpresas = await buscarTodasEmpresas();
     const ordenadas = ordenarPorDistancia(todasEmpresas, localizacao.lat, localizacao.lng);
-    const proximas = ordenadas.filter((e) => e.distanciaKm !== null && e.distanciaKm <= RAIO_KM).slice(0, 6);
+    const proximas = ordenadas.filter((e) => e.distanciaKm !== null && e.distanciaKm <= RAIO_KM);
 
-    // Bônus: tenta descobrir o nome da cidade pra mostrar no título.
+    // Conta quantas empresas de cada categoria estão no raio.
+    const contagem = {};
+    proximas.forEach((empresa) => {
+      (empresa.categorias || []).forEach((cat) => {
+        contagem[cat] = (contagem[cat] || 0) + 1;
+      });
+    });
+
+    // Coloca o selo de contagem em cada card de categoria (nas duas cópias duplicadas do carrossel).
+    Object.entries(contagem).forEach(([categoriaId, quantidade]) => {
+      container.querySelectorAll(`[data-categoria-id="${categoriaId}"] .categoria-card__contagem`).forEach((selo) => {
+        selo.textContent = quantidade;
+      });
+    });
+
+    // Bônus: tenta descobrir o nome da cidade pra personalizar o título.
     // Se falhar, não tem problema — só mantém o título genérico.
     try {
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${localizacao.lat}&lon=${localizacao.lng}`;
       const resposta = await fetch(url);
       const dados = await resposta.json();
       const nomeCidade = dados?.address?.city || dados?.address?.town || dados?.address?.municipality || '';
-      if (nomeCidade) {
-        titulo.textContent = `📍 Perto de você agora em ${nomeCidade}`;
+      const totalServicos = proximas.length;
+      if (nomeCidade && totalServicos > 0) {
+        titulo.textContent = `Motorista, aqui em ${nomeCidade} tem ${totalServicos} serviço${totalServicos !== 1 ? 's' : ''} que ${totalServicos !== 1 ? 'podem' : 'pode'} te ajudar`;
       }
     } catch (erroReverso) {
       console.warn('Não foi possível identificar a cidade do usuário.', erroReverso);
     }
-
-    if (proximas.length === 0) {
-      alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma empresa cadastrada num raio de ${RAIO_KM}km ainda.</p>`;
-      return;
-    }
-    alvo.innerHTML = proximas.map(renderMiniCardEmpresa).join('');
   } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
-    console.error(erro);
+    console.error('Não foi possível carregar a contagem por categoria.', erro);
   }
 }
 

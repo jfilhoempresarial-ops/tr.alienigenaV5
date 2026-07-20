@@ -128,6 +128,29 @@ main {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+.categoria-card__contagem {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.categoria-card__contagem:empty {
+  display: none;
+}
+
 .categoria-card::after {
   content: '';
   position: absolute;
@@ -640,44 +663,6 @@ button {
   font-size: 13px;
   color: #888;
   padding: 8px 0;
-}
-
-.perto-categoria-chip {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--cor-branco);
-  border-radius: 999px;
-  padding: 10px 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  text-decoration: none;
-  color: var(--cor-texto);
-  scroll-snap-align: start;
-}
-
-.perto-categoria-chip__icone {
-  font-size: 18px;
-}
-
-.perto-categoria-chip__label {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.perto-categoria-chip__contagem {
-  background: var(--cor-primaria);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
 }
 
 .mini-card {
