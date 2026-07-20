@@ -128,10 +128,6 @@ export function renderHome(container) {
         </div>
       </div>
 
-      <a href="/grupos-whatsapp" class="banner-grupos-imagem">
-        <img src="/images/whatsapp-grupos.png" alt="Participe dos grupos de WhatsApp de caminhoneiro" />
-      </a>
-
       <div id="carrossel-banners-marcas"></div>
 
       <div class="home-secao">
@@ -143,6 +139,10 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <a href="/grupos-whatsapp" class="banner-grupos-imagem">
+        <img src="/images/whatsapp-grupos.png" alt="Participe dos grupos de WhatsApp de caminhoneiro" />
+      </a>
 
       <a href="#" class="banner-parceiros-gif">
         <img src="/images/gif-agrup.gif" alt="Grupos parceiros TRA da Estrada" />
