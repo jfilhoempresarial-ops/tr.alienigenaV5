@@ -1858,9 +1858,11 @@ button {
 }
 
 .playlist-cta-pendrive {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
   color: #fff;
   border-radius: var(--radius);
@@ -1869,8 +1871,62 @@ button {
   margin-top: 16px;
 }
 
-.playlist-cta-pendrive__icone {
-  font-size: 28px;
+.playlist-cta-pendrive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.35), transparent);
+  animation: brilho-pill 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.playlist-cta-pendrive__equalizador {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.playlist-cta-pendrive__equalizador span {
+  display: block;
+  width: 4px;
+  background: #7ed321;
+  border-radius: 2px;
+  animation: equalizar 1s ease-in-out infinite;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(1) {
+  height: 40%;
+  animation-delay: -0.2s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(2) {
+  height: 100%;
+  animation-delay: -0.6s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(3) {
+  height: 65%;
+  animation-delay: -0.1s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(4) {
+  height: 80%;
+  animation-delay: -0.8s;
+}
+
+@keyframes equalizar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 .playlist-cta-pendrive__texto {
