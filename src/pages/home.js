@@ -1,5 +1,7 @@
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { buscarEmpresasDestaque } from '../services/empresas.service.js';
+import { buscarEmpresasDestaque, buscarTodasEmpresas } from '../services/empresas.service.js';
+import { obterLocalizacaoAtual } from '../services/geo.service.js';
+import { ordenarPorDistancia } from '../utils/distancia.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
@@ -126,7 +128,7 @@ export function renderHome(container) {
       <div id="carrossel-banners-perto"></div>
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📍 Perto de você agora</h2>
+          <h2 class="home-secao__titulo" id="titulo-perto-de-voce">📍 Perto de você agora</h2>
         </div>
         <div class="home-secao__lista" id="lista-perto-de-voce">
           <p class="home-secao__vazio">Carregando...</p>
@@ -276,13 +278,55 @@ function configurarCarrosselCategorias(container) {
 
 async function carregarPertoDeVoce(container) {
   const alvo = container.querySelector('#lista-perto-de-voce');
+  const titulo = container.querySelector('#titulo-perto-de-voce');
+  const RAIO_KM = 30;
+
+  // Pede a localização assim que a home carrega. Se demorar demais (>6s) ou
+  // for negada, cai no modo antigo (mostra destaques gerais, sem filtrar).
+  let localizacao = null;
   try {
-    const empresas = await buscarEmpresasDestaque(6);
-    if (empresas.length === 0) {
-      alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma empresa cadastrada ainda.</p>`;
+    localizacao = await Promise.race([
+      obterLocalizacaoAtual(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), 6000)),
+    ]);
+  } catch (erro) {
+    console.warn('Localização indisponível na home, mostrando destaques gerais.', erro);
+  }
+
+  try {
+    if (!localizacao) {
+      const empresas = await buscarEmpresasDestaque(6);
+      if (empresas.length === 0) {
+        alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma empresa cadastrada ainda.</p>`;
+        return;
+      }
+      alvo.innerHTML = empresas.map(renderMiniCardEmpresa).join('');
       return;
     }
-    alvo.innerHTML = empresas.map(renderMiniCardEmpresa).join('');
+
+    const todasEmpresas = await buscarTodasEmpresas();
+    const ordenadas = ordenarPorDistancia(todasEmpresas, localizacao.lat, localizacao.lng);
+    const proximas = ordenadas.filter((e) => e.distanciaKm !== null && e.distanciaKm <= RAIO_KM).slice(0, 6);
+
+    // Bônus: tenta descobrir o nome da cidade pra mostrar no título.
+    // Se falhar, não tem problema — só mantém o título genérico.
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${localizacao.lat}&lon=${localizacao.lng}`;
+      const resposta = await fetch(url);
+      const dados = await resposta.json();
+      const nomeCidade = dados?.address?.city || dados?.address?.town || dados?.address?.municipality || '';
+      if (nomeCidade) {
+        titulo.textContent = `📍 Perto de você agora em ${nomeCidade}`;
+      }
+    } catch (erroReverso) {
+      console.warn('Não foi possível identificar a cidade do usuário.', erroReverso);
+    }
+
+    if (proximas.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma empresa cadastrada num raio de ${RAIO_KM}km ainda.</p>`;
+      return;
+    }
+    alvo.innerHTML = proximas.map(renderMiniCardEmpresa).join('');
   } catch (erro) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
     console.error(erro);
