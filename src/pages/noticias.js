@@ -1,16 +1,6 @@
 import { buscarNoticiasAtivas } from '../services/noticias.service.js';
 import { formatarDataEvento } from '../utils/formatters.js';
 
-const CATEGORIAS = [
-  { id: '', label: '🌐 Todas' },
-  { id: 'mobilizacao', label: '📢 Mobilização' },
-  { id: 'rodovia', label: '🛣️ Rodovia' },
-  { id: 'seguranca', label: '🚨 Segurança' },
-  { id: 'direitos', label: '📋 Direitos' },
-  { id: 'legislacao', label: '⚖️ Legislação' },
-  { id: 'geral', label: '📰 Geral' },
-];
-
 const POR_PAGINA = 10;
 
 export async function renderNoticias(container) {
@@ -30,30 +20,14 @@ export async function renderNoticias(container) {
     return;
   }
 
-  let categoriaAtiva = '';
   let quantidadeVisivel = POR_PAGINA;
 
   function render() {
-    const filtradas = categoriaAtiva
-      ? todasNoticias.filter((n) => n.categoria === categoriaAtiva)
-      : todasNoticias;
-    const visiveis = filtradas.slice(0, quantidadeVisivel);
-    const temMais = filtradas.length > quantidadeVisivel;
+    const visiveis = todasNoticias.slice(0, quantidadeVisivel);
+    const temMais = todasNoticias.length > quantidadeVisivel;
 
     container.innerHTML = `
       <section class="noticias">
-        <div class="noticias__header">
-          <h1>📰 Notícias que impactam o seu bolso</h1>
-          <p>Separadas por perfil: autônomo, CLT e agregado</p>
-        </div>
-
-        <div class="noticias__filtros">
-          ${CATEGORIAS.map(
-            (c) =>
-              `<button class="chip ${categoriaAtiva === c.id ? 'chip--ativo' : ''}" data-categoria="${c.id}">${c.label}</button>`
-          ).join('')}
-        </div>
-
         <div class="noticias-lista">
           ${visiveis.map(renderCardNoticia).join('')}
         </div>
@@ -65,14 +39,6 @@ export async function renderNoticias(container) {
         }
       </section>
     `;
-
-    container.querySelectorAll('.noticias__filtros .chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        categoriaAtiva = chip.dataset.categoria;
-        quantidadeVisivel = POR_PAGINA;
-        render();
-      });
-    });
 
     const botaoMais = container.querySelector('#carregar-mais-noticias');
     if (botaoMais) {
