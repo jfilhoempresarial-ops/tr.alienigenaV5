@@ -34,6 +34,18 @@ const LABEL_CATEGORIA = {
   tacografo: 'Tacógrafo',
 };
 
+// Ícone usado nos marcadores individuais (empresas que não formaram cluster).
+// Mesmo estilo visual do ícone de cluster (alienígena), só que sem o número.
+const iconeEmpresa = L.divIcon({
+  html: `
+    <div class="mapa-pino-empresa">
+      <span class="mapa-pino-empresa__emoji">👽</span>
+    </div>
+  `,
+  className: 'mapa-pino-empresa-icone',
+  iconSize: L.point(40, 40),
+});
+
 export async function renderMapa(container) {
   container.innerHTML = `
     <section class="mapa-pagina">
@@ -90,6 +102,7 @@ export async function renderMapa(container) {
       // somar por categoria quando ele estiver dentro de um cluster.
       const marker = L.marker([empresa.lat, empresa.lng], {
         categorias: empresa.categorias || [],
+        icon: iconeEmpresa,
       }).bindPopup(`
         <strong>${empresa.nome}</strong><br/>
         ${empresa.endereco ? `${empresa.endereco}<br/>` : ''}
