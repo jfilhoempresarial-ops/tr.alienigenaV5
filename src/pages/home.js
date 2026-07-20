@@ -144,6 +144,10 @@ export function renderHome(container) {
         </div>
       </div>
 
+      <a href="#" class="banner-parceiros-gif">
+        <img src="/images/gif-agrup.gif" alt="Grupos parceiros TRA da Estrada" />
+      </a>
+
       <div id="aniversario-banner-publicidade"></div>
 
       <div class="home-secao" id="secao-aniversariantes">
@@ -158,10 +162,6 @@ export function renderHome(container) {
         </div>
         <div id="carrossel-banners-eventos"></div>
       </div>
-
-      <a href="#" class="banner-parceiros-gif">
-        <img src="/images/gif-agrup.gif" alt="Grupos parceiros TRA da Estrada" />
-      </a>
 
       <a href="https://wa.me/558881938793?text=${encodeURIComponent('Olá! Vi o anúncio da Lions Mutual no TRA da Estrada e quero saber mais sobre proteção veicular.')}" target="_blank" rel="noopener" class="banner-lions-mutual">
         <img src="/images/banner-lions-mutual.jpg" alt="Lions Mutual - Proteção Veicular" />
