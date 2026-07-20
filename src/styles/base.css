@@ -1280,8 +1280,9 @@ button {
   margin: 3px;
 }
 
-.mapa-cluster-pino__logo {
-  /* mantém as cores originais da logo (TR branco com borda preta + A verde) */
+.mapa-cluster-pino__emoji {
+  font-size: 26px;
+  line-height: 1;
 }
 
 .mapa-cluster-pino__numero {
