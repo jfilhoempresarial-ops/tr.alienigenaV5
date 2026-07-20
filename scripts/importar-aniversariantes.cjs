@@ -1,31 +1,44 @@
 /**
- * Script de importação: lê um CSV de aniversariantes (relatório de
- * cadastros do Bling) e cadastra cada um na coleção "aniversariantes"
- * do Firestore.
+ * Script de importação: lê a planilha de aniversariantes em XLSX
+ * (aba "Niver Mês", colunas "Cliente" e "Data nascimento") e cadastra
+ * cada um na coleção "aniversariantes" do Firestore.
  *
  * COMO USAR:
  * 1. Coloque este arquivo dentro da pasta "scripts/" do projeto.
- * 2. Coloque seu CSV dentro de "scripts/", com o nome "aniversariantes.csv".
- *    Colunas esperadas: Nome, Dia, Mes (números, sem ano).
+ * 2. Salve sua planilha atualizada como "scripts/aniversariantes.xlsx"
+ *    (substituindo a anterior).
  * 3. No terminal, dentro da pasta do projeto, rode:
  *      node scripts/importar-aniversariantes.cjs
+ *
+ * Roda sozinho via GitHub Actions sempre que você atualizar o
+ * scripts/aniversariantes.xlsx (veja .github/workflows/atualizar-aniversariantes.yml).
  *
  * Você pode rodar este script sempre que atualizar a lista de clientes —
  * ele LIMPA a coleção antiga e sobe a lista nova por completo, então é
  * sempre a "foto atual" da sua base, sem duplicar ninguém.
  */
 
-const fs = require('fs');
 const path = require('path');
-const { parse } = require('csv-parse/sync');
+const XLSX = require('xlsx');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
-const CAMINHO_CSV = path.join(__dirname, 'aniversariantes.csv');
-const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
+const CAMINHO_XLSX = path.join(__dirname, 'aniversariantes.xlsx');
+const NOME_ABA = 'Niver Mês';
+
+// No GitHub Actions, a chave vem da secret em base64. Rodando local no
+// seu PC, usa o arquivo serviceAccountKey.json direto (não versionado).
+function carregarCredencial() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8');
+    return JSON.parse(json);
+  }
+  const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
+  return require(CAMINHO_CHAVE);
+}
 
 initializeApp({
-  credential: cert(require(CAMINHO_CHAVE)),
+  credential: cert(carregarCredencial()),
 });
 const db = getFirestore();
 
@@ -50,28 +63,34 @@ async function limparColecao() {
 }
 
 async function main() {
-  const conteudoCsv = fs.readFileSync(CAMINHO_CSV, 'utf-8');
-  const linhas = parse(conteudoCsv, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-  });
+  const workbook = XLSX.readFile(CAMINHO_XLSX, { cellDates: true });
 
-  console.log(`\nTotal de linhas no CSV: ${linhas.length}`);
+  if (!workbook.SheetNames.includes(NOME_ABA)) {
+    throw new Error(
+      `Não encontrei a aba "${NOME_ABA}" no arquivo. Abas disponíveis: ${workbook.SheetNames.join(', ')}`
+    );
+  }
+
+  const planilha = workbook.Sheets[NOME_ABA];
+  const linhas = XLSX.utils.sheet_to_json(planilha, { defval: null });
+
+  console.log(`\nTotal de linhas na aba "${NOME_ABA}": ${linhas.length}`);
 
   await limparColecao();
 
   let enviados = 0;
   let puladas = 0;
   for (const linha of linhas) {
-    const nome = linha['Nome'];
-    const dia = parseInt(linha['Dia'], 10);
-    const mes = parseInt(linha['Mes'], 10);
+    const nome = linha['Cliente'];
+    const dataNascimento = linha['Data nascimento'];
 
-    if (!nome || !dia || !mes) {
+    if (!nome || !dataNascimento || !(dataNascimento instanceof Date)) {
       puladas++;
       continue;
     }
+
+    const dia = dataNascimento.getDate();
+    const mes = dataNascimento.getMonth() + 1;
 
     await db.collection('aniversariantes').add({ nome: nome.trim(), dia, mes });
     enviados++;
