@@ -1,0 +1,23 @@
+name: Buscar notícias do universo caminhoneiro (Google News)
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 06:00 no horário de Brasília (UTC-3)
+    - cron: '0 15 * * *'  # 12:00 no horário de Brasília (UTC-3)
+    - cron: '0 21 * * *'  # 18:00 no horário de Brasília (UTC-3)
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependências
+        run: npm install firebase-admin
+      - name: Buscar e gravar notícias
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/buscar-noticias-google.cjs
