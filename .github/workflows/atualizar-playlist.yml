@@ -1,7 +1,8 @@
 name: Atualizar playlist do motorista
 on:
   schedule:
-    - cron: '0 6 * * *'  # uma vez por dia, aprox. 03:00 no horário de Brasília (UTC-3)
+    - cron: '0 12 * * *'  # 09:00 no horário de Brasília (UTC-3)
+    - cron: '0 19 * * *'  # 16:00 no horário de Brasília (UTC-3)
   workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:
