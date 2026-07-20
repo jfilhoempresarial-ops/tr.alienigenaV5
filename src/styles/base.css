@@ -642,6 +642,44 @@ button {
   padding: 8px 0;
 }
 
+.perto-categoria-chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cor-branco);
+  border-radius: 999px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: var(--cor-texto);
+  scroll-snap-align: start;
+}
+
+.perto-categoria-chip__icone {
+  font-size: 18px;
+}
+
+.perto-categoria-chip__label {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.perto-categoria-chip__contagem {
+  background: var(--cor-primaria);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
 .mini-card {
   flex: 0 0 auto;
   width: 210px;
