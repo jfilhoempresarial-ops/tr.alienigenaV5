@@ -1507,12 +1507,7 @@ button {
   text-decoration: none;
 }
 #aniversariantes-resumo {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 4px;
-  scrollbar-width: none;
+  display: block;
 }
 
 #aniversariantes-resumo::-webkit-scrollbar {
@@ -1520,9 +1515,7 @@ button {
 }
 
 .aniversario-card {
-  flex: 0 0 auto;
-  width: 260px;
-  scroll-snap-align: start;
+  width: 100%;
   background: linear-gradient(135deg, #fff8e6, #ffffff);
   border: 1px solid #f5d98e;
   border-radius: var(--radius);
@@ -1579,6 +1572,12 @@ button {
 
 .aniversario-card__grupo-lista li:last-child {
   border-bottom: none;
+}
+
+#aniversario-banner-publicidade {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 20px;
 }
 
 .aniversario-publicidade {

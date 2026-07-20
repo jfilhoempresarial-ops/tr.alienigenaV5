@@ -134,7 +134,18 @@ export function renderHome(container) {
 
       <div id="carrossel-banners-marcas"></div>
 
-     
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
+          <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
+        </div>
+        <div id="manchetes-home" class="manchetes-home">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
+      <div id="aniversario-banner-publicidade"></div>
+
       <div class="home-secao" id="secao-aniversariantes">
         <div id="aniversariantes-resumo">
           <p class="home-secao__vazio">Carregando...</p>
@@ -158,16 +169,6 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
-          <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
-        </div>
-        <div id="manchetes-home" class="manchetes-home">
-          <p class="home-secao__vazio">Carregando...</p>
-        </div>
-      </div>
-
-      <div class="home-secao">
-        <div class="home-secao__header">
           <h2 class="home-secao__titulo">🎶 Playlist do Motorista</h2>
         </div>
         <div id="playlist-motorista">
@@ -185,9 +186,9 @@ export function renderHome(container) {
   carregarFretesResumo(container);
   carregarContagemCategorias(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
+  carregarManchetes(container);
   carregarAniversariantes(container);
   renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
-  carregarManchetes(container);
   carregarPlaylist(container);
 }
 
@@ -396,6 +397,15 @@ function renderMiniCardEmpresa(empresa) {
 async function carregarAniversariantes(container) {
   const secao = container.querySelector('#secao-aniversariantes');
   const alvo = container.querySelector('#aniversariantes-resumo');
+  const bannerAlvo = container.querySelector('#aniversario-banner-publicidade');
+
+  // O banner de publicidade é fixo e continua aparecendo mesmo sem aniversariante na semana.
+  bannerAlvo.innerHTML = `
+    <a href="#" class="aniversario-publicidade">
+      <img src="/images/publicidade-aniversario.jpg" alt="Publicidade" />
+    </a>
+  `;
+
   try {
     const [semana, mes] = await Promise.all([buscarAniversariantesDaSemana(), buscarAniversariantesDoMes()]);
 
@@ -411,9 +421,6 @@ async function carregarAniversariantes(container) {
     const grupos = agruparPorData(semana);
 
     alvo.innerHTML = `
-      <a href="#" class="aniversario-publicidade">
-        <img src="/images/publicidade-aniversario.jpg" alt="Publicidade" />
-      </a>
       <div class="aniversario-card">
         <div class="aniversario-card__header-linha">
           <h3 class="aniversario-card__titulo">📅 Motoristas da TRA aniversariantes</h3>
