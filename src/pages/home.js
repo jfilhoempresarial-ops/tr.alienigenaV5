@@ -488,6 +488,71 @@ function renderMiniCardVaga(vaga) {
   `;
 }
 
+const CHAVE_ULTIMO_INDICE_PLAYLIST = 'tra-playlist-ultimo-indice';
+
+/**
+ * Faz o rodízio da música em destaque: cada visita mostra a próxima da lista.
+ * Guardado no navegador do próprio motorista (localStorage), então é por
+ * pessoa/aparelho — não afeta os outros visitantes.
+ */
+function obterProximoIndicePlaylist(totalMusicas) {
+  try {
+    const ultimo = parseInt(localStorage.getItem(CHAVE_ULTIMO_INDICE_PLAYLIST), 10);
+    const proximo = Number.isNaN(ultimo) ? 0 : (ultimo + 1) % totalMusicas;
+    localStorage.setItem(CHAVE_ULTIMO_INDICE_PLAYLIST, String(proximo));
+    return proximo;
+  } catch {
+    return 0; // localStorage bloqueado (modo privado, etc.) — sempre mostra a primeira.
+  }
+}
+
+/** Rolagem automática suave (vai e volta) no carrossel de músicas, mesmo estilo do de categorias. */
+function configurarAutoScrollPlaylist(lista) {
+  if (!lista || lista.scrollWidth <= lista.clientWidth) return; // nada pra rolar
+
+  const VELOCIDADE_PX = 0.6;
+  let direcao = 1;
+  let pausado = false;
+  let animando = true;
+  let timeoutRetomada = null;
+
+  function passo() {
+    if (!animando) return;
+    if (!pausado) {
+      lista.scrollLeft += VELOCIDADE_PX * direcao;
+      const maximo = lista.scrollWidth - lista.clientWidth;
+      if (lista.scrollLeft >= maximo) direcao = -1;
+      if (lista.scrollLeft <= 0) direcao = 1;
+    }
+    requestAnimationFrame(passo);
+  }
+
+  function pausar() {
+    pausado = true;
+    if (timeoutRetomada) clearTimeout(timeoutRetomada);
+  }
+
+  function agendarRetomada(delayMs = 1500) {
+    if (timeoutRetomada) clearTimeout(timeoutRetomada);
+    timeoutRetomada = setTimeout(() => {
+      pausado = false;
+    }, delayMs);
+  }
+
+  lista.addEventListener('pointerdown', pausar);
+  lista.addEventListener('pointerup', () => agendarRetomada());
+  lista.addEventListener('pointercancel', () => agendarRetomada());
+  lista.addEventListener('mouseenter', pausar);
+  lista.addEventListener('mouseleave', () => agendarRetomada(300));
+
+  document.addEventListener('visibilitychange', () => {
+    animando = !document.hidden;
+    if (animando) requestAnimationFrame(passo);
+  });
+
+  requestAnimationFrame(passo);
+}
+
 async function carregarPlaylist(container) {
   const alvo = container.querySelector('#playlist-motorista');
   try {
@@ -497,7 +562,8 @@ async function carregarPlaylist(container) {
       return;
     }
 
-    const primeira = musicas[0];
+    const indiceDestaque = obterProximoIndicePlaylist(musicas.length);
+    const primeira = musicas[indiceDestaque];
 
     alvo.innerHTML = `
       <div class="playlist-embed">
@@ -511,11 +577,11 @@ async function carregarPlaylist(container) {
           loading="lazy"
         ></iframe>
       </div>
-      <div class="playlist-lista">
+      <div class="playlist-lista" id="playlist-lista">
         ${musicas
           .map(
             (m, i) => `
-          <button class="playlist-item ${i === 0 ? 'playlist-item--ativo' : ''}" data-video-id="${m.id}">
+          <button class="playlist-item ${i === indiceDestaque ? 'playlist-item--ativo' : ''}" data-video-id="${m.id}">
             <img src="${m.miniatura}" alt="" class="playlist-item__miniatura" loading="lazy" />
             <span class="playlist-item__titulo">${m.titulo}</span>
           </button>
@@ -544,6 +610,11 @@ async function carregarPlaylist(container) {
         botao.classList.add('playlist-item--ativo');
       });
     });
+
+    const listaEl = alvo.querySelector('#playlist-lista');
+    const itemAtivo = listaEl.querySelector('.playlist-item--ativo');
+    if (itemAtivo) itemAtivo.scrollIntoView({ inline: 'start', block: 'nearest' });
+    configurarAutoScrollPlaylist(listaEl);
   } catch (erro) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar a playlist agora.</p>`;
     console.error(erro);
