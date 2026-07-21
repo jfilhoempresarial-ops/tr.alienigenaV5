@@ -1,8 +1,18 @@
 import { buscarBannersAtivos, buscarBannersPorCategoria, registrarClique } from '../services/banners.service.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 
-const INTERVALO_MS = 3000;
-let timerAtual = null;
+// Intervalo base + uma variação de até alguns segundos, calculada por
+// carrossel (containerId), pra cada um trocar de slide num compasso levemente
+// diferente e não ficarem todos passando no mesmo instante.
+const INTERVALO_BASE_MS = 3000;
+const VARIACAO_MAXIMA_MS = 1800;
+
+// Timers guardados por containerId (não mais uma única variável global) —
+// assim, renderizar um carrossel novo só limpa o timer DELE MESMO, nunca o
+// de outro carrossel na mesma página. Esse era o bug: antes, um único
+// "timerAtual" compartilhado fazia os carrosséis limparem o timer um do
+// outro, deixando o comportamento de troca de slide imprevisível.
+const timersPorContainer = new Map();
 
 const NUMERO_COMERCIAL = '5588988621481'; // TODO: troque pelo seu número real de WhatsApp comercial
 
@@ -30,13 +40,26 @@ const PLACEHOLDER_TEXTO = {
   },
 };
 
+/** Gera um intervalo determinístico (mas diferente) por containerId, entre
+ * INTERVALO_BASE_MS e INTERVALO_BASE_MS + VARIACAO_MAXIMA_MS. Determinístico
+ * pra não ficar um valor aleatório novo a cada re-render do mesmo carrossel. */
+function calcularIntervalo(containerId) {
+  let hash = 0;
+  for (let i = 0; i < containerId.length; i++) {
+    hash = (hash * 31 + containerId.charCodeAt(i)) % 100000;
+  }
+  const variacao = hash % VARIACAO_MAXIMA_MS;
+  return INTERVALO_BASE_MS + variacao;
+}
+
 export async function renderCarrosselBanners(containerId = 'carrossel-banners', categoria = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  if (timerAtual) {
-    clearInterval(timerAtual);
-    timerAtual = null;
+  const timerAnterior = timersPorContainer.get(containerId);
+  if (timerAnterior) {
+    clearInterval(timerAnterior);
+    timersPorContainer.delete(containerId);
   }
 
   let banners;
@@ -97,10 +120,13 @@ export async function renderCarrosselBanners(containerId = 'carrossel-banners', 
     indiceAtual = indice;
   }
 
-  timerAtual = setInterval(() => {
+  const intervaloDesteCarrossel = calcularIntervalo(containerId);
+  const novoTimer = setInterval(() => {
     const proximo = (indiceAtual + 1) % banners.length;
     mostrarSlide(proximo);
-  }, INTERVALO_MS);
+  }, intervaloDesteCarrossel);
+
+  timersPorContainer.set(containerId, novoTimer);
 }
 
 function renderPlaceholder(container, categoria) {
