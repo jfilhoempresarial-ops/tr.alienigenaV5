@@ -616,7 +616,13 @@ async function carregarPlaylist(container) {
 
     const listaEl = alvo.querySelector('#playlist-lista');
     const itemAtivo = listaEl.querySelector('.playlist-item--ativo');
-    if (itemAtivo) itemAtivo.scrollIntoView({ inline: 'start', block: 'nearest' });
+    // Rola só o carrossel horizontal até o item ativo — NÃO usar scrollIntoView
+    // aqui, porque ele pode arrastar a página inteira pra baixo (o navegador
+    // rola o document verticalmente também pra garantir visibilidade do
+    // elemento, mesmo pedindo block: 'nearest').
+    if (itemAtivo) {
+      listaEl.scrollLeft = itemAtivo.offsetLeft;
+    }
     configurarAutoScrollPlaylist(listaEl);
   } catch (erro) {
     alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar a playlist agora.</p>`;
