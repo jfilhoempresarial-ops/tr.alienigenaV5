@@ -66,6 +66,10 @@ const DIAS_MAXIMOS = 3;
 // Máximo de notícias novas gravadas por execução (evita lotar o Firestore
 // de uma vez só se muita coisa saiu ao mesmo tempo).
 const MAXIMO_POR_EXECUCAO = 15;
+
+// Imagem usada quando não é possível pegar a foto real da matéria (ou quando
+// só se consegue o ícone genérico do próprio Google News, não da fonte).
+const IMAGEM_PADRAO = '/images/tra-news-logo.png';
 // -----------------------------------
 
 initializeApp({
@@ -157,9 +161,14 @@ async function tentarBuscarImagem(link) {
     if (!resposta.ok) return null;
     const html = await resposta.text();
     const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    return match ? match[1] : null;
+    if (!match) return null;
+    const urlImagem = match[1];
+    // Se o redirecionamento não saiu do domínio do Google, a imagem capturada
+    // é o ícone genérico do Google News, não a foto da matéria — descarta.
+    if (/(^|\.)google(usercontent)?\.com|gstatic\.com/i.test(urlImagem)) return null;
+    return urlImagem;
   } catch {
-    return null; // fonte bloqueou, deu timeout, etc. — segue sem imagem, o card já tem fallback.
+    return null; // fonte bloqueou, deu timeout, etc. — segue sem imagem, cai no fallback.
   }
 }
 
@@ -207,6 +216,7 @@ async function main() {
       origem: 'google-news',
     };
     if (imagemUrl) dados.imagemUrl = imagemUrl;
+    else dados.imagemUrl = IMAGEM_PADRAO;
 
     await db.collection('noticias').doc(id).set(dados, { merge: true });
     gravadas++;
