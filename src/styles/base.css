@@ -2031,6 +2031,88 @@ button {
 .noticia-completa__texto p {
   margin: 0 0 16px;
 }
+
+/* ===== Notícia externa (iframe com barra TRA no topo) ===== */
+
+.noticia-externa {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.noticia-externa__barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0f2d1a;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.noticia-externa__logo {
+  height: 28px;
+  width: auto;
+}
+
+.noticia-externa__texto-barra {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.noticia-externa__fechar {
+  color: #fff;
+  text-decoration: none;
+  font-size: 18px;
+  padding: 4px 8px;
+  opacity: 0.8;
+}
+
+.noticia-externa__fechar:hover {
+  opacity: 1;
+}
+
+.noticia-externa__aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #fff8e6;
+  border-bottom: 1px solid #f5d98e;
+  flex-shrink: 0;
+}
+
+.noticia-externa__aviso span {
+  font-size: 12px;
+  color: #7a5c00;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noticia-externa__abrir-original {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f2d1a;
+  background: #7ed321;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.noticia-externa__iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+}
 /* ===== Rodapé institucional (colunas de links) ===== */
 
 .footer {
@@ -2626,6 +2708,51 @@ button {
   font-size: 13px;
   color: #888;
   margin: 0;
+}
+
+.parceira-card__saiba-mais-btn {
+  background: #eef1ee;
+  color: #333;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.parceira-card__contatos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.parceira-card__contato {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.parceira-card__contato--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.parceira-card__contato--instagram {
+  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af);
+  color: #fff;
+}
+
+.parceira-card__contato--site {
+  background: #eef1ee;
+  color: #333;
 }
 
 .parceira-card__link {

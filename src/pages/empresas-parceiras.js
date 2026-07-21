@@ -1,4 +1,5 @@
 import { buscarEmpresasParceiras } from '../services/banners.service.js';
+import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 
 export async function renderEmpresasParceiras(container) {
   container.innerHTML = `
@@ -23,23 +24,51 @@ export async function renderEmpresasParceiras(container) {
       return;
     }
 
-    alvo.innerHTML = parceiras
-      .map(
-        (empresa) => `
-        <div class="parceira-card">
-          <p class="parceira-card__nome">${empresa.nome}</p>
-          ${empresa.descricao ? `<p class="parceira-card__descricao">${empresa.descricao}</p>` : ''}
-          ${
-            empresa.link
-              ? `<a href="${empresa.link}" target="_blank" rel="noopener" class="parceira-card__link">Saiba mais</a>`
-              : ''
-          }
-        </div>
-      `
-      )
-      .join('');
+    alvo.innerHTML = parceiras.map((empresa, indice) => renderCardParceira(empresa, indice)).join('');
+
+    // "Saiba mais" alterna a visibilidade dos botões de contato daquele card.
+    alvo.querySelectorAll('[data-toggle-contato]').forEach((botao) => {
+      botao.addEventListener('click', () => {
+        const painel = alvo.querySelector(`#parceira-contatos-${botao.dataset.toggleContato}`);
+        if (!painel) return;
+        const estaAberto = !painel.hidden;
+        painel.hidden = estaAberto;
+        botao.textContent = estaAberto ? 'Saiba mais' : 'Fechar';
+      });
+    });
   } catch (erro) {
     alvo.innerHTML = `<p class="erro">Não foi possível carregar as empresas parceiras agora.</p>`;
     console.error(erro);
   }
+}
+
+function renderCardParceira(empresa, indice) {
+  const linkWhats = empresa.whatsapp
+    ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu número no anúncio da TRA e quero saber mais.')
+    : null;
+  const linkInstagram = empresa.instagram
+    ? `https://www.instagram.com/${empresa.instagram.replace(/^@/, '').trim()}/`
+    : null;
+  const linkSite = empresa.link || null;
+
+  const temAlgumContato = Boolean(linkWhats || linkInstagram || linkSite);
+
+  return `
+    <div class="parceira-card">
+      <p class="parceira-card__nome">${empresa.nome}</p>
+      ${empresa.descricao ? `<p class="parceira-card__descricao">${empresa.descricao}</p>` : ''}
+      ${
+        temAlgumContato
+          ? `
+        <button class="parceira-card__saiba-mais-btn" data-toggle-contato="${indice}">Saiba mais</button>
+        <div class="parceira-card__contatos" id="parceira-contatos-${indice}" hidden>
+          ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--whatsapp">💬 WhatsApp</a>` : ''}
+          ${linkInstagram ? `<a href="${linkInstagram}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--instagram">📸 Instagram</a>` : ''}
+          ${linkSite ? `<a href="${linkSite}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--site">🔗 Site</a>` : ''}
+        </div>
+      `
+          : ''
+      }
+    </div>
+  `;
 }

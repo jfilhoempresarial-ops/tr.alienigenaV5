@@ -52,6 +52,8 @@ export async function buscarEmpresasParceiras() {
       vistos.set(nome, {
         nome,
         descricao: dados.descricao || null,
+        whatsapp: dados.whatsapp || null,
+        instagram: dados.instagram || null,
         link: dados.link || null,
       });
     }

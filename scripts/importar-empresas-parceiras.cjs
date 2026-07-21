@@ -89,7 +89,6 @@ async function main() {
     const descricao = (linha['Solução para o motorista'] || '').toString().trim();
     const whatsapp = normalizarTelefone(linha['WhatsApp / telefone']);
     const instagram = limparInstagram(linha['Instagram']);
-    const instagramLink = instagram ? `https://www.instagram.com/${instagram.replace(/^@/, '')}/` : '';
     const fonteLink = (linha['Fonte / link'] || '').toString().trim();
 
     const dados = {
@@ -100,8 +99,10 @@ async function main() {
     };
     if (whatsapp) dados.whatsapp = whatsapp;
     if (instagram) dados.instagram = instagram;
-    // Preferência de link pra exibir no card: Instagram, senão o link da coluna "Fonte / link".
-    dados.link = instagramLink || fonteLink || null;
+    // "link" fica só pro site/fonte genérica (ex: Motz, que só tem site, sem
+    // Instagram) — o Instagram vira botão próprio no card, montado a partir
+    // do campo "instagram" (handle), não precisa duplicar aqui.
+    dados.link = fonteLink || null;
 
     const id = gerarIdParceira(nome);
     const docRef = db.collection('banners').doc(id);
