@@ -51,6 +51,7 @@ export async function buscarEmpresasParceiras() {
     if (nome && !vistos.has(nome)) {
       vistos.set(nome, {
         nome,
+        descricao: dados.descricao || null,
         link: dados.link || null,
       });
     }

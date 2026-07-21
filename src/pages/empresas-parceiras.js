@@ -28,6 +28,7 @@ export async function renderEmpresasParceiras(container) {
         (empresa) => `
         <div class="parceira-card">
           <p class="parceira-card__nome">${empresa.nome}</p>
+          ${empresa.descricao ? `<p class="parceira-card__descricao">${empresa.descricao}</p>` : ''}
           ${
             empresa.link
               ? `<a href="${empresa.link}" target="_blank" rel="noopener" class="parceira-card__link">Saiba mais</a>`
