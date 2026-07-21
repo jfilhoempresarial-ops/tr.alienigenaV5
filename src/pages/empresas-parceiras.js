@@ -46,12 +46,16 @@ function renderCardParceira(empresa, indice) {
   const linkWhats = empresa.whatsapp
     ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu número no anúncio da TRA e quero saber mais.')
     : null;
+  // Se não tiver o campo "instagram" (handle) preenchido, mas o "link" antigo
+  // apontar pro instagram.com, aproveita ele como Instagram em vez de perder
+  // a informação — vários banners antigos guardavam o perfil ali dentro.
   const linkInstagram = empresa.instagram
     ? `https://www.instagram.com/${empresa.instagram.replace(/^@/, '').trim()}/`
-    : null;
-  const linkSite = empresa.link || null;
+    : empresa.link && /instagram\.com/i.test(empresa.link)
+      ? empresa.link
+      : null;
 
-  const temAlgumContato = Boolean(linkWhats || linkInstagram || linkSite);
+  const temAlgumContato = Boolean(linkWhats || linkInstagram);
 
   return `
     <div class="parceira-card">
@@ -64,7 +68,6 @@ function renderCardParceira(empresa, indice) {
         <div class="parceira-card__contatos" id="parceira-contatos-${indice}" hidden>
           ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--whatsapp">💬 WhatsApp</a>` : ''}
           ${linkInstagram ? `<a href="${linkInstagram}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--instagram">📸 Instagram</a>` : ''}
-          ${linkSite ? `<a href="${linkSite}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--site">🔗 Site</a>` : ''}
         </div>
       `
           : ''
