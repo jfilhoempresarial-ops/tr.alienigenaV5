@@ -270,13 +270,16 @@ async function carregarContagemCategorias(container) {
   const titulo = container.querySelector('#home-titulo-principal');
   const RAIO_KM = 20;
 
-  // Pede a localização assim que a home carrega. Se demorar demais (>6s) ou
-  // for negada, cai no modo antigo (título genérico, sem contagem por raio).
+  // Pede a localização assim que a home carrega. O geo.service.js já dá até 15s
+  // pro GPS responder (enableHighAccuracy: false, bom pra rodovia com sinal fraco),
+  // então aqui damos uma margem de segurança de 18s — nunca menor que o timeout
+  // interno, senão desistimos antes da resposta chegar (era o bug: 6s aqui vs
+  // 15s lá dentro, o site desistia primeiro e nunca tentava de novo).
   let localizacao = null;
   try {
     localizacao = await Promise.race([
       obterLocalizacaoAtual(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), 6000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), 18000)),
     ]);
   } catch (erro) {
     console.warn('Localização indisponível na home, mantendo título genérico.', erro);
