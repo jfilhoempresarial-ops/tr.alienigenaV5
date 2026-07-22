@@ -348,11 +348,12 @@ async function carregarManchetes(container) {
     
     alvo.innerHTML = manchetes
       .map((n) => {
-        const ehPropria = Boolean(n.texto);
-        const href = ehPropria ? `/noticia/${n.id}` : n.link;
-        const alvoLink = ehPropria ? '' : 'target="_blank" rel="noopener"';
+        // Todas as notícias (próprias ou externas) abrem na nossa rota /noticia/:id,
+        // sem sair do site — a página noticia.js decide como mostrar cada tipo
+        // (texto próprio, ou moldura com a barra TRA pra notícias externas).
+        const href = `/noticia/${n.id}`;
         return `
-      <a href="${href}" ${alvoLink} class="manchete-card">
+      <a href="${href}" class="manchete-card">
         ${
           n.imagemUrl
             ? `<img src="${n.imagemUrl}" alt="" class="manchete-card__imagem" loading="lazy" />`
@@ -417,7 +418,15 @@ async function carregarAniversariantes(container) {
     const diaHoje = hoje.getDate();
     const mesHoje = hoje.getMonth() + 1;
 
-    const grupos = agruparPorData(semana);
+    const gruposOrdenados = agruparPorData(semana);
+    // Traz o grupo de hoje pra frente de todos os outros — o motorista vê
+    // primeiro quem faz aniversário HOJE, mesmo que cronologicamente não
+    // seja o primeiro dia da semana exibida.
+    const indiceHoje = gruposOrdenados.findIndex((g) => g.dia === diaHoje && g.mes === mesHoje);
+    const grupos =
+      indiceHoje > 0
+        ? [gruposOrdenados[indiceHoje], ...gruposOrdenados.slice(0, indiceHoje), ...gruposOrdenados.slice(indiceHoje + 1)]
+        : gruposOrdenados;
 
     alvo.innerHTML = `
       <div class="aniversario-card">
