@@ -48,6 +48,20 @@ const iconeEmpresa = L.divIcon({
   iconSize: L.point(54, 54),
 });
 
+// Ícone vermelho pros Pontos de Parada e Descanso (PPD) oficiais do governo —
+// pra diferenciar visualmente dos prestadores comuns (verde). Mesmo tamanho,
+// cor e emoji diferentes.
+const iconePpd = L.divIcon({
+  html: `
+    <div class="mapa-cluster-pino mapa-cluster-pino--ppd">
+      <span class="mapa-cluster-pino__emoji">🛏️</span>
+      <span class="mapa-cluster-pino__numero mapa-cluster-pino__numero--ppd">1</span>
+    </div>
+  `,
+  className: 'mapa-cluster-icone',
+  iconSize: L.point(54, 54),
+});
+
 export async function renderMapa(container) {
   container.innerHTML = `
     <section class="mapa-pagina">
@@ -104,7 +118,7 @@ export async function renderMapa(container) {
       // somar por categoria quando ele estiver dentro de um cluster.
       const marker = L.marker([empresa.lat, empresa.lng], {
         categorias: empresa.categorias || [],
-        icon: iconeEmpresa,
+        icon: empresa.origem === 'ppd-gov-br' ? iconePpd : iconeEmpresa,
       }).bindPopup(`
         <strong>${empresa.nome}</strong><br/>
         ${empresa.endereco ? `${empresa.endereco}<br/>` : ''}

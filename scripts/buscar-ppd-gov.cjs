@@ -50,6 +50,42 @@ function gerarId(nome, cidade) {
   return texto || `ppd-${Date.now()}`;
 }
 
+// Cache por cidade+UF: várias linhas da lista compartilham a mesma cidade
+// (ex: duas em Feira de Santana), então geocodificamos cada cidade só uma
+// vez, mesmo que apareça em várias linhas da tabela.
+const cacheGeocodificacao = new Map();
+
+/**
+ * Geocodifica pelo nome da CIDADE (não temos endereço/KM exato pra geocodificar
+ * com precisão) via Nominatim/OpenStreetMap, gratuito e sem precisar de chave.
+ * O pino no mapa fica no centro da cidade, não na localização exata da rodovia
+ * — é uma aproximação, mas já ajuda o motorista a saber que tem um PPD ali perto.
+ * Respeita o limite de 1 requisição/segundo do Nominatim (uso justo, gratuito).
+ */
+async function geocodificarCidade(cidade, uf) {
+  const chave = `${cidade}|${uf}`;
+  if (cacheGeocodificacao.has(chave)) return cacheGeocodificacao.get(chave);
+
+  let resultado = null;
+  try {
+    const consulta = encodeURIComponent(`${cidade}, ${uf}, Brasil`);
+    const url = `https://nominatim.openstreetmap.org/search?q=${consulta}&format=json&limit=1&countrycodes=br`;
+    const resposta = await fetch(url, {
+      headers: { 'User-Agent': 'TRAdaEstrada-PPDScraper/1.0 (https://tralienigena.com.br)' },
+    });
+    const dados = await resposta.json();
+    if (dados && dados[0]) {
+      resultado = { lat: parseFloat(dados[0].lat), lng: parseFloat(dados[0].lon) };
+    }
+  } catch (erro) {
+    console.warn(`⚠️  Não foi possível geocodificar "${cidade}/${uf}":`, erro.message);
+  }
+
+  cacheGeocodificacao.set(chave, resultado);
+  await new Promise((r) => setTimeout(r, 1100)); // respeita o limite de 1 req/s do Nominatim
+  return resultado;
+}
+
 /** Acha a tabela certa na página (pode ter várias tabelas escondidas no layout do site do governo)
  *  procurando pela que tem "NOME FANTASIA" no cabeçalho, e extrai as linhas. */
 function extrairPpds(html) {
@@ -103,6 +139,7 @@ async function main() {
   for (const ppd of ppds) {
     const endereco = ppd.localizacao ? `${ppd.localizacao} — ${ppd.cidade}/${ppd.uf}` : `${ppd.cidade}/${ppd.uf}`;
     const id = gerarId(ppd.nome, ppd.cidade);
+    const coordenadas = await geocodificarCidade(ppd.cidade, ppd.uf);
 
     const dados = {
       nome: ppd.nome,
@@ -114,9 +151,14 @@ async function main() {
       origem: 'ppd-gov-br',
       // Sem "whatsapp" de propósito — a lista oficial não traz telefone.
     };
+    if (coordenadas) {
+      dados.lat = coordenadas.lat;
+      dados.lng = coordenadas.lng;
+    }
 
     await db.collection('empresas').doc(id).set(dados, { merge: true });
     gravados++;
+    console.log(`✅ (${gravados}/${ppds.length}) ${ppd.nome} — ${ppd.cidade}/${ppd.uf}${coordenadas ? '' : ' (sem coordenada)'}`);
   }
 
   console.log(`🎉 Concluído! ${gravados} PPDs gravados/atualizados na categoria "Pontos de Apoio".`);

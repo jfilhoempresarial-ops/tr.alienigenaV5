@@ -1343,6 +1343,15 @@ button {
   line-height: 1;
 }
 
+.mapa-cluster-pino--ppd {
+  border-color: #d9412f;
+}
+
+.mapa-cluster-pino__numero--ppd {
+  background: #d9412f;
+  color: #fff;
+}
+
 .banner-grupos__icone {
   font-size: 28px;
 }
