@@ -35,13 +35,17 @@ export async function buscarBannersAtivos() {
 }
 
 /**
- * Busca a lista de empresas parceiras: pega TODOS os banners ativos
- * (de qualquer categoria/posição do site) e retorna os nomes distintos,
- * sem repetir — usado na página "Empresas Parceiras".
+ * Busca a lista de empresas parceiras: considera SOMENTE os banners criados
+ * pela importação da planilha (scripts/empresasparceiras.xlsx), identificados
+ * pelo campo origem: 'importacao-planilha-parceiras'. Banners criados à mão
+ * pelo admin (pro carrossel da home) NÃO entram mais aqui — isso evita
+ * duplicidade entre "empresa com banner de carrossel" e "empresa da planilha".
+ * A partir de agora, pra uma empresa aparecer na página de Parceiras, ela
+ * precisa estar na planilha.
  */
 export async function buscarEmpresasParceiras() {
   const ref = collection(db, COLLECTION);
-  const q = query(ref, where('ativo', '==', true));
+  const q = query(ref, where('ativo', '==', true), where('origem', '==', 'importacao-planilha-parceiras'));
   const snapshot = await getDocs(q);
 
   const vistos = new Map();
