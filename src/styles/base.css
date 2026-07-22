@@ -964,6 +964,15 @@ button {
   font-size: 14px;
   padding: 20px 0;
 }
+
+.erro-carregamento {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.erro-carregamento .btn-secundario {
+  margin-top: 12px;
+}
 .carrossel-categoria {
   margin-bottom: 20px;
 }

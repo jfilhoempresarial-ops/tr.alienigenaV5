@@ -35,19 +35,40 @@ function obterLocalizacaoComTimeout(ms = 5000) {
   ]);
 }
 
+// Em algumas redes móveis (sinal fraco de rodovia, "modo economia de dados"
+// da operadora, proxy que bloqueia conexões do tipo WebChannel), a consulta
+// ao Firestore pode ficar pendurada pra sempre — sem dar erro, sem responder.
+// Sem esse limite, a tela ficava travada em "Buscando prestadores..." pra
+// sempre nesses casos. Com o timeout, cai no bloco de erro (com botão de
+// tentar de novo) depois de 12s em vez de travar.
+function buscarComTimeout(promessa, ms = 12000) {
+  return Promise.race([
+    promessa,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout ao buscar prestadores')), ms)),
+  ]);
+}
+
 export async function renderResultados(container, categoria) {
   container.innerHTML = `<p class="loading">Buscando prestadores...</p>`;
 
   let empresas;
   try {
-    empresas = await buscarEmpresasPorCategoria(categoria);
+    empresas = await buscarComTimeout(buscarEmpresasPorCategoria(categoria));
   } catch (erro) {
     container.innerHTML = `
-      <p class="erro">
-        Não conseguimos carregar os prestadores dessa categoria agora. Tente novamente em instantes.
-      </p>
+      <div class="erro-carregamento">
+        <p class="erro">
+          Não conseguimos carregar os prestadores dessa categoria agora. Isso pode acontecer com sinal fraco
+          de internet. Tente novamente.
+        </p>
+        <button id="tentar-carregar-empresas" class="btn-secundario">🔄 Tentar de novo</button>
+      </div>
     `;
     console.error(erro);
+    const botaoTentarCarregar = container.querySelector('#tentar-carregar-empresas');
+    if (botaoTentarCarregar) {
+      botaoTentarCarregar.addEventListener('click', () => renderResultados(container, categoria));
+    }
     return;
   }
 
