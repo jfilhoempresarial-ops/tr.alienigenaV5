@@ -594,7 +594,12 @@ async function carregarPlaylist(container) {
           .map(
             (m, i) => `
           <button class="playlist-item ${i === indiceDestaque ? 'playlist-item--ativo' : ''}" data-video-id="${m.id}">
-            <img src="${m.miniatura}" alt="" class="playlist-item__miniatura" loading="lazy" />
+            <div class="playlist-item__miniatura-wrap">
+              <img src="${m.miniatura}" alt="" class="playlist-item__miniatura" loading="lazy" />
+              <span class="playlist-item__equalizador">
+                <span></span><span></span><span></span><span></span>
+              </span>
+            </div>
             <span class="playlist-item__titulo">${m.titulo}</span>
           </button>
         `
