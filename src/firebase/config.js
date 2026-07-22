@@ -14,14 +14,16 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 
-// experimentalAutoDetectLongPolling: detecta automaticamente quando a conexão
-// em streaming (WebChannel) padrão do Firestore está sendo bloqueada — comum
-// em redes de operadora móvel/proxies restritivos — e troca para long polling
-// nesses casos, sem prejudicar a performance em redes normais (Wi-Fi, etc).
-// Isso resolve o site "carregando pra sempre" em alguns celulares (ex: iPhone
-// em 4G/5G) sem precisar forçar long polling o tempo todo.
+// experimentalForceLongPolling: antes usávamos experimentalAutoDetectLongPolling
+// (detecção automática), mas mesmo assim dois motoristas em redes móveis de
+// rodovia continuaram travando na conexão com o Firestore ("Buscando
+// prestadores..." pra sempre, sem erro). O modo automático nem sempre detecta
+// a tempo redes que bloqueiam o streaming (WebChannel). Forçando long polling
+// sempre, a conexão fica um pouco mais pesada em redes boas (Wi-Fi, 4G forte),
+// mas funciona de forma confiável em qualquer rede — prioridade certa pra um
+// app que precisa funcionar na estrada, com qualquer sinal.
 export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
+  experimentalForceLongPolling: true,
 });
 
 export const auth = getAuth(app);
