@@ -14,10 +14,9 @@ function gerarLinkMapa(empresa) {
 
 /** Recebe um objeto empresa (já com distanciaKm calculada) e retorna o HTML do card. */
 export function renderCardEmpresa(empresa) {
-  const linkWhats = gerarLinkWhatsapp(
-    empresa.whatsapp,
-    `Olá! Vi seu contato no TRA da Estrada e preciso de ajuda.`
-  );
+  const linkWhats = empresa.whatsapp
+    ? gerarLinkWhatsapp(empresa.whatsapp, `Olá! Vi seu contato no TRA da Estrada e preciso de ajuda.`)
+    : null;
   const linkMapa = gerarLinkMapa(empresa);
 
   const totalAvaliacoes = empresa.totalAvaliacoes || 0;
@@ -32,6 +31,8 @@ export function renderCardEmpresa(empresa) {
 
       ${empresa.endereco ? `<p class="card-empresa__endereco">${empresa.endereco}</p>` : ''}
 
+      ${empresa.descricao ? `<p class="card-empresa__descricao">${empresa.descricao}</p>` : ''}
+
       <div class="card-empresa__linha">
         ${empresa.disponivel24h ? '<span class="tag tag--pequena">24h</span>' : ''}
         ${empresa.atendeCarreta ? '<span class="tag tag--pequena">Carreta</span>' : ''}
@@ -42,9 +43,13 @@ export function renderCardEmpresa(empresa) {
       </div>
 
       <div class="card-empresa__acoes">
-        <a href="${linkWhats}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--whatsapp">
+        ${
+          empresa.whatsapp
+            ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--whatsapp">
           💬 WhatsApp
-        </a>
+        </a>`
+            : ''
+        }
         <a href="${linkMapa}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--mapa">
           📍 Como chegar
         </a>

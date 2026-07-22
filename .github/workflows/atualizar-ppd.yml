@@ -1,0 +1,21 @@
+name: Atualizar Pontos de Parada e Descanso (PPD)
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 06:00 no horário de Brasília (UTC-3), 1x por dia
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependências
+        run: npm install cheerio firebase-admin
+      - name: Buscar e gravar PPDs
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/buscar-ppd-gov.cjs
