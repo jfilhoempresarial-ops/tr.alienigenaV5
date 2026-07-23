@@ -50,6 +50,8 @@ const MAPA_CATEGORIAS = {
   'Posto de Combu': 'posto', // caso a coluna venha cortada
   'Auto Peças': 'autopecas',
   'Tacógrafo': 'tacografo',
+  'Ponto de Apoio': 'pontoapoio',
+  'Pontos de Apoio': 'pontoapoio', // aceita as duas formas (singular/plural) na planilha
 };
 // -----------------------------------
 
