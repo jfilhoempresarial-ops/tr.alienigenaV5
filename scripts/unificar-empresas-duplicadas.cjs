@@ -55,7 +55,11 @@ function normalizarTexto(txt) {
 }
 
 function chaveDuplicidade(dados) {
-  return `${normalizarTexto(dados.nome)}|${normalizarTexto(dados.cidade)}`;
+  // Agrupa por nome + endereço (não por "cidade"): o campo cidade pode estar
+  // vazio ou ausente em documentos gravados por versões antigas do script
+  // de importação, o que faria duplicatas reais passarem despercebidas.
+  // O endereço é sempre preenchido, então é uma chave mais confiável.
+  return `${normalizarTexto(dados.nome)}|${normalizarTexto(dados.endereco)}`;
 }
 
 /** Pontua o quão "completo"/importante é um documento, pra decidir qual sobrevive. */
@@ -83,7 +87,7 @@ async function main() {
 
   const duplicados = [...grupos.values()].filter((grupo) => grupo.length > 1);
 
-  console.log(`Total de empresas distintas (por nome+cidade): ${grupos.size}`);
+  console.log(`Total de empresas distintas (por nome+endereço): ${grupos.size}`);
   console.log(`Grupos com duplicata: ${duplicados.length}`);
   console.log(`Modo: ${APLICAR_MUDANCAS ? '⚠️  APLICANDO MUDANÇAS DE VERDADE' : '🔎 SIMULAÇÃO (nada será alterado)'}\n`);
 
