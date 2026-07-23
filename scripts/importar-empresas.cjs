@@ -108,9 +108,12 @@ async function main() {
     const telefone = linha['Telefone/Whatssap'];
     const cidade = (linha['Cidade'] || '').trim();
 
-    // Linha "completa" exige os 4 campos principais preenchidos.
-    // O que não estiver completo fica pra você terminar de preencher depois.
-    if (!setor || !nome || !endereco || !telefone) {
+    // Linha "completa" exige Setor, Empresa e Endereço preenchidos. Telefone
+    // NÃO é mais obrigatório — algumas empresas legítimas (postos de rede
+    // grande, PPDs, etc.) não têm telefone público disponível, e isso não
+    // deve impedir o cadastro. O card só esconde o botão de WhatsApp quando
+    // não houver telefone (ver card-empresa.js).
+    if (!setor || !nome || !endereco) {
       puladas++;
       continue;
     }
