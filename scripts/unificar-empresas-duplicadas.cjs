@@ -7,12 +7,12 @@
  * empresa acabou gravada duas vezes com IDs diferentes (por alguma diferença
  * de formatação entre execuções do importar-empresas.cjs ao longo do tempo).
  *
- * Prioridade de qual documento SOBREVIVE (vira o principal): o mais completo
- * — mais categorias, tem lat/lng, tem whatsapp, tem avaliações já registradas
- * (notaMedia/totalAvaliacoes), pra não perder histórico de avaliação dos
- * motoristas. As categorias de TODOS os duplicados são somadas (união), não
- * substituídas — se uma cópia tinha "tacografo" e outra "mecanico", o
- * resultado final tem as duas.
+ * Prioridade de qual documento SOBREVIVE (vira o principal): o MAIS RECENTE
+ * (campo criadoEm). Documentos sem essa data são tratados como os mais
+ * antigos. Mesmo escolhendo pelo mais recente, ainda mesclamos os campos que
+ * faltarem nele (categorias, avaliações) a partir do(s) duplicado(s) mais
+ * antigo(s), pra não perder informação à toa — só a escolha de ID/documento
+ * que sobrevive muda, os dados continuam sendo somados.
  *
  * MODO SIMULAÇÃO POR PADRÃO: com APLICAR_MUDANCAS = false, o script só
  * MOSTRA o que faria (nenhum dado é alterado ou apagado). Depois de
@@ -65,15 +65,11 @@ function chaveDuplicidade(dados) {
   return normalizarTexto(dados.nome);
 }
 
-/** Pontua o quão "completo"/importante é um documento, pra decidir qual sobrevive. */
-function pontuarCompletude(dados) {
-  let pontos = 0;
-  if (dados.totalAvaliacoes) pontos += 5; // NUNCA perder avaliações já feitas por motoristas
-  if (dados.lat && dados.lng) pontos += 2;
-  if (dados.whatsapp) pontos += 2;
-  if ((dados.categorias || []).length > 0) pontos += 1;
-  if (dados.criadoEm) pontos += 1;
-  return pontos;
+/** Retorna a data de criação como timestamp, ou 0 se não tiver (tratado como o mais antigo). */
+function obterTimestampCriacao(dados) {
+  if (!dados.criadoEm) return 0;
+  const data = new Date(dados.criadoEm);
+  return Number.isNaN(data.getTime()) ? 0 : data.getTime();
 }
 
 async function main() {
@@ -95,7 +91,7 @@ async function main() {
   console.log(`Modo: ${APLICAR_MUDANCAS ? '⚠️  APLICANDO MUDANÇAS DE VERDADE' : '🔎 SIMULAÇÃO (nada será alterado)'}\n`);
 
   for (const grupo of duplicados) {
-    const ordenado = [...grupo].sort((a, b) => pontuarCompletude(b.dados) - pontuarCompletude(a.dados));
+    const ordenado = [...grupo].sort((a, b) => obterTimestampCriacao(b.dados) - obterTimestampCriacao(a.dados));
     const principal = ordenado[0];
     const extras = ordenado.slice(1);
 
