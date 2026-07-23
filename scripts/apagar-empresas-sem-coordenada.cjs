@@ -24,7 +24,7 @@ const { getFirestore } = require('firebase-admin/firestore');
 const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
 
 // Troque para true depois de conferir o log da simulação.
-const APLICAR_MUDANCAS = false;
+const APLICAR_MUDANCAS = true;
 
 function carregarCredencial() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
