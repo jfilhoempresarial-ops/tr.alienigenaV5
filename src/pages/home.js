@@ -1,7 +1,4 @@
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { buscarTodasEmpresas } from '../services/empresas.service.js';
-import { obterLocalizacaoAtual } from '../services/geo.service.js';
-import { ordenarPorDistancia } from '../utils/distancia.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
@@ -21,6 +18,29 @@ const CATEGORIAS = [
 ];
 
 const LABEL_POR_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
+
+// Rede de segurança: em redes móveis ruins (rodovia, sinal fraco), a consulta
+// ao Firestore pode ficar pendurada pra sempre, sem erro nem resposta. Sem
+// isso, a seção ficava travada em "Carregando..." pra sempre nesses casos.
+// Depois de 12s sem resposta, cai no bloco de erro (com botão de tentar de
+// novo) em vez de travar. Usado em todas as seções da home.
+function comTimeout(promessa, ms = 12000) {
+  return Promise.race([
+    promessa,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout ao carregar')), ms)),
+  ]);
+}
+
+function renderErroComRetry(alvo, aoTentarDeNovo) {
+  alvo.innerHTML = `
+    <div class="home-secao__erro">
+      <p class="home-secao__vazio">Não foi possível carregar agora.</p>
+      <button class="btn-secundario home-secao__retry-btn">🔄 Tentar de novo</button>
+    </div>
+  `;
+  const botao = alvo.querySelector('.home-secao__retry-btn');
+  if (botao) botao.addEventListener('click', aoTentarDeNovo);
+}
 
 function capitalizarNome(txt) {
   return (txt || '')
@@ -89,7 +109,6 @@ export function renderHome(container) {
             <a href="${href}" ${targetBlank} class="categoria-card" data-categoria-id="${cat.id}">
               <span class="categoria-card__icone">${cat.icone}</span>
               <span class="categoria-card__label">${cat.label}</span>
-              ${!cat.rotaInterna ? `<span class="categoria-card__contagem"></span>` : ''}
             </a>
           `;
           }).join('')}
@@ -180,7 +199,6 @@ export function renderHome(container) {
   configurarBuscaHome(container);
   carregarVagasDestaque(container);
   carregarFretesResumo(container);
-  carregarContagemCategorias(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
   carregarManchetes(container);
   carregarAniversariantes(container);
@@ -266,69 +284,10 @@ function configurarCarrosselCategorias(container) {
   requestAnimationFrame(passoAutoScroll);
 }
 
-async function carregarContagemCategorias(container) {
-  const titulo = container.querySelector('#home-titulo-principal');
-  const RAIO_KM = 20;
-
-  // Pede a localização assim que a home carrega. O geo.service.js já dá até 15s
-  // pro GPS responder (enableHighAccuracy: false, bom pra rodovia com sinal fraco),
-  // então aqui damos uma margem de segurança de 18s — nunca menor que o timeout
-  // interno, senão desistimos antes da resposta chegar (era o bug: 6s aqui vs
-  // 15s lá dentro, o site desistia primeiro e nunca tentava de novo).
-  let localizacao = null;
-  try {
-    localizacao = await Promise.race([
-      obterLocalizacaoAtual(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), 18000)),
-    ]);
-  } catch (erro) {
-    console.warn('Localização indisponível na home, mantendo título genérico.', erro);
-    return;
-  }
-
-  try {
-    const todasEmpresas = await buscarTodasEmpresas();
-    const ordenadas = ordenarPorDistancia(todasEmpresas, localizacao.lat, localizacao.lng);
-    const proximas = ordenadas.filter((e) => e.distanciaKm !== null && e.distanciaKm <= RAIO_KM);
-
-    // Conta quantas empresas de cada categoria estão no raio.
-    const contagem = {};
-    proximas.forEach((empresa) => {
-      (empresa.categorias || []).forEach((cat) => {
-        contagem[cat] = (contagem[cat] || 0) + 1;
-      });
-    });
-
-    // Coloca o selo de contagem em cada card de categoria (nas duas cópias duplicadas do carrossel).
-    Object.entries(contagem).forEach(([categoriaId, quantidade]) => {
-      container.querySelectorAll(`[data-categoria-id="${categoriaId}"] .categoria-card__contagem`).forEach((selo) => {
-        selo.textContent = quantidade;
-      });
-    });
-
-    // Bônus: tenta descobrir o nome da cidade pra personalizar o título.
-    // Se falhar, não tem problema — só mantém o título genérico.
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${localizacao.lat}&lon=${localizacao.lng}`;
-      const resposta = await fetch(url);
-      const dados = await resposta.json();
-      const nomeCidade = dados?.address?.city || dados?.address?.town || dados?.address?.municipality || '';
-      const totalServicos = proximas.length;
-      if (nomeCidade && totalServicos > 0) {
-        titulo.textContent = `Motorista, aqui em ${nomeCidade} tem ${totalServicos} serviço${totalServicos !== 1 ? 's' : ''} que ${totalServicos !== 1 ? 'podem' : 'pode'} te ajudar`;
-      }
-    } catch (erroReverso) {
-      console.warn('Não foi possível identificar a cidade do usuário.', erroReverso);
-    }
-  } catch (erro) {
-    console.error('Não foi possível carregar a contagem por categoria.', erro);
-  }
-}
-
 async function carregarManchetes(container) {
   const alvo = container.querySelector('#manchetes-home');
   try {
-    const manchetes = await buscarManchetesHome(3);
+    const manchetes = await comTimeout(buscarManchetesHome(3));
     if (manchetes.length === 0) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhuma notícia no momento.</p>`;
       return;
@@ -369,7 +328,7 @@ async function carregarManchetes(container) {
       })
       .join('');
   } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
+    renderErroComRetry(alvo, () => carregarManchetes(container));
     console.error(erro);
   }
 }
@@ -407,7 +366,9 @@ async function carregarAniversariantes(container) {
   `;
 
   try {
-    const [semana, mes] = await Promise.all([buscarAniversariantesDaSemana(), buscarAniversariantesDoMes()]);
+    const [semana, mes] = await comTimeout(
+      Promise.all([buscarAniversariantesDaSemana(), buscarAniversariantesDoMes()])
+    );
 
     if (semana.length === 0) {
       secao.style.display = 'none';
@@ -467,7 +428,7 @@ async function carregarVagasDestaque(container) {
   const alvo = container.querySelector('#lista-vagas');
   const titulo = container.querySelector('#titulo-vagas-destaque');
   try {
-    const dados = await buscarVagas();
+    const dados = await comTimeout(buscarVagas());
     const todosItens = dados.itens || [];
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
@@ -485,7 +446,7 @@ async function carregarVagasDestaque(container) {
     }
     alvo.innerHTML = itens.map(renderMiniCardVaga).join('');
   } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
+    renderErroComRetry(alvo, () => carregarVagasDestaque(container));
     console.error(erro);
   }
 }
@@ -568,7 +529,7 @@ function configurarAutoScrollPlaylist(lista) {
 async function carregarPlaylist(container) {
   const alvo = container.querySelector('#playlist-motorista');
   try {
-    const musicas = await buscarPlaylist();
+    const musicas = await comTimeout(buscarPlaylist());
     if (musicas.length === 0) {
       alvo.innerHTML = `<p class="home-secao__vazio">Playlist indisponível no momento.</p>`;
       return;
@@ -639,7 +600,7 @@ async function carregarPlaylist(container) {
     }
     configurarAutoScrollPlaylist(listaEl);
   } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar a playlist agora.</p>`;
+    renderErroComRetry(alvo, () => carregarPlaylist(container));
     console.error(erro);
   }
 }
@@ -648,7 +609,7 @@ async function carregarFretesResumo(container) {
   const alvo = container.querySelector('#lista-fretes');
   const titulo = container.querySelector('#titulo-fretes-resumo');
   try {
-    const fretes = await buscarTodosFretes();
+    const fretes = await comTimeout(buscarTodosFretes());
 
     titulo.textContent = fretes.length
       ? `📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}`
@@ -684,7 +645,7 @@ async function carregarFretesResumo(container) {
       })
       .join('');
   } catch (erro) {
-    alvo.innerHTML = `<p class="home-secao__vazio">Não foi possível carregar agora.</p>`;
+    renderErroComRetry(alvo, () => carregarFretesResumo(container));
     console.error(erro);
   }
 }

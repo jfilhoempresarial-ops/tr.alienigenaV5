@@ -5,34 +5,25 @@ import { renderCardEmpresa } from '../components/card-empresa.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 import { avaliarEmpresa } from '../services/avaliacoes.service.js';
 
-// Texto de exemplo (placeholder) da busca em cada categoria.
-// Categorias que NÃO aparecem aqui (ex: "posto") não mostram caixa de busca —
-// só o carrossel de banner, para o anunciante (ex: preço do combustível).
+// Texto de exemplo (placeholder) da busca em cada categoria. Categorias que
+// não tinham um texto específico caem no placeholder genérico (pode buscar
+// por serviço OU por cidade — ex: "Sobral", "freio", "diesel").
 const PLACEHOLDER_BUSCA = {
-  mecanico: 'Digite o problema do seu caminhão (ex: motor, freio, embreagem)',
-  borracharia: 'Digite o que você precisa (ex: furo, calibragem, tira prego)',
-  eletrica: 'Digite o problema elétrico (ex: bateria, alternador, luz)',
-  guincho: 'Digite sua emergência (ex: pane, acidente, atolado)',
-  pontoapoio: 'Digite o que você procura',
-  autopecas: 'Digite a peça que você procura',
-  tacografo: 'Digite o que você precisa (ex: aferição, calibração, cronotacógrafo)',
+  mecanico: 'Digite o problema ou a cidade (ex: motor, freio, embreagem, Sobral)',
+  borracharia: 'Digite o que você precisa ou a cidade (ex: furo, calibragem, Sobral)',
+  eletrica: 'Digite o problema ou a cidade (ex: bateria, alternador, Sobral)',
+  guincho: 'Digite sua emergência ou a cidade (ex: pane, acidente, Sobral)',
+  pontoapoio: 'Digite o que você procura ou a cidade',
+  autopecas: 'Digite a peça ou a cidade que você procura',
+  tacografo: 'Digite o que você precisa ou a cidade (ex: aferição, Sobral)',
 };
+const PLACEHOLDER_BUSCA_PADRAO = 'Digite a cidade ou o que você procura';
 
 function normalizar(txt) {
   return (txt || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
-}
-
-// Evita que a busca de localização trave a página para sempre caso o
-// navegador demore demais para responder (ex: popup de permissão que
-// não aparece, GPS lento). Depois de 5s, seguimos sem localização.
-function obterLocalizacaoComTimeout(ms = 5000) {
-  return Promise.race([
-    obterLocalizacaoAtual(),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout de localização')), ms)),
-  ]);
 }
 
 // Em algumas redes móveis (sinal fraco de rodovia, "modo economia de dados"
@@ -79,44 +70,50 @@ export async function renderResultados(container, categoria) {
 
   const RAIO_KM = 20;
 
-  // A localização é só um "bônus" para ordenar por distância.
-  // Se falhar ou demorar demais (permissão negada, sem GPS, timeout),
-  // mostramos a lista mesmo assim, sem ordenar nem filtrar por raio.
+  // NÃO pedimos localização automaticamente mais — o motorista decide se
+  // quer usar (botão "Usar minha localização"), já que boa parte não libera
+  // GPS e isso só atrasava a página sem necessidade pra quem prefere digitar
+  // a cidade na busca. Por padrão, a lista mostra tudo, sem ordenar por
+  // distância nem filtrar por raio.
   let localizacao = null;
-  try {
-    localizacao = await obterLocalizacaoComTimeout();
-  } catch (erro) {
-    console.warn('Localização indisponível, mostrando lista sem ordenar por distância.', erro);
-  }
+  let buscandoLocalizacao = false;
+  let empresasBase = empresas;
 
-  const listaOrdenada = localizacao
-    ? ordenarPorDistancia(empresas, localizacao.lat, localizacao.lng)
-    : empresas;
-
-  // Com localização disponível, só mantém prestadores dentro de 20km
-  // (empresas sem coordenadas ainda não entram, pois não dá pra confirmar a distância).
-  const listaBase = localizacao
-    ? listaOrdenada.filter((empresa) => empresa.distanciaKm !== null && empresa.distanciaKm <= RAIO_KM)
-    : listaOrdenada;
-
-  const avisoLocalizacao = !localizacao
-    ? `<p class="aviso-localizacao">
-         Não foi possível acessar sua localização, então a lista abaixo não está ordenada por distância.
-         <button id="tentar-localizacao">Tentar de novo</button>
-       </p>`
-    : '';
-
-  const placeholderBusca = PLACEHOLDER_BUSCA[categoria];
+  const placeholderBusca = PLACEHOLDER_BUSCA[categoria] || PLACEHOLDER_BUSCA_PADRAO;
   let filtroTexto = '';
 
   function aplicarFiltro() {
-    if (!placeholderBusca || !filtroTexto) return listaBase;
-    const qn = normalizar(filtroTexto);
-    return listaBase.filter((empresa) => {
-      const nome = normalizar(empresa.nome);
-      const endereco = normalizar(empresa.endereco);
-      return nome.includes(qn) || endereco.includes(qn);
-    });
+    let lista = empresasBase;
+    if (filtroTexto) {
+      const qn = normalizar(filtroTexto);
+      lista = lista.filter((empresa) => {
+        const nome = normalizar(empresa.nome);
+        const endereco = normalizar(empresa.endereco);
+        const cidade = normalizar(empresa.cidade);
+        return nome.includes(qn) || endereco.includes(qn) || cidade.includes(qn);
+      });
+    }
+    if (localizacao) {
+      lista = lista.filter((empresa) => empresa.distanciaKm !== null && empresa.distanciaKm <= RAIO_KM);
+    }
+    return lista;
+  }
+
+  async function usarLocalizacao() {
+    buscandoLocalizacao = true;
+    render();
+
+    try {
+      const loc = await obterLocalizacaoAtual();
+      localizacao = loc;
+      empresasBase = ordenarPorDistancia(empresas, loc.lat, loc.lng);
+    } catch (erro) {
+      console.warn('Não foi possível obter a localização.', erro);
+      alert('Não foi possível acessar sua localização. Confira se a permissão está ativada.');
+    }
+
+    buscandoLocalizacao = false;
+    render();
   }
 
   function render() {
@@ -135,20 +132,25 @@ export async function renderResultados(container, categoria) {
           <span class="banner-grupos__seta">›</span>
         </a>
 
-        ${
-          placeholderBusca
-            ? `<input
-                type="text"
-                id="resultados-busca"
-                class="resultados__busca"
-                placeholder="${placeholderBusca}"
-                value="${filtroTexto}"
-              />`
-            : ''
-        }
+        <input
+          type="text"
+          id="resultados-busca"
+          class="resultados__busca"
+          placeholder="${placeholderBusca}"
+          value="${filtroTexto}"
+        />
 
-        <h2>${localizacao ? `${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} perto de você` : `${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} disponíve${listaFinal.length !== 1 ? 'is' : 'l'}`}</h2>
-        ${avisoLocalizacao}
+        <button id="usar-localizacao-btn" class="resultados__localizacao-btn" ${buscandoLocalizacao ? 'disabled' : ''}>
+          ${
+            buscandoLocalizacao
+              ? '⏳ Buscando sua localização...'
+              : localizacao
+                ? '📍 Localização ativada — resultados num raio de 20km'
+                : '📍 Usar minha localização (ordenar por distância)'
+          }
+        </button>
+
+        <h2>${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</h2>
         <div class="resultados-lista">
           ${
             listaFinal.length
@@ -163,9 +165,9 @@ export async function renderResultados(container, categoria) {
 
     renderCarrosselBanners('carrossel-categoria', categoria);
 
-    const botaoTentar = container.querySelector('#tentar-localizacao');
-    if (botaoTentar) {
-      botaoTentar.addEventListener('click', () => renderResultados(container, categoria));
+    const botaoLocalizacao = container.querySelector('#usar-localizacao-btn');
+    if (botaoLocalizacao && !localizacao) {
+      botaoLocalizacao.addEventListener('click', usarLocalizacao);
     }
 
     const inputBusca = container.querySelector('#resultados-busca');

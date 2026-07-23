@@ -695,6 +695,15 @@ button {
   padding: 8px 0;
 }
 
+.home-secao__erro {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.home-secao__retry-btn {
+  margin-top: 6px;
+}
+
 .mini-card {
   flex: 0 0 auto;
   width: 210px;
@@ -1024,6 +1033,25 @@ button {
 .resultados__busca:focus {
   outline: none;
   border-color: var(--cor-primaria);
+}
+
+.resultados__localizacao-btn {
+  display: block;
+  width: 100%;
+  background: #eef1ee;
+  color: var(--cor-primaria-escura);
+  border: 1px dashed var(--cor-primaria);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 0 16px;
+}
+
+.resultados__localizacao-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 .mini-card--aniversario {
   background: linear-gradient(135deg, #fff8e6, #ffffff);
