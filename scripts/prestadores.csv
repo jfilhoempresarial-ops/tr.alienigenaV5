@@ -1,172 +1,162 @@
-Setor,Empresa,Descrição dos Serviços,Endereço,Telefone/Whatssap,Cidade,Estado,Latitude/Longitude
-Mecânico,OFICINA O CARLINHO E JADERSON CAMINHOES,,"VILA SÃO RAFAEL RUA A - Várzea da Matriz, Aracati - CE, 62800-000",(88) 99288-3505,Aracati,Ce,"-4.556260796835767, -37.75578076240889"
-Guincho,Oficina e Reboque Assis do Truck,,"Vila Cajueiro - Vila cajueiro, Aracati - CE, 62806-899",88999643495,Aracati,Ce,
-Borracharia,Oficina e Borracharia O Pretim,,"Córrego dos Fernandes, Aracati - CE, 62800-000",(88) 99720-5703,Aracati,Ce,
-Elétrica,Reboque Guincho Offcar,,"BR-304, 142 - Zona Rural, Aracati - CE, 62800-000",(88) 99964-4622,Aracati,Ce,
-Lava-Jato,Lavajato Central,,"Estr. de Santa Tereza - Santa Tereza, Aracati - CE, 62800-000",(88) 98168-6303,Aracati,Ce,
-Posto de Combustível,Posto Dunorte,,"48, BR-304, SN - Pedregal, Aracati - CE, 62800-000",(88) 99837-0052,Aracati,Ce,
-Auto Peças,Prontocar Aracati - Peças e Serviços,,"R. Cel. Alexandrino, 1858 - Nossa Sra. de Lourdes, Aracati - CE, 62800-000",(88) 3421-3315,Aracati,Ce,
-Auto Peças,Oficina e Reboque Assis do Truck,,"Vila Cajueiro - Vila cajueiro, Aracati - CE, 62806-899",88999643495,Aracati,Ce,
-Auto Peças,Autopeças Santa Luzia,,"Rua Coronel Alexandrino, 1702, R. Cel. Alexandrino, 1692 - Nossa Sra. de Lourdes, Aracati - CE, 62800-000",(88) 3421-1807,Aracati,Ce,
-Mecânico,OFICINA CENTRO DE REPARAÇÃO AUTOMOTIVA,,"R. Francisco Cordeiro, 63 - Putiú, Baturité - CE, 62760-000",(85) 99212-9046,Baturité,Ce,
-Guincho,Ednardo Reboque 24hs,,"R. Francisco Maria Silva, S/N - Antônio Diogo, Redenção - CE, 62790-000", (85) 98186-0385,Baturité,Ce,
-Borracharia,Borracharia o Almir,,"R. Duque de Caxias, 33 - Putiú, Baturité - CE, 62760-000",,Baturité,Ce,
-Elétrica,Auto Elétrica Carlos Jardim,,"R. Duque de Caxias - Feira do Gado, Baturité - CE, 62760-000",(85) 99241-0576,Baturité,Ce,
-Lava-Jato, Lava Jato Tio Chico,,"Tv. Maj. Pedro Mendes Machado, 116",,Baturité,Ce,
-Posto de Combustível,Posto Casa Grande,,"CE-356, 280 - Sanharão, Baturité - CE, 62760-000",(85) 99247-7190,Baturité,Ce,
-Auto Peças,Auto Peças Cancão,,"Praça Osmar Marinho, 19 - Putiú, Baturité - CE, 62760-000",(85) 99632-8114,Baturité,Ce,
-,,,,,,,
-Mecânico,VB. Diesel Peças&Serviços,,"Av - R. Pres. Geisel, 1816 - Canindezinho, Canindé - CE, 62700-000",(85) 98542-5307,Canindé,Ce,"-4.352622446406684, -39.3266264288353"
-Guincho,,,,,Canindé,Ce,
-Borracharia,,,,,Canindé,Ce,
-Elétrica,,,,,Canindé,Ce,
-Lava-Jato,,,,,Canindé,Ce,
-Posto de Combustível,,,,,Canindé,Ce,
-Auto Peças,,,,,Canindé,Ce,
-,,,,,,,
-Mecânico,Oficina Só Diesel,,"R. Moura Fé, 462 - São Vicente, Crateús - CE, 63700-000",(88) 3691-2140,Crateús,Ce,"-5.181518540129727, -40.66450812883529"
-Guincho,Auto Car Reboque,,"R. Cel. Totó, 856 - São Vicente, Crateús - CE, 63700-000",(88) 3691-4207,Crateús,Ce,
-Borracharia,Borracharia móvel Gilliard 24 horas,,"Tv. Eduardo Albuquerque, 14 - Venancio, Crateús - CE, 63700-000",(88) 99404-5162,Crateús,Ce,
-Elétrica,Oficina Só Diesel,,"R. Moura Fé, 462 - São Vicente, Crateús - CE, 63700-000",(88) 3691-2140,Crateús,Ce,
-Lava-Jato,Lava Jato Auto Brilho,,"R. Cel. Zezé, 1434 - Centro, Crateús - CE, 63704-030",(88) 99481-6133,Crateús,Ce,
-Posto de Combustível,Posto Petrobras,,"Av. Sgt. Hermínio, 500 - Venancio, Crateús - CE, 63700-000",(88) 3691-2888,Crateús,Ce,
-Auto Peças,Mourão Auto Peças,,"R. Cel. Lúcio, 623 - Centro, Crateús - CE, 63700-000",(88) 3691-0620,Crateús,Ce,
-Tacógrafo,,,,,,,
-Mecânico,Deassis Soluções,,"R. Santa Helena, 647 - quadra 47 lote 02 - Jabuti, Eusébio - CE, 61760-000",(85) 98725-7903,Eusébio,Ce,"-3.9351716398247034, -38.50355821534118"
-Guincho,MR Reboque,,,(85) 97400-1540,Eusébio,Ce,
-Borracharia,Borracharia pica-pau e Rafael,,"Centro, Eusébio - CE, 61762-880",(85) 98535-4101,Eusébio,Ce,
-Elétrica,VS Truck Centro Automotivo,,"Avenida Gilmar Amora Pontes 371 - Jabuti, Eusébio - CE, 61766-670",(85) 98676-0134,Eusébio,Ce,
-Lava-Jato,Lava-jato cantinho do céu (M2),,"Av. Cel. Cícero de Sá, 1501 - Centro, Eusébio - CE, 61760-000", (85) 99166-1526,Eusébio,Ce,
-Posto de Combustível,Posto Clube do Vaqueiro | BR,,"Rod. 4º Anel Viário, 1656-1956 - Pedra, Eusébio - CE, 61760-000",,Eusébio,Ce,
-Auto Peças,Truckão Auto Peças - Paupina,,"BR-116, 5639 - Paupina, Fortaleza - CE",8532502133,Eusébio,Ce,
-Tacógrafo,J M C Tacógrafos ,,"BR-116, Km 15 - 5830 - Loja H e G - Pedras, Fortaleza - CE, 60874-502",(85) 3275-0825,Eusébio,Ce,
-Mecânico,,,,,Fortaleza,Ce,
-Guincho,,,,,Fortaleza,Ce,
-Borracharia,,,,,Fortaleza,Ce,
-Elétrica,,,,,Fortaleza,Ce,
-Lava-Jato,,,,,Fortaleza,Ce,
-Posto de Combustível,,,,,Fortaleza,Ce,
-Auto Peças,,,,,Fortaleza,Ce,
-,,,,,,,
-Mecânico,Baixinho das molas,,"Alto do Estrela, Horizonte - CE, 62880-000",(85) 99921-9731,Horizonte,Ce,
-Guincho,MAC Reboque,,"ROD. SANTOS DUMONT, 4817 KM40 - Centro, Horizonte - CE, 62880-000",(85) 3336-2000,Horizonte,Ce,"-4.100600675356213, -38.50092545767059"
-Borracharia,Borracharia horizonte,,"Av. Cel. Luiz Flávio Nogueira, 1292 - Lagoinha, Horizonte - CE, 62880-000",(85) 99165-2487,Horizonte,Ce,
-Elétrica,AUTO ELETRO A.S CARROS E CAMINHÕES 12/24 VTs,,"Av. Pres. Castelo Branco, 5625-G - Centro, Horizonte - CE, 62880-000",(85) 99663-4679,Horizonte,Ce,
-Lava-Jato,,,,,Horizonte,Ce,
-Posto de Combustível,Posto Coluna,,"BR-116, KM35 - Coluna, Horizonte - CE, 62887-285",(85) 2130-8650,Horizonte,Ce,
-Auto Peças,Peixoto Peças,,"Av. Pres. Castelo Branco, 1625 - Centro, Horizonte - CE, 62884-190",(85) 3336-0112,Horizonte,Ce,
-Tacógrafo,TCrono Tacógrafos,,"Rod. Br Cento Dezesseis, 17368 - Centro, Itaitinga - CE, 61880-000 - Antonio Miguel, Itaitinga - CE, 61880-820",(85) 4042-3592,,,
-Mecânico,,,,,Iguatu,Ce,
-Guincho,,,,,Iguatu,Ce,
-Borracharia,,,,,Iguatu,Ce,
-Elétrica,,,,,Iguatu,Ce,
-Lava-Jato,,,,,Iguatu,Ce,
-Posto de Combustível,,,,,Iguatu,Ce,
-Auto Peças,,,,,Iguatu,Ce,
-,,,,,,,
-Mecânico,Jodiesel Caminhões,,"Av. Padre Cícero, 4350 - A - São José, Juazeiro do Norte - CE, 63041-140",(88) 99973-0063,Juazeiro do Norte,Ce,
-Guincho,SOS GUINCHO SERVIÇO DE GUINCHO 24H juazeiro do norte CE,,"Av. Padre Cícero, 1790C - Salesianos, Juazeiro do Norte - CE, 63050-208",(88) 99999-9911,Juazeiro do Norte,Ce,
-Borracharia,Borracharia do Biscoito,,"Próximo a Nacional Gás - Av. Ailton Gomes - Juazeiro do Norte, CE, 63051-015",(88) 99655-1046,Juazeiro do Norte,Ce,"-7.232709156878971, -39.312468913494115"
-Elétrica,Silva auto elétrica,,"R. Jacinta Tavares Lopes, 394 - São José, Juazeiro do Norte - CE, 63024-512",(88) 3571-5274,Juazeiro do Norte,Ce,
-Lava-Jato,Lava jato Bola 8,,"R. Cerelino Quezado Filgueiras Filho, 350 - Triângulo, Juazeiro do Norte - CE, 63042-050",(88) 98118-8535,Juazeiro do Norte,Ce,
-Posto de Combustível,Pôsto Petrobrás - Aeropôsto,,"Av. Gov. Virgílio Távora, 2650 - Aeroporto, Juazeiro do Norte - CE, 63020-470",(88) 3572-1633,Juazeiro do Norte,Ce,
-Auto Peças,Varejão do Caminhão- Auto Peças,," Av. João Durval Carneiro, 1595 A - Castelo Branco, Juazeiro - BA, 48906-510",87) 98136-4539 ,Juazeiro do Norte,Ce,
-Tacógrafo,Tacovale - Tacógrafos,,"R. Ladislau de Arruda Campos, 36 - Triângulo, Juazeiro do Norte - CE, 63041-200",(88) 3511-6120,Juazeiro do Norte,Ce,
-Mecânico,,,,,Limoeiro do Norte,Ce,
-Guincho,,,,,Limoeiro do Norte,Ce,
-Borracharia,,,,,Limoeiro do Norte,Ce,
-Elétrica,,,,,Limoeiro do Norte,Ce,
-Lava-Jato,,,,,Limoeiro do Norte,Ce,
-Posto de Combustível,,,,,Limoeiro do Norte,Ce,
-Auto Peças,,,,,Limoeiro do Norte,Ce,
-,,,,,,,
-Mecânico,,,,,Maracanaú,Ce,
-Guincho,,,,,Maracanaú,Ce,
-Borracharia,,,,,Maracanaú,Ce,
-Elétrica,,,,,Maracanaú,Ce,
-Lava-Jato,,,,,Maracanaú,Ce,
-Posto de Combustível,,,,,Maracanaú,Ce,
-Auto Peças,,,,,Maracanaú,Ce,
-,,,,,,,
-Mecânico,,,,,Maranguape,Ce,
-Guincho,,,,,Maranguape,Ce,
-Borracharia,,,,,Maranguape,Ce,
-Elétrica,,,,,Maranguape,Ce,
-Lava-Jato,,,,,Maranguape,Ce,
-Posto de Combustível,,,,,Maranguape,Ce,
-Auto Peças,,,,,Maranguape,Ce,
-,,,,,,,
-Mecânico,Oficina em Morada Nova L B Auto Center,,"R. Raul Nogueira, 906 - 02 de - Agosto, Morada Nova - CE, 62940-000",(88) 99912-4305,Morada Nova,Ce,
-Guincho,Gscx7dv,,"R. Raimundo José - Aruaru, Morada Nova - CE, 62951-000",,Morada Nova,Ce,
-Borracharia,Borracharia União,,"R. Raul Nogueira, 1214 - Morada Nova, CE, 62940-000",,Morada Nova,Ce,
-Elétrica,Auto Elétrica Juazeiro,,"Av. Manoel Castro Gomes de Andrade, 1561 - Morada Nova, CE, 62940-000",(88) 99910-4996,Morada Nova,Ce,"-5.107919230551275, -38.3631534711647"
-Lava-Jato,Lava Jato O Rogerio,,"Av. Santos Dumont - Campo de Aviação, Morada Nova - CE, 62940-000",(88) 99990-9460,Morada Nova,Ce,
-Posto de Combustível,Posto Morada Nova | BR,,"Rodovia CE-138, S/N, KM 64, Morada Nova - CE, 62940-000",(88) 3422-2021,Morada Nova,Ce,
-Auto Peças,AMS Peças - Autopeças em Morada Nova,,"Av. Cel. Tibúrcio, 481 - Girilândia, Morada Nova - CE, 62940-000",(88) 99751-0651,Morada Nova,Ce,
-Tacógrafo,Franklin Auto Center,,"Av. Manoel de Castro Filho, nº 701 - Morada Nova, CE, 62940-000",(88) 99964-0216,Morada Nova,Ce,
-Mecânico,,,,,Pecém,Ce,
-Guincho,,,,,Pecém,Ce,
-Borracharia,,,,,Pecém,Ce,
-Elétrica,,,,,Pecém,Ce,
-Lava-Jato,,,,,Pecém,Ce,
-Posto de Combustível,,,,,Pecém,Ce,
-Auto Peças,,,,,Pecém,Ce,
-,,,,,,,
-Mecânico,,,,,Quixadá,Ce,
-Guincho,,,,,Quixadá,Ce,
-Borracharia,,,,,Quixadá,Ce,
-Elétrica,,,,,Quixadá,Ce,
-Lava-Jato,,,,,Quixadá,Ce,
-Posto de Combustível,,,,,Quixadá,Ce,
-Auto Peças,,,,,Quixadá,Ce,
-,,,,,,,
-Mecânico,,,,,Quixeramobim,Ce,
-Guincho,,,,,Quixeramobim,Ce,
-Borracharia,,,,,Quixeramobim,Ce,
-Elétrica,,,,,Quixeramobim,Ce,
-Lava-Jato,,,,,Quixeramobim,Ce,
-Posto de Combustível,,,,,Quixeramobim,Ce,
-Auto Peças,,,,,Quixeramobim,Ce,
-,,,,,,,
-Mecânico,Cardan Nordeste,,"Av. Sen. José Ermírio de Moraes, 2059 - Dom José, Sobral - CE, 62015-505",(88) 99696-4393,Sobral,Ce,
-Guincho,TIÃO TRUCK REBOQUE,,"BR-222, Km 222 - Distrito Industrial, Sobral - CE, 62053-105",(88) 98855-1844,Sobral,Ce,
-Borracharia,Borracharia São Francisco,," BR-222, 1325 - Distrito Industrial, Sobral - CE, 62053-105",88997098715,Sobral,Ce,
-Elétrica,Oficina Auto Elétrica O Amaral,,"Distrito Industrial, Sobral - CE",(88) 99962-8625,Sobral,Ce,
-Lava-Jato,LS Lavajato Caminhões,,"Rodovia Br 222 Km 225, Sobral - CE, 62.014-080",88981431773,Sobral,Ce,"-3.7064713465670556, -40.36118321534118"
-Posto de Combustível,Auto Posto Gatão,,"BR-222, KM 218 - Sobral, CE, 62103-000",(88) 99910-1097,Sobral,Ce,
-Auto Peças,Tião Truck Center Ltda / Tião Tacógrafos Ltda,,"Rodovia BR 222 Km 222, Nº 1581, BR-222, 1583 - Distrito Industrial, Sobral - CE, 62053-105",(88) 99437-1661,Sobral,Ce,
-Mecânico,Boto Auto Truck Reboque 24h,,"BR-222 - Tianguá, CE, 62320-001",(88) 99961-3973,Tianguá,Ce,
-Guincho,Reboques ME Truck Diesel,,"Br, Saída para Teresina - BR222, KM 317 - Tianguá, CE, 62320-000",(88) 99645-7672,Tianguá,Ce,
-Borracharia,Borracharia O BAIXIM,,"Rua Manoel Lourenço de Vasconcelos, 10 - Palmeiras Compridas, Tianguá - CE, 62320-000",(88) 99973-7979,Tianguá,Ce,
-Elétrica,Leandro Eletro Diesel e Acessórios,,"Br 222, Km 312 - Centro, Tianguá - CE, 62320-000",(88) 99469-8766,Tianguá,Ce,
-Lava-Jato,Lava Jato Nevou - Lavagem Automotiva,,"Rua tabelião Artur Vasconcelos, 120 - Laurão, Tianguá - CE, 62320-000",(88) 99447-9200,Tianguá,Ce,
-Posto de Combustível,"Postos L CAR Cacimbas, Tianguá/Ce",,"BR-222, Km 317 - Cacimbas, Tianguá - CE, 62320-000",(88) 99484-1642,Tianguá,Ce,
-Auto Peças,Grupo Suriel Mega Truck,,"BR-222, km 312 - Cruzeiro, Tianguá - CE, 62320-000",(88) 3112-8755,Tianguá,Ce,
-Tacógrafo,CATATAU PNEUS: AFERIÇÃO E MANUTENÇÃO DE TACÓGRAFOS.,,"BR-222, KM 315 - Gov. Ferraz, Tianguá - CE, 62320-000",(88) 99225-8354,Tianguá,Ce,"-3.7448037459114634, -41.009534986505045"
-Mecânico,Oficina de Solda O Higor,Modificações e reparos em geral; funilaria e solda oxigênio,"Avenida Tabelião Luiz Nogueira Lima - Tianguá, CE, 62324-075",(88) 99250-5871,Tianguá,Ce,
-Mecânico,Posto de Molas O Luciano,"Serviço de molas, rodas, descarga, freio e suspensão de caminhão","R. Antônio José de Sousa - Matadouro, Tianguá - CE, 62325-780",(88) 99380-4113,Tianguá,Ce,
-Mecânico,Shalom Caminhões,"Bateria, diagnóstico de motor, elétrica, freios e reparo de suspensão para caminhões","Rua Dois Antônios, 150, 2765 - Bairro Santo Antônio, Teresina - PI",(86) 98875-7941,Teresina,PI,"-5.0920108, -42.8037597"
-Mecânico,Oficina do Dino Automecânica Diesel,"Diagnóstico de motor, freios, reparo de suspensão e direção, troca de filtro, cabos e velas para caminhões e tratores","Tv. Antônio Baena, 548 - Pedreira, Belém - PA, 66085-051",(91) 98390-2140,Belém,PA,"-1.4227, -48.4695"
-Mecânico,Oficina Mecanica GPE,,"Av. Três, 6 - quadra 231 - Jardim São Cristovão, São Luís - MA, 65055-315",(98) 3244-7867,São Luís,MA,"-2.5758872, -44.2227959"
-Mecânico,CARDAN Service,Especialistas em transmissão a cardan e barra de direção para caminhões no Ceará,"Rod Quarto Anel Viário, 2700 E, Fortaleza",85 98910-0514,Fortaleza,Ce,"-3.8679887, -38.5101615"
-Mecânico,BR Super Truck,"Diagnóstico de motor veicular, elétrica, freios, martelinho de ouro, reparo de suspensão","R. Bambuzinho, 854 - Distrito Industrial II, Manaus - AM, 69007-430",(92) 99204-1203,Manaus,AM,"-3.098, -59.970"
-Mecânico,ZS Service Car Truck,"Oficina de caminhões (diagnóstico, elétrica, reparo geral)","BA-526, 101 - Barragem de Ipitanga - Ceasa, Salvador - BA, 41402-450",(71) 99970-0136,Salvador,BA,"-12.850, -38.370"
-Mecânico,Revise Trucks Center,"Freios, reparo de suspensão e direção, serviço de freios de caminhão","R. Santo Inácio, S/N - Qd 17, Lt 01 - Ipiranga, Goiânia - GO, 74453-280",(62) 99607-9198,Goiânia,GO,"-16.720, -49.250"
-Mecânico,Oficina Mecânica De Caminhões,Oficina de caminhões,"R. Tuneiras do Oeste, 120 - Jardim Pirituba, São Paulo - SP, 02985-010",(11) 96505-7359,São Paulo,SP,"-23.485, -46.735"
-Mecânico,Oficina 2 Irmãos - Diesel | Truck e Service,"Elétrica, freios, transmissão, troca de óleo, bomba injetora diesel, caixa de câmbio","Rua General Lima e Silva, 151 - Aerolândia, Fortaleza - CE, 60850-530",(85) 99420-1485,Fortaleza,CE,"-3.821, -38.505"
-Mecânico,Guiauto Serviços e Peças,"Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção","R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999",(88) 99647-1212,Sobral,CE,"-3.703, -40.348"
-Auto Peças,Guiauto Serviços e Peças,"Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção","R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999",(88) 99647-1212,Sobral,CE,"-3.703, -40.348"
-Elétrica,Guiauto Serviços e Peças,"Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção","R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999",(88) 99647-1212,Sobral,CE,"-3.703, -40.348"
-Guincho,Guiauto Serviços e Peças,"Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção, reboque","R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999",(88) 99647-1212,Sobral,CE,"-3.703, -40.348"
-Tacógrafo,Sobral Tacógrafos,"Aferição, calibração e selagem de tacógrafo, inspeção veicular","Av. Sen. Fernandes Távora, 271 - Gerardo Cristino, Sobral - CE, 62050-382",(88) 99713-9620,Sobral,CE,"-3.706, -40.351"
-Posto de Combustível,Posto Shell,"Combustível, aberto 24 horas, apoio para caminhoneiros","BR 222 Faz Ipueiras Km 244, Sn Zona Rural, BR-222 - Gerardo Cristino, Sobral - CE, 62100-000",,Sobral,CE,"-3.712, -40.360"
-Auto Peças,Auto Peças Viana,Loja de autopeças,"BR-222, 1315 - Distrito Industrial, Sobral - CE, 62053-105",(88) 99383-5927,Sobral,CE,"-3.699, -40.345"
-Posto de Combustível,Loja de Conveniência São Domingos 1,Loja de conveniência dentro do Posto São Domingos,"Posto São Domingos - CE-362 - Coração de Jesus, Sobral - CE, 62010-302",(88) 99807-2819,Sobral,CE,"-3.670, -40.320"
-Elétrica,Shalom Caminhões,"Bateria, diagnóstico de motor, elétrica, freios e reparo de suspensão para caminhões","Rua Dois Antônios, 150, 2765 - Bairro Santo Antônio, Teresina - PI",(86) 98875-7941,Teresina,PI,"-5.0920108, -42.8037597"
-Elétrica,BR Super Truck,"Diagnóstico de motor veicular, elétrica, freios, martelinho de ouro, reparo de suspensão","R. Bambuzinho, 854 - Distrito Industrial II, Manaus - AM, 69007-430",(92) 99204-1203,Manaus,AM,"-3.098, -59.970"
-Elétrica,ZS Service Car Truck,"Oficina de caminhões (diagnóstico, elétrica, reparo geral)","BA-526, 101 - Barragem de Ipitanga - Ceasa, Salvador - BA, 41402-450",(71) 99970-0136,Salvador,BA,"-12.850, -38.370"
-Elétrica,Oficina 2 Irmãos - Diesel | Truck e Service,"Elétrica, freios, transmissão, troca de óleo, bomba injetora diesel, caixa de câmbio","Rua General Lima e Silva, 151 - Aerolândia, Fortaleza - CE, 60850-530",(85) 99420-1485,Fortaleza,CE,"-3.821, -38.505"
-Ponto de Apoio,Auto Posto Gatão,"Posto 24h com amplo estacionamento pra caminhão, restaurante, banho e pousada anexa","BR-222, KM 218, Sobral - CE, 62103-000",(88) 99910-1097,Sobral,CE,"-3.746, -40.312"
-Ponto de Apoio,Hotel Gatão - Sobral,"Pousada na beira da BR-222 anexa ao posto, café da manhã e estacionamento pra caminhão","BR-222, KM 219, Sobral - CE, 62103-000",(88) 99216-4421,Sobral,CE,"-3.747, -40.311"
-Ponto de Apoio,Posto Shell,"Posto 24h com área de parada pra caminhoneiro na BR-222","BR 222 Faz Ipueiras Km 244, Sn Zona Rural, BR-222 - Gerardo Cristino, Sobral - CE, 62100-000",,Sobral,CE,"-3.720, -40.331"
-Ponto de Apoio,Posto São Domingos Jaburuna,"Posto 24h com conveniência e oficina, ponto de parada na BR-222","BR-222, 232 - Jaburuna, Sobral - CE, 62100-000",(88) 3611-4242,Sobral,CE,"-3.710, -40.417"
+Setor,Empresa,Descrição dos Serviços,Endereço,Telefone/Whatssap,Cidade,Estado,Latitude/Longitude;
+"Mecânico,OFICINA O CARLINHO E JADERSON CAMINHOES,,""VILA SÃO RAFAEL RUA A - Várzea da Matriz, Aracati - CE, 62800-000"",(88) 99288-3505,Aracati,Ce,""-4.556260796835767, -37.75578076240889""";
+"Guincho,Oficina e Reboque Assis do Truck,,""Vila Cajueiro - Vila cajueiro, Aracati - CE, 62806-899"",88999643495,Aracati,Ce,";
+"Borracharia,Oficina e Borracharia O Pretim,,""Córrego dos Fernandes, Aracati - CE, 62800-000"",(88) 99720-5703,Aracati,Ce,";
+"Elétrica,Reboque Guincho Offcar,,""BR-304, 142 - Zona Rural, Aracati - CE, 62800-000"",(88) 99964-4622,Aracati,Ce,";
+"Lava-Jato,Lavajato Central,,""Estr. de Santa Tereza - Santa Tereza, Aracati - CE, 62800-000"",(88) 98168-6303,Aracati,Ce,";
+"Posto de Combustível,Posto Dunorte,,""48, BR-304, SN - Pedregal, Aracati - CE, 62800-000"",(88) 99837-0052,Aracati,Ce,";
+"Auto Peças,Prontocar Aracati - Peças e Serviços,,""R. Cel. Alexandrino, 1858 - Nossa Sra. de Lourdes, Aracati - CE, 62800-000"",(88) 3421-3315,Aracati,Ce,";
+"Auto Peças,Oficina e Reboque Assis do Truck,,""Vila Cajueiro - Vila cajueiro, Aracati - CE, 62806-899"",88999643495,Aracati,Ce,";
+"Auto Peças,Autopeças Santa Luzia,,""Rua Coronel Alexandrino, 1702, R. Cel. Alexandrino, 1692 - Nossa Sra. de Lourdes, Aracati - CE, 62800-000"",(88) 3421-1807,Aracati,Ce,";
+"Mecânico,OFICINA CENTRO DE REPARAÇÃO AUTOMOTIVA,,""R. Francisco Cordeiro, 63 - Putiú, Baturité - CE, 62760-000"",(85) 99212-9046,Baturité,Ce,";
+"Guincho,Ednardo Reboque 24hs,,""R. Francisco Maria Silva, S/N - Antônio Diogo, Redenção - CE, 62790-000"", (85) 98186-0385,Baturité,Ce,";
+"Borracharia,Borracharia o Almir,,""R. Duque de Caxias, 33 - Putiú, Baturité - CE, 62760-000"",,Baturité,Ce,";
+"Elétrica,Auto Elétrica Carlos Jardim,,""R. Duque de Caxias - Feira do Gado, Baturité - CE, 62760-000"",(85) 99241-0576,Baturité,Ce,";
+"Lava-Jato, Lava Jato Tio Chico,,""Tv. Maj. Pedro Mendes Machado, 116"",,Baturité,Ce,";
+"Posto de Combustível,Posto Casa Grande,,""CE-356, 280 - Sanharão, Baturité - CE, 62760-000"",(85) 99247-7190,Baturité,Ce,";
+"Auto Peças,Auto Peças Cancão,,""Praça Osmar Marinho, 19 - Putiú, Baturité - CE, 62760-000"",(85) 99632-8114,Baturité,Ce,";
+"Mecânico,VB. Diesel Peças&Serviços,,""Av - R. Pres. Geisel, 1816 - Canindezinho, Canindé - CE, 62700-000"",(85) 98542-5307,Canindé,Ce,""-4.352622446406684, -39.3266264288353""";
+Guincho,,,,,Canindé,Ce,;
+Borracharia,,,,,Canindé,Ce,;
+Elétrica,,,,,Canindé,Ce,;
+Lava-Jato,,,,,Canindé,Ce,;
+Posto de Combustível,,,,,Canindé,Ce,;
+Auto Peças,,,,,Canindé,Ce,;
+"Mecânico,Oficina Só Diesel,,""R. Moura Fé, 462 - São Vicente, Crateús - CE, 63700-000"",(88) 3691-2140,Crateús,Ce,""-5.181518540129727, -40.66450812883529""";
+"Guincho,Auto Car Reboque,,""R. Cel. Totó, 856 - São Vicente, Crateús - CE, 63700-000"",(88) 3691-4207,Crateús,Ce,";
+"Borracharia,Borracharia móvel Gilliard 24 horas,,""Tv. Eduardo Albuquerque, 14 - Venancio, Crateús - CE, 63700-000"",(88) 99404-5162,Crateús,Ce,";
+"Elétrica,Oficina Só Diesel,,""R. Moura Fé, 462 - São Vicente, Crateús - CE, 63700-000"",(88) 3691-2140,Crateús,Ce,";
+"Lava-Jato,Lava Jato Auto Brilho,,""R. Cel. Zezé, 1434 - Centro, Crateús - CE, 63704-030"",(88) 99481-6133,Crateús,Ce,";
+"Posto de Combustível,Posto Petrobras,,""Av. Sgt. Hermínio, 500 - Venancio, Crateús - CE, 63700-000"",(88) 3691-2888,Crateús,Ce,";
+"Auto Peças,Mourão Auto Peças,,""R. Cel. Lúcio, 623 - Centro, Crateús - CE, 63700-000"",(88) 3691-0620,Crateús,Ce,";
+Tacógrafo,,,,,,,;
+"Mecânico,Deassis Soluções,,""R. Santa Helena, 647 - quadra 47 lote 02 - Jabuti, Eusébio - CE, 61760-000"",(85) 98725-7903,Eusébio,Ce,""-3.9351716398247034, -38.50355821534118""";
+Guincho,MR Reboque,,,(85) 97400-1540,Eusébio,Ce,;
+"Borracharia,Borracharia pica-pau e Rafael,,""Centro, Eusébio - CE, 61762-880"",(85) 98535-4101,Eusébio,Ce,";
+"Elétrica,VS Truck Centro Automotivo,,""Avenida Gilmar Amora Pontes 371 - Jabuti, Eusébio - CE, 61766-670"",(85) 98676-0134,Eusébio,Ce,";
+"Lava-Jato,Lava-jato cantinho do céu (M2),,""Av. Cel. Cícero de Sá, 1501 - Centro, Eusébio - CE, 61760-000"", (85) 99166-1526,Eusébio,Ce,";
+"Posto de Combustível,Posto Clube do Vaqueiro | BR,,""Rod. 4º Anel Viário, 1656-1956 - Pedra, Eusébio - CE, 61760-000"",,Eusébio,Ce,";
+"Auto Peças,Truckão Auto Peças - Paupina,,""BR-116, 5639 - Paupina, Fortaleza - CE"",8532502133,Eusébio,Ce,";
+"Tacógrafo,J M C Tacógrafos ,,""BR-116, Km 15 - 5830 - Loja H e G - Pedras, Fortaleza - CE, 60874-502"",(85) 3275-0825,Eusébio,Ce,";
+Mecânico,,,,,Fortaleza,Ce,;
+Guincho,,,,,Fortaleza,Ce,;
+Borracharia,,,,,Fortaleza,Ce,;
+Elétrica,,,,,Fortaleza,Ce,;
+Lava-Jato,,,,,Fortaleza,Ce,;
+Posto de Combustível,,,,,Fortaleza,Ce,;
+Auto Peças,,,,,Fortaleza,Ce,;
+"Mecânico,Baixinho das molas,,""Alto do Estrela, Horizonte - CE, 62880-000"",(85) 99921-9731,Horizonte,Ce,";
+"Guincho,MAC Reboque,,""ROD. SANTOS DUMONT, 4817 KM40 - Centro, Horizonte - CE, 62880-000"",(85) 3336-2000,Horizonte,Ce,""-4.100600675356213, -38.50092545767059""";
+"Borracharia,Borracharia horizonte,,""Av. Cel. Luiz Flávio Nogueira, 1292 - Lagoinha, Horizonte - CE, 62880-000"",(85) 99165-2487,Horizonte,Ce,";
+"Elétrica,AUTO ELETRO A.S CARROS E CAMINHÕES 12/24 VTs,,""Av. Pres. Castelo Branco, 5625-G - Centro, Horizonte - CE, 62880-000"",(85) 99663-4679,Horizonte,Ce,";
+Lava-Jato,,,,,Horizonte,Ce,;
+"Posto de Combustível,Posto Coluna,,""BR-116, KM35 - Coluna, Horizonte - CE, 62887-285"",(85) 2130-8650,Horizonte,Ce,";
+"Auto Peças,Peixoto Peças,,""Av. Pres. Castelo Branco, 1625 - Centro, Horizonte - CE, 62884-190"",(85) 3336-0112,Horizonte,Ce,";
+"Tacógrafo,TCrono Tacógrafos,,""Rod. Br Cento Dezesseis, 17368 - Centro, Itaitinga - CE, 61880-000 - Antonio Miguel, Itaitinga - CE, 61880-820"",(85) 4042-3592,,,";
+Mecânico,,,,,Iguatu,Ce,;
+Guincho,,,,,Iguatu,Ce,;
+Borracharia,,,,,Iguatu,Ce,;
+Elétrica,,,,,Iguatu,Ce,;
+Lava-Jato,,,,,Iguatu,Ce,;
+Posto de Combustível,,,,,Iguatu,Ce,;
+Auto Peças,,,,,Iguatu,Ce,;
+"Mecânico,Jodiesel Caminhões,,""Av. Padre Cícero, 4350 - A - São José, Juazeiro do Norte - CE, 63041-140"",(88) 99973-0063,Juazeiro do Norte,Ce,";
+"Guincho,SOS GUINCHO SERVIÇO DE GUINCHO 24H juazeiro do norte CE,,""Av. Padre Cícero, 1790C - Salesianos, Juazeiro do Norte - CE, 63050-208"",(88) 99999-9911,Juazeiro do Norte,Ce,";
+"Borracharia,Borracharia do Biscoito,,""Próximo a Nacional Gás - Av. Ailton Gomes - Juazeiro do Norte, CE, 63051-015"",(88) 99655-1046,Juazeiro do Norte,Ce,""-7.232709156878971, -39.312468913494115""";
+"Elétrica,Silva auto elétrica,,""R. Jacinta Tavares Lopes, 394 - São José, Juazeiro do Norte - CE, 63024-512"",(88) 3571-5274,Juazeiro do Norte,Ce,";
+"Lava-Jato,Lava jato Bola 8,,""R. Cerelino Quezado Filgueiras Filho, 350 - Triângulo, Juazeiro do Norte - CE, 63042-050"",(88) 98118-8535,Juazeiro do Norte,Ce,";
+"Posto de Combustível,Pôsto Petrobrás - Aeropôsto,,""Av. Gov. Virgílio Távora, 2650 - Aeroporto, Juazeiro do Norte - CE, 63020-470"",(88) 3572-1633,Juazeiro do Norte,Ce,";
+"Auto Peças,Varejão do Caminhão- Auto Peças,,"" Av. João Durval Carneiro, 1595 A - Castelo Branco, Juazeiro - BA, 48906-510"",87) 98136-4539 ,Juazeiro do Norte,Ce,";
+"Tacógrafo,Tacovale - Tacógrafos,,""R. Ladislau de Arruda Campos, 36 - Triângulo, Juazeiro do Norte - CE, 63041-200"",(88) 3511-6120,Juazeiro do Norte,Ce,";
+Mecânico,,,,,Limoeiro do Norte,Ce,;
+Guincho,,,,,Limoeiro do Norte,Ce,;
+Borracharia,,,,,Limoeiro do Norte,Ce,;
+Elétrica,,,,,Limoeiro do Norte,Ce,;
+Lava-Jato,,,,,Limoeiro do Norte,Ce,;
+Posto de Combustível,,,,,Limoeiro do Norte,Ce,;
+Auto Peças,,,,,Limoeiro do Norte,Ce,;
+Mecânico,,,,,Maracanaú,Ce,;
+Guincho,,,,,Maracanaú,Ce,;
+Borracharia,,,,,Maracanaú,Ce,;
+Elétrica,,,,,Maracanaú,Ce,;
+Lava-Jato,,,,,Maracanaú,Ce,;
+Posto de Combustível,,,,,Maracanaú,Ce,;
+Auto Peças,,,,,Maracanaú,Ce,;
+Mecânico,,,,,Maranguape,Ce,;
+Guincho,,,,,Maranguape,Ce,;
+Borracharia,,,,,Maranguape,Ce,;
+Elétrica,,,,,Maranguape,Ce,;
+Lava-Jato,,,,,Maranguape,Ce,;
+Posto de Combustível,,,,,Maranguape,Ce,;
+Auto Peças,,,,,Maranguape,Ce,;
+"Mecânico,Oficina em Morada Nova L B Auto Center,,""R. Raul Nogueira, 906 - 02 de - Agosto, Morada Nova - CE, 62940-000"",(88) 99912-4305,Morada Nova,Ce,";
+"Guincho,Gscx7dv,,""R. Raimundo José - Aruaru, Morada Nova - CE, 62951-000"",,Morada Nova,Ce,";
+"Borracharia,Borracharia União,,""R. Raul Nogueira, 1214 - Morada Nova, CE, 62940-000"",,Morada Nova,Ce,";
+"Elétrica,Auto Elétrica Juazeiro,,""Av. Manoel Castro Gomes de Andrade, 1561 - Morada Nova, CE, 62940-000"",(88) 99910-4996,Morada Nova,Ce,""-5.107919230551275, -38.3631534711647""";
+"Lava-Jato,Lava Jato O Rogerio,,""Av. Santos Dumont - Campo de Aviação, Morada Nova - CE, 62940-000"",(88) 99990-9460,Morada Nova,Ce,";
+"Posto de Combustível,Posto Morada Nova | BR,,""Rodovia CE-138, S/N, KM 64, Morada Nova - CE, 62940-000"",(88) 3422-2021,Morada Nova,Ce,";
+"Auto Peças,AMS Peças - Autopeças em Morada Nova,,""Av. Cel. Tibúrcio, 481 - Girilândia, Morada Nova - CE, 62940-000"",(88) 99751-0651,Morada Nova,Ce,";
+"Tacógrafo,Franklin Auto Center,,""Av. Manoel de Castro Filho, nº 701 - Morada Nova, CE, 62940-000"",(88) 99964-0216,Morada Nova,Ce,";
+Mecânico,,,,,Pecém,Ce,;
+Guincho,,,,,Pecém,Ce,;
+Borracharia,,,,,Pecém,Ce,;
+Elétrica,,,,,Pecém,Ce,;
+Lava-Jato,,,,,Pecém,Ce,;
+Posto de Combustível,,,,,Pecém,Ce,;
+Auto Peças,,,,,Pecém,Ce,;
+Mecânico,,,,,Quixadá,Ce,;
+Guincho,,,,,Quixadá,Ce,;
+Borracharia,,,,,Quixadá,Ce,;
+Elétrica,,,,,Quixadá,Ce,;
+Lava-Jato,,,,,Quixadá,Ce,;
+Posto de Combustível,,,,,Quixadá,Ce,;
+Auto Peças,,,,,Quixadá,Ce,;
+Mecânico,,,,,Quixeramobim,Ce,;
+Guincho,,,,,Quixeramobim,Ce,;
+Borracharia,,,,,Quixeramobim,Ce,;
+Elétrica,,,,,Quixeramobim,Ce,;
+Lava-Jato,,,,,Quixeramobim,Ce,;
+Posto de Combustível,,,,,Quixeramobim,Ce,;
+Auto Peças,,,,,Quixeramobim,Ce,;
+"Mecânico,Cardan Nordeste,,""Av. Sen. José Ermírio de Moraes, 2059 - Dom José, Sobral - CE, 62015-505"",(88) 99696-4393,Sobral,Ce,";
+"Guincho,TIÃO TRUCK REBOQUE,,""BR-222, Km 222 - Distrito Industrial, Sobral - CE, 62053-105"",(88) 98855-1844,Sobral,Ce,";
+"Borracharia,Borracharia São Francisco,,"" BR-222, 1325 - Distrito Industrial, Sobral - CE, 62053-105"",88997098715,Sobral,Ce,";
+"Elétrica,Oficina Auto Elétrica O Amaral,,""Distrito Industrial, Sobral - CE"",(88) 99962-8625,Sobral,Ce,";
+"Lava-Jato,LS Lavajato Caminhões,,""Rodovia Br 222 Km 225, Sobral - CE, 62.014-080"",88981431773,Sobral,Ce,""-3.7064713465670556, -40.36118321534118""";
+"Posto de Combustível,Auto Posto Gatão,,""BR-222, KM 218 - Sobral, CE, 62103-000"",(88) 99910-1097,Sobral,Ce,";
+"Auto Peças,Tião Truck Center Ltda / Tião Tacógrafos Ltda,,""Rodovia BR 222 Km 222, Nº 1581, BR-222, 1583 - Distrito Industrial, Sobral - CE, 62053-105"",(88) 99437-1661,Sobral,Ce,";
+"Mecânico,Boto Auto Truck Reboque 24h,,""BR-222 - Tianguá, CE, 62320-001"",(88) 99961-3973,Tianguá,Ce,";
+"Guincho,Reboques ME Truck Diesel,,""Br, Saída para Teresina - BR222, KM 317 - Tianguá, CE, 62320-000"",(88) 99645-7672,Tianguá,Ce,";
+"Borracharia,Borracharia O BAIXIM,,""Rua Manoel Lourenço de Vasconcelos, 10 - Palmeiras Compridas, Tianguá - CE, 62320-000"",(88) 99973-7979,Tianguá,Ce,";
+"Elétrica,Leandro Eletro Diesel e Acessórios,,""Br 222, Km 312 - Centro, Tianguá - CE, 62320-000"",(88) 99469-8766,Tianguá,Ce,";
+"Lava-Jato,Lava Jato Nevou - Lavagem Automotiva,,""Rua tabelião Artur Vasconcelos, 120 - Laurão, Tianguá - CE, 62320-000"",(88) 99447-9200,Tianguá,Ce,";
+"Posto de Combustível,""Postos L CAR Cacimbas, Tianguá/Ce"",,""BR-222, Km 317 - Cacimbas, Tianguá - CE, 62320-000"",(88) 99484-1642,Tianguá,Ce,";
+"Auto Peças,Grupo Suriel Mega Truck,,""BR-222, km 312 - Cruzeiro, Tianguá - CE, 62320-000"",(88) 3112-8755,Tianguá,Ce,";
+"Tacógrafo,CATATAU PNEUS: AFERIÇÃO E MANUTENÇÃO DE TACÓGRAFOS.,,""BR-222, KM 315 - Gov. Ferraz, Tianguá - CE, 62320-000"",(88) 99225-8354,Tianguá,Ce,""-3.7448037459114634, -41.009534986505045""";
+Mecânico,Oficina de Solda O Higor,Modificações e reparos em geral;" funilaria e solda oxigênio,""Avenida Tabelião Luiz Nogueira Lima - Tianguá, CE, 62324-075"",(88) 99250-5871,Tianguá,Ce,"
+"Mecânico,Posto de Molas O Luciano,""Serviço de molas, rodas, descarga, freio e suspensão de caminhão"",""R. Antônio José de Sousa - Matadouro, Tianguá - CE, 62325-780"",(88) 99380-4113,Tianguá,Ce,";
+"Mecânico,Shalom Caminhões,""Bateria, diagnóstico de motor, elétrica, freios e reparo de suspensão para caminhões"",""Rua Dois Antônios, 150, 2765 - Bairro Santo Antônio, Teresina - PI"",(86) 98875-7941,Teresina,PI,""-5.0920108, -42.8037597""";
+"Mecânico,Oficina do Dino Automecânica Diesel,""Diagnóstico de motor, freios, reparo de suspensão e direção, troca de filtro, cabos e velas para caminhões e tratores"",""Tv. Antônio Baena, 548 - Pedreira, Belém - PA, 66085-051"",(91) 98390-2140,Belém,PA,""-1.4227, -48.4695""";
+"Mecânico,Oficina Mecanica GPE,,""Av. Três, 6 - quadra 231 - Jardim São Cristovão, São Luís - MA, 65055-315"",(98) 3244-7867,São Luís,MA,""-2.5758872, -44.2227959""";
+"Mecânico,CARDAN Service,Especialistas em transmissão a cardan e barra de direção para caminhões no Ceará,""Rod Quarto Anel Viário, 2700 E, Fortaleza"",85 98910-0514,Fortaleza,Ce,""-3.8679887, -38.5101615""";
+"Mecânico,BR Super Truck,""Diagnóstico de motor veicular, elétrica, freios, martelinho de ouro, reparo de suspensão"",""R. Bambuzinho, 854 - Distrito Industrial II, Manaus - AM, 69007-430"",(92) 99204-1203,Manaus,AM,""-3.098, -59.970""";
+"Mecânico,ZS Service Car Truck,""Oficina de caminhões (diagnóstico, elétrica, reparo geral)"",""BA-526, 101 - Barragem de Ipitanga - Ceasa, Salvador - BA, 41402-450"",(71) 99970-0136,Salvador,BA,""-12.850, -38.370""";
+"Mecânico,Revise Trucks Center,""Freios, reparo de suspensão e direção, serviço de freios de caminhão"",""R. Santo Inácio, S/N - Qd 17, Lt 01 - Ipiranga, Goiânia - GO, 74453-280"",(62) 99607-9198,Goiânia,GO,""-16.720, -49.250""";
+"Mecânico,Oficina Mecânica De Caminhões,Oficina de caminhões,""R. Tuneiras do Oeste, 120 - Jardim Pirituba, São Paulo - SP, 02985-010"",(11) 96505-7359,São Paulo,SP,""-23.485, -46.735""";
+"Mecânico,Oficina 2 Irmãos - Diesel | Truck e Service,""Elétrica, freios, transmissão, troca de óleo, bomba injetora diesel, caixa de câmbio"",""Rua General Lima e Silva, 151 - Aerolândia, Fortaleza - CE, 60850-530"",(85) 99420-1485,Fortaleza,CE,""-3.821, -38.505""";
+"Mecânico,Guiauto Serviços e Peças,""Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção"",""R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999"",(88) 99647-1212,Sobral,CE,""-3.703, -40.348""";
+"Auto Peças,Guiauto Serviços e Peças,""Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção"",""R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999"",(88) 99647-1212,Sobral,CE,""-3.703, -40.348""";
+"Elétrica,Guiauto Serviços e Peças,""Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção"",""R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999"",(88) 99647-1212,Sobral,CE,""-3.703, -40.348""";
+"Guincho,Guiauto Serviços e Peças,""Ar-condicionado, bateria, diagnóstico de motor veicular, elétrica, freios, reparo de suspensão e direção, reboque"",""R. Souza Águiar, 26 - Sinhá Sabóia, Sobral - CE, 62050-999"",(88) 99647-1212,Sobral,CE,""-3.703, -40.348""";
+"Tacógrafo,Sobral Tacógrafos,""Aferição, calibração e selagem de tacógrafo, inspeção veicular"",""Av. Sen. Fernandes Távora, 271 - Gerardo Cristino, Sobral - CE, 62050-382"",(88) 99713-9620,Sobral,CE,""-3.706, -40.351""";
+"Posto de Combustível,Posto Shell,""Combustível, aberto 24 horas, apoio para caminhoneiros"",""BR 222 Faz Ipueiras Km 244, Sn Zona Rural, BR-222 - Gerardo Cristino, Sobral - CE, 62100-000"",,Sobral,CE,""-3.712, -40.360""";
+"Auto Peças,Auto Peças Viana,Loja de autopeças,""BR-222, 1315 - Distrito Industrial, Sobral - CE, 62053-105"",(88) 99383-5927,Sobral,CE,""-3.699, -40.345""";
+"Posto de Combustível,Loja de Conveniência São Domingos 1,Loja de conveniência dentro do Posto São Domingos,""Posto São Domingos - CE-362 - Coração de Jesus, Sobral - CE, 62010-302"",(88) 99807-2819,Sobral,CE,""-3.670, -40.320""";
+"Elétrica,Shalom Caminhões,""Bateria, diagnóstico de motor, elétrica, freios e reparo de suspensão para caminhões"",""Rua Dois Antônios, 150, 2765 - Bairro Santo Antônio, Teresina - PI"",(86) 98875-7941,Teresina,PI,""-5.0920108, -42.8037597""";
+"Elétrica,BR Super Truck,""Diagnóstico de motor veicular, elétrica, freios, martelinho de ouro, reparo de suspensão"",""R. Bambuzinho, 854 - Distrito Industrial II, Manaus - AM, 69007-430"",(92) 99204-1203,Manaus,AM,""-3.098, -59.970""";
+"Elétrica,ZS Service Car Truck,""Oficina de caminhões (diagnóstico, elétrica, reparo geral)"",""BA-526, 101 - Barragem de Ipitanga - Ceasa, Salvador - BA, 41402-450"",(71) 99970-0136,Salvador,BA,""-12.850, -38.370""";
+"Elétrica,Oficina 2 Irmãos - Diesel | Truck e Service,""Elétrica, freios, transmissão, troca de óleo, bomba injetora diesel, caixa de câmbio"",""Rua General Lima e Silva, 151 - Aerolândia, Fortaleza - CE, 60850-530"",(85) 99420-1485,Fortaleza,CE,""-3.821, -38.505""";
+"Ponto de Apoio,Auto Posto Gatão,""Posto 24h com amplo estacionamento pra caminhão, restaurante, banho e pousada anexa"",""BR-222, KM 218, Sobral - CE, 62103-000"",(88) 99910-1097,Sobral,CE,""-3.746, -40.312""";
+"Ponto de Apoio,Hotel Gatão - Sobral,""Pousada na beira da BR-222 anexa ao posto, café da manhã e estacionamento pra caminhão"",""BR-222, KM 219, Sobral - CE, 62103-000"",(88) 99216-4421,Sobral,CE,""-3.747, -40.311""";
+"Ponto de Apoio,Posto Shell,""Posto 24h com área de parada pra caminhoneiro na BR-222"",""BR 222 Faz Ipueiras Km 244, Sn Zona Rural, BR-222 - Gerardo Cristino, Sobral - CE, 62100-000"",,Sobral,CE,""-3.720, -40.331""";
+"Ponto de Apoio,Posto São Domingos Jaburuna,""Posto 24h com conveniência e oficina, ponto de parada na BR-222"",""BR-222, 232 - Jaburuna, Sobral - CE, 62100-000"",(88) 3611-4242,Sobral,CE,""-3.710, -40.417""";
