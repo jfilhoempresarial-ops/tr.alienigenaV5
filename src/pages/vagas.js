@@ -8,14 +8,20 @@ function normalizar(txt) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-function formatarData(iso) {
+function formatarDataHora(iso) {
   if (!iso) return 'ainda não atualizado';
-  return new Date(iso).toLocaleDateString('pt-BR', {
+  const data = new Date(iso);
+  const dataFormatada = data.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+  const horaFormatada = data.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${dataFormatada}, às ${horaFormatada}`;
 }
 
 function renderCardUnidadeSine(vaga) {
@@ -46,6 +52,26 @@ function renderCardVaga(vaga) {
         ${tel ? `<a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>` : ''}
         ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="btn-whatsapp">💬 WhatsApp</a>` : ''}
       </div>
+    </div>
+  `;
+}
+
+function agruparPorPosto(lista) {
+  const grupos = new Map();
+  lista.forEach((v) => {
+    const posto = v.cidade || 'Não informado';
+    if (!grupos.has(posto)) grupos.set(posto, []);
+    grupos.get(posto).push(v);
+  });
+  return [...grupos.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+}
+
+function renderGrupoPosto(posto, vagasPosto) {
+  const totalPosto = vagasPosto.reduce((s, v) => s + (v.quantidade || 1), 0);
+  return `
+    <div class="vagas__grupo-posto">
+      <h3 class="vagas__posto-titulo">📍 ${posto} — ${totalPosto} vaga${totalPosto !== 1 ? 's' : ''}</h3>
+      ${vagasPosto.map(renderCardVaga).join('')}
     </div>
   `;
 }
@@ -84,6 +110,30 @@ export async function renderVagas(container) {
     const total = itens.reduce((s, v) => s + (v.quantidade || 1), 0);
     const infoUnidade = filtroCidade && filtradas.length ? renderCardUnidadeSine(filtradas[0]) : '';
 
+    // Total de vagas na cidade selecionada (ignora o filtro de texto, considera só a cidade)
+    const totalCidade = filtroCidade
+      ? itens
+          .filter((v) => v.cidadeBase === filtroCidade)
+          .reduce((s, v) => s + (v.quantidade || 1), 0)
+      : 0;
+
+    const nomeCidadeExibicao = filtroCidade
+      ? filtroCidade.charAt(0) + filtroCidade.slice(1).toLowerCase()
+      : '';
+
+    const ehFortaleza = filtroCidade.toUpperCase() === 'FORTALEZA';
+
+    let conteudoLista;
+    if (!filtradas.length) {
+      conteudoLista = '<p class="vazio">Nenhuma vaga encontrada com esse filtro.</p>';
+    } else if (ehFortaleza) {
+      conteudoLista = agruparPorPosto(filtradas)
+        .map(([posto, vagasPosto]) => renderGrupoPosto(posto, vagasPosto))
+        .join('');
+    } else {
+      conteudoLista = filtradas.map(renderCardVaga).join('');
+    }
+
     container.innerHTML = `
       <section class="vagas">
         <div id="carrossel-vagas" class="carrossel-categoria"></div>
@@ -98,7 +148,7 @@ export async function renderVagas(container) {
         </div>
 
         <div class="vagas__resumo">
-          <p>📅 Atualizado em: ${formatarData(dados.atualizado)}</p>
+          <p>📅 Atualizado em: ${formatarDataHora(dados.atualizado)}</p>
           <p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O nome da empresa contratante é informado no momento do atendimento.</p>
         </div>
 
@@ -120,10 +170,16 @@ export async function renderVagas(container) {
             .join('')}
         </div>
 
+        ${
+          filtroCidade
+            ? `<p class="vagas__total-cidade">📊 Total em ${nomeCidadeExibicao}: <strong>${totalCidade}</strong> vaga${totalCidade !== 1 ? 's' : ''}</p>`
+            : ''
+        }
+
         ${infoUnidade}
 
         <div class="vagas-lista">
-          ${filtradas.length ? filtradas.map(renderCardVaga).join('') : '<p class="vazio">Nenhuma vaga encontrada com esse filtro.</p>'}
+          ${conteudoLista}
         </div>
       </section>
     `;

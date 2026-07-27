@@ -3,6 +3,38 @@ import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 const NUMERO_COMERCIAL = '5588988621481';
 
+function converterParaData(campo) {
+  if (!campo) return null;
+  if (campo instanceof Date) return campo;
+  if (typeof campo === 'string') return new Date(campo);
+  if (typeof campo.toDate === 'function') return campo.toDate(); // Firestore Timestamp
+  if (typeof campo.seconds === 'number') return new Date(campo.seconds * 1000);
+  return null;
+}
+
+function formatarDataHora(campo) {
+  const data = converterParaData(campo);
+  if (!data || isNaN(data.getTime())) return 'ainda não atualizado';
+  const dataFormatada = data.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const horaFormatada = data.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${dataFormatada}, às ${horaFormatada}`;
+}
+
+function obterDataAtualizacaoMaisRecente(fretes) {
+  // Os itens já vêm ordenados por criadoEm desc na consulta ao Firestore,
+  // então o primeiro item real (não-exemplo) representa a atualização mais recente.
+  const primeiroComData = fretes.find((f) => f.criadoEm);
+  return primeiroComData ? primeiroComData.criadoEm : null;
+}
+
 export async function renderFretes(container, estadoInicial = null) {
   container.innerHTML = `<p class="loading">Carregando fretes...</p>`;
 
@@ -19,6 +51,8 @@ export async function renderFretes(container, estadoInicial = null) {
     container.innerHTML = `<p class="vazio">Nenhum frete disponível no momento.</p>`;
     return;
   }
+
+  const atualizadoEm = obterDataAtualizacaoMaisRecente(fretes);
 
   const porEstado = new Map();
   fretes.forEach((f) => {
@@ -40,6 +74,7 @@ export async function renderFretes(container, estadoInicial = null) {
       <div class="fretes-pagina__header">
         <h1>📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</h1>
         <p>Filtre pelo seu tipo de veículo e toque no frete para ver os detalhes</p>
+        <p class="fretes-pagina__atualizado">📅 Atualizado em: ${formatarDataHora(atualizadoEm)}</p>
       </div>
 
       ${ufsOrdenadas
@@ -53,6 +88,16 @@ export async function renderFretes(container, estadoInicial = null) {
           );
 
           const nomeEstado = NOME_ESTADO[uf] || uf;
+
+          // Agrupa por cidade de origem para mostrar o somatório de fretes em cada cidade
+          const porCidade = new Map();
+          lista.forEach((f) => {
+            const cidade = f.cidadeOrigem || 'Não informado';
+            if (!porCidade.has(cidade)) porCidade.set(cidade, []);
+            porCidade.get(cidade).push(f);
+          });
+          const cidadesOrdenadas = [...porCidade.keys()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
           return `
             <div class="fretes-pagina__grupo" id="estado-${uf}">
               <h2 class="fretes-pagina__grupo-titulo">🚛 ${lista.length} frete${lista.length !== 1 ? 's' : ''} saindo de ${nomeEstado}</h2>
@@ -68,7 +113,17 @@ export async function renderFretes(container, estadoInicial = null) {
               </div>
 
               <div class="fretes-pagina__lista" data-lista-estado="${uf}">
-                ${lista.map(renderCardFrete).join('')}
+                ${cidadesOrdenadas
+                  .map((cidade) => {
+                    const fretesCidade = porCidade.get(cidade);
+                    return `
+                      <div class="fretes-pagina__grupo-cidade">
+                        <h3 class="fretes-pagina__cidade-titulo">🏙️ ${cidade} — ${fretesCidade.length} frete${fretesCidade.length !== 1 ? 's' : ''}</h3>
+                        ${fretesCidade.map(renderCardFrete).join('')}
+                      </div>
+                    `;
+                  })
+                  .join('')}
               </div>
             </div>
           `;
