@@ -1,0 +1,26 @@
+name: Atualizar grupos de WhatsApp
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/relacao_grupos.xlsx'   # dispara automaticamente sempre que essa planilha mudar
+  schedule:
+    - cron: '0 11,21 * * *'             # 08:00 e 18:00 (horário de Fortaleza, UTC-3)
+  workflow_dispatch: {}                 # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependências
+        run: npm install xlsx firebase-admin
+      - name: Importar grupos de WhatsApp
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/importar-grupos-whatsapp.cjs
