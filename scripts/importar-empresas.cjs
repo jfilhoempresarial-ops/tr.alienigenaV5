@@ -1,193 +1,129 @@
-/**
- * Script de importação: lê o CSV de prestadores de serviço
- * (scripts/prestadores.csv) e cadastra/atualiza cada linha COMPLETA
- * na coleção "empresas" do Firestore.
- *
- * Uma linha só é importada se tiver: Setor, Empresa, Endereço e
- * Telefone/Whatssap preenchidos. Linhas faltando qualquer um desses
- * são ignoradas (ficam na planilha como "pendente de completar").
- *
- * SEGURO RODAR DE NOVO: cada empresa recebe um ID fixo (gerado a
- * partir do nome + cidade), então rodar o script de novo com a
- * planilha atualizada ATUALIZA a empresa já existente em vez de
- * duplicar. Campos que não vêm da planilha (avaliações, notaMedia,
- * totalAvaliacoes) são preservados.
- *
- * Se a coluna "Latitude/Longitude" já vier preenchida (formato
- * "lat, lng"), o script já salva lat/lng direto — sem precisar
- * rodar o geocodificar-empresas.cjs pra essas.
- *
- * COMO USAR:
- * 1. Atualize o scripts/prestadores.csv com as novas informações.
- * 2. No terminal, dentro da pasta do projeto, rode:
- *      node scripts/importar-empresas.cjs
- * 3. Depois, se quiser preencher lat/lng das que ficaram sem, rode:
- *      node scripts/geocodificar-empresas.cjs
- */
+// scripts/importar-grupos-whatsapp.cjs
+//
+// Lê scripts/relacao_grupos.xlsx e sincroniza os grupos com a coleção
+// "grupos_whatsapp" no Firestore. Roda via GitHub Actions
+// (.github/workflows/atualizar-grupos-whatsapp.yml), 2x por dia e sempre
+// que a planilha for alterada.
+//
+// A cada execução, a coleção inteira é apagada e reescrita com o conteúdo
+// atual da planilha — assim, basta adicionar/editar/remover uma linha no
+// relacao_grupos.xlsx que o site reflete isso na próxima sincronização.
+// Não é necessário controlar duplicados manualmente.
 
-const fs = require('fs');
 const path = require('path');
-const { parse } = require('csv-parse/sync');
+const xlsx = require('xlsx');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
-// ---------- CONFIGURAÇÃO ----------
-const CAMINHO_CSV = path.join(__dirname, 'prestadores.csv');
-const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
+const COLLECTION = 'grupos_whatsapp';
+const PLANILHA = path.join(__dirname, 'relacao_grupos.xlsx');
 
-// Se true, as empresas já entram/continuam como aprovadas (aparecem no site na hora).
-// Se false, entram pendentes (precisam ser aprovadas no painel admin).
-const MARCAR_COMO_VERIFICADO = true;
-
-// Mapeia o texto do "Setor" da planilha para o código de categoria do site.
-const MAPA_CATEGORIAS = {
-  'Mecânico': 'mecanico',
-  'Guincho': 'guincho',
-  'Borracharia': 'borracharia',
-  'Elétrica': 'eletrica',
-  'Lava-Jato': 'lavajato',
-  'Posto de Combustível': 'posto',
-  'Posto de Combu': 'posto', // caso a coluna venha cortada
-  'Auto Peças': 'autopecas',
-  'Tacógrafo': 'tacografo',
-  'Ponto de Apoio': 'pontoapoio',
-  'Pontos de Apoio': 'pontoapoio', // aceita as duas formas (singular/plural) na planilha
-};
-// -----------------------------------
-
-initializeApp({
-  credential: cert(require(CAMINHO_CHAVE)),
-});
-const db = getFirestore();
-
-function normalizarTelefone(telefone) {
-  if (!telefone) return '';
-  return telefone.toString().replace(/\D/g, '');
+function iniciarFirebase() {
+  const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  if (!base64) {
+    throw new Error('Variável FIREBASE_SERVICE_ACCOUNT_BASE64 não definida.');
+  }
+  const serviceAccount = JSON.parse(
+    Buffer.from(base64, 'base64').toString('utf-8')
+  );
+  const app = initializeApp({ credential: cert(serviceAccount) });
+  return getFirestore(app);
 }
 
-function mapearCategoria(setor) {
-  const chave = (setor || '').trim();
-  return MAPA_CATEGORIAS[chave] || null;
+function normalizarTelefone(valor) {
+  const digitos = String(valor || '').replace(/\D/g, '');
+  if (!digitos) return '';
+  // Garante o prefixo do país (55). Se a planilha já tiver o 55 na frente
+  // (13 dígitos), não duplica.
+  return digitos.startsWith('55') && digitos.length >= 12
+    ? digitos
+    : `55${digitos}`;
 }
 
-/** Converte "lat, lng" (string da coluna Latitude/Longitude) em { lat, lng } numéricos. */
-function parseLatLng(texto) {
-  if (!texto || !texto.trim()) return null;
-  const partes = texto.split(',').map((p) => parseFloat(p.trim()));
-  if (partes.length !== 2 || partes.some((n) => Number.isNaN(n))) return null;
-  return { lat: partes[0], lng: partes[1] };
+function normalizarCidade(valor) {
+  const cidade = String(valor || '').trim();
+  if (!cidade) return '';
+  return cidade.includes('/') ? cidade : `${cidade}/CE`;
 }
 
-/** Gera um ID de documento estável a partir do nome + cidade (evita duplicar em reimportações). */
-function gerarIdEmpresa(nome, cidade) {
-  const texto = `${nome} ${cidade || ''}`
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return texto || `empresa-${Date.now()}`;
+function lerPlanilha() {
+  const workbook = xlsx.readFile(PLANILHA);
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const linhas = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
+  return linhas
+    .map((linha, indice) => {
+      const nomeGrupo = String(linha.Grupo || '').trim();
+      const responsavel = String(linha.Adm || '').trim();
+      const whatsapp = normalizarTelefone(linha.Telefone);
+
+      if (!nomeGrupo || !responsavel || !whatsapp) {
+        console.warn(
+          `Linha ${indice + 2} ignorada por dados incompletos:`,
+          linha
+        );
+        return null;
+      }
+
+      return {
+        nomeGrupo,
+        cidade: normalizarCidade(linha.Cidade),
+        categoria: String(linha.Categoria || '').trim(),
+        responsavel,
+        whatsapp,
+        isExemplo: false,
+        ativo: true,
+        ordem: indice + 1,
+        atualizadoEm: new Date().toISOString(),
+      };
+    })
+    .filter(Boolean);
 }
 
-async function main() {
-  const conteudoCsv = fs.readFileSync(CAMINHO_CSV, 'utf-8');
-  const linhas = parse(conteudoCsv, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
+async function limparColecao(db) {
+  const snapshot = await db.collection(COLLECTION).get();
+  if (snapshot.empty) return;
+
+  const batches = [];
+  let batch = db.batch();
+  let contador = 0;
+
+  snapshot.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+    contador += 1;
+    if (contador === 450) {
+      batches.push(batch.commit());
+      batch = db.batch();
+      contador = 0;
+    }
   });
+  if (contador > 0) batches.push(batch.commit());
 
-  // Agrupa por nome+cidade da empresa (uma empresa pode aparecer 2x com setores diferentes)
-  const empresasPorId = new Map();
-  let puladas = 0;
-
-  for (const linha of linhas) {
-    const nome = linha['Empresa'];
-    const endereco = linha['Endereço'];
-    const setor = linha['Setor'];
-    const telefone = linha['Telefone/Whatssap'];
-    const cidade = (linha['Cidade'] || '').trim();
-
-    // Linha "completa" exige Setor, Empresa e Endereço preenchidos. Telefone
-    // NÃO é mais obrigatório — algumas empresas legítimas (postos de rede
-    // grande, PPDs, etc.) não têm telefone público disponível, e isso não
-    // deve impedir o cadastro. O card só esconde o botão de WhatsApp quando
-    // não houver telefone (ver card-empresa.js).
-    if (!setor || !nome || !endereco) {
-      puladas++;
-      continue;
-    }
-
-    const categoria = mapearCategoria(setor);
-    if (!categoria) {
-      console.warn(`⚠️  Setor não mapeado: "${setor}" (empresa: ${nome}) — pulando categoria, mas mantendo empresa.`);
-    }
-
-    const id = gerarIdEmpresa(nome, cidade);
-    if (!empresasPorId.has(id)) {
-      empresasPorId.set(id, {
-        id,
-        nome: nome.trim(),
-        whatsapp: normalizarTelefone(telefone),
-        endereco: endereco.trim(),
-        cidade,
-        estado: (linha['Estado'] || '').trim(),
-        latLng: parseLatLng(linha['Latitude/Longitude']),
-        categorias: new Set(),
-      });
-    }
-    if (categoria) {
-      empresasPorId.get(id).categorias.add(categoria);
-    }
-  }
-
-  console.log(`\nTotal de empresas únicas encontradas: ${empresasPorId.size}`);
-  console.log(`Linhas puladas (incompletas): ${puladas}\n`);
-
-  let novas = 0;
-  let atualizadas = 0;
-  let comCoordenadas = 0;
-
-  for (const empresa of empresasPorId.values()) {
-    const dados = {
-      nome: empresa.nome,
-      whatsapp: empresa.whatsapp,
-      endereco: `${empresa.endereco}${empresa.cidade ? ' - ' + empresa.cidade : ''}${empresa.estado ? '/' + empresa.estado : ''}`,
-      cidade: empresa.cidade || '',
-      categorias: Array.from(empresa.categorias),
-      verificado: MARCAR_COMO_VERIFICADO,
-      origem: 'importacao-csv',
-    };
-
-    if (empresa.latLng) {
-      dados.lat = empresa.latLng.lat;
-      dados.lng = empresa.latLng.lng;
-      comCoordenadas++;
-    }
-
-    const docRef = db.collection('empresas').doc(empresa.id);
-    const existente = await docRef.get();
-
-    if (existente.exists) {
-      // merge: true preserva campos que não vêm da planilha, como
-      // notaMedia/totalAvaliacoes (avaliações já feitas pelos motoristas).
-      await docRef.set(dados, { merge: true });
-      atualizadas++;
-      console.log(`🔄 (${atualizadas + novas}) ${dados.nome} — atualizada`);
-    } else {
-      await docRef.set({ ...dados, criadoEm: new Date().toISOString() });
-      novas++;
-      console.log(`✅ (${atualizadas + novas}) ${dados.nome} — nova`);
-    }
-  }
-
-  console.log(`\n🎉 Concluído!`);
-  console.log(`   ${novas} empresas novas.`);
-  console.log(`   ${atualizadas} empresas já existentes, atualizadas.`);
-  console.log(`   ${comCoordenadas} entraram/atualizaram com lat/lng da planilha.`);
+  await Promise.all(batches);
 }
 
-main().catch((erro) => {
-  console.error('❌ Erro ao importar:', erro);
+async function importar() {
+  const db = iniciarFirebase();
+  const grupos = lerPlanilha();
+
+  if (grupos.length === 0) {
+    console.warn('Nenhum grupo válido encontrado na planilha. Nada foi alterado no Firestore.');
+    return;
+  }
+
+  await limparColecao(db);
+
+  const batch = db.batch();
+  grupos.forEach((grupo) => {
+    const ref = db.collection(COLLECTION).doc();
+    batch.set(ref, grupo);
+  });
+  await batch.commit();
+
+  console.log(`${grupos.length} grupo(s) importado(s) com sucesso para "${COLLECTION}".`);
+}
+
+importar().catch((erro) => {
+  console.error('Erro ao importar grupos de WhatsApp:', erro);
   process.exit(1);
 });
