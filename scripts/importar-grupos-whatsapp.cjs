@@ -12,7 +12,8 @@
 
 const path = require('path');
 const xlsx = require('xlsx');
-const admin = require('firebase-admin');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 
 const COLLECTION = 'grupos_whatsapp';
 const PLANILHA = path.join(__dirname, 'relacao_grupos.xlsx');
@@ -25,8 +26,8 @@ function iniciarFirebase() {
   const serviceAccount = JSON.parse(
     Buffer.from(base64, 'base64').toString('utf-8')
   );
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-  return admin.firestore();
+  const app = initializeApp({ credential: cert(serviceAccount) });
+  return getFirestore(app);
 }
 
 function normalizarTelefone(valor) {
