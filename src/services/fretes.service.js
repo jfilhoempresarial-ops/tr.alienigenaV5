@@ -9,6 +9,11 @@ const COLLECTION = 'fretes';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const CACHE_KEY = 'tra:fretes:cache';
 
+// Só nos interessa mostrar fretes que tocam o Ceará em pelo menos uma ponta
+// (saindo do CE para qualquer lugar, ou chegando de qualquer lugar para o CE).
+// Fretes onde nem origem nem destino é CE não aparecem no site.
+const ESTADO_ALVO = 'CE';
+
 export const NOME_ESTADO = {
   CE: 'Ceará', PI: 'Piauí', MA: 'Maranhão', PE: 'Pernambuco', RN: 'Rio Grande do Norte',
   PB: 'Paraíba', BA: 'Bahia', GO: 'Goiás', SP: 'São Paulo', MG: 'Minas Gerais',
@@ -23,6 +28,16 @@ const EXEMPLOS = [
   { veiculo: 'Carreta', carroceria: 'Graneleira', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Ipu', estadoDestino: 'CE', carga: 'Grãos', especie: 'Granel', preco: '35,00', pesoTon: 28, obs: null, isExemplo: true },
   { veiculo: 'Bitrem', carroceria: 'Caçamba', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Teresina', estadoDestino: 'PI', carga: 'Areia', especie: 'Granel', preco: '65,00', pesoTon: 32, obs: null, isExemplo: true },
 ];
+
+/**
+ * Mantém só os fretes que tocam o Ceará (origem OU destino), mesmo que a
+ * outra ponta seja de outro estado. Fretes 100% fora do CE são descartados.
+ */
+function filtrarPorCeara(itens) {
+  return itens.filter(
+    (item) => item.estadoOrigem === ESTADO_ALVO || item.estadoDestino === ESTADO_ALVO
+  );
+}
 
 /** Lê o cache do sessionStorage, se ainda estiver dentro da validade. */
 function lerCache() {
@@ -64,7 +79,8 @@ export async function buscarTodosFretes() {
     const ref = collection(db, COLLECTION);
     const q = query(ref, orderBy('criadoEm', 'desc'));
     const snapshot = await getDocs(q);
-    const itens = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const todos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const itens = filtrarPorCeara(todos);
 
     if (itens.length > 0) {
       salvarCache(itens);
@@ -73,7 +89,7 @@ export async function buscarTodosFretes() {
   } catch (erro) {
     console.error('Erro ao buscar fretes:', erro);
   }
-  return EXEMPLOS;
+  return filtrarPorCeara(EXEMPLOS);
 }
 
 /**
