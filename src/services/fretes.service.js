@@ -9,10 +9,10 @@ const COLLECTION = 'fretes';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const CACHE_KEY = 'tra:fretes:cache';
 
-// Só nos interessa mostrar fretes que tocam o Ceará em pelo menos uma ponta
-// (saindo do CE para qualquer lugar, ou chegando de qualquer lugar para o CE).
-// Fretes onde nem origem nem destino é CE não aparecem no site.
-const ESTADO_ALVO = 'CE';
+// Cidades com mais visualização no Instagram nos últimos 30 dias.
+// Revisar/atualizar essa lista toda semana conforme os dados do Instagram —
+// é só editar esse array, o resto do filtro se adapta sozinho.
+const CIDADES_ALVO = ['São Paulo', 'Fortaleza', 'Goiânia', 'São Luís', 'Sobral'];
 
 export const NOME_ESTADO = {
   CE: 'Ceará', PI: 'Piauí', MA: 'Maranhão', PE: 'Pernambuco', RN: 'Rio Grande do Norte',
@@ -29,14 +29,28 @@ const EXEMPLOS = [
   { veiculo: 'Bitrem', carroceria: 'Caçamba', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Teresina', estadoDestino: 'PI', carga: 'Areia', especie: 'Granel', preco: '65,00', pesoTon: 32, obs: null, isExemplo: true },
 ];
 
+/** Remove acentos e normaliza maiúsculas/minúsculas para comparar nomes de cidade com segurança. */
+function normalizarNomeCidade(nome) {
+  if (!nome) return '';
+  return nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .trim()
+    .toLowerCase();
+}
+
+const CIDADES_ALVO_NORMALIZADAS = CIDADES_ALVO.map(normalizarNomeCidade);
+
 /**
- * Mantém só os fretes que tocam o Ceará (origem OU destino), mesmo que a
- * outra ponta seja de outro estado. Fretes 100% fora do CE são descartados.
+ * Mantém só os fretes cuja cidade de origem OU destino está na lista de
+ * cidades-alvo (foco atual: maior engajamento no Instagram nos últimos 30 dias).
  */
-function filtrarPorCeara(itens) {
-  return itens.filter(
-    (item) => item.estadoOrigem === ESTADO_ALVO || item.estadoDestino === ESTADO_ALVO
-  );
+function filtrarPorCidadesAlvo(itens) {
+  return itens.filter((item) => {
+    const origem = normalizarNomeCidade(item.cidadeOrigem);
+    const destino = normalizarNomeCidade(item.cidadeDestino);
+    return CIDADES_ALVO_NORMALIZADAS.includes(origem) || CIDADES_ALVO_NORMALIZADAS.includes(destino);
+  });
 }
 
 /** Lê o cache do sessionStorage, se ainda estiver dentro da validade. */
@@ -80,7 +94,7 @@ export async function buscarTodosFretes() {
     const q = query(ref, orderBy('criadoEm', 'desc'));
     const snapshot = await getDocs(q);
     const todos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const itens = filtrarPorCeara(todos);
+    const itens = filtrarPorCidadesAlvo(todos);
 
     if (itens.length > 0) {
       salvarCache(itens);
@@ -89,7 +103,7 @@ export async function buscarTodosFretes() {
   } catch (erro) {
     console.error('Erro ao buscar fretes:', erro);
   }
-  return filtrarPorCeara(EXEMPLOS);
+  return filtrarPorCidadesAlvo(EXEMPLOS);
 }
 
 /**
