@@ -1,5 +1,9 @@
 import { buscarGruposWhatsappAtivos } from '../services/grupos-whatsapp.service.js';
 
+// Número que recebe as mensagens de motoristas querendo incluir um grupo novo na lista.
+const WHATSAPP_INCLUIR_GRUPO = '5588988621481';
+const MENSAGEM_INCLUIR_GRUPO = 'Opa, tenho um grupo de motoristas e queria incluir ele na TRA!';
+
 export async function renderGruposWhatsapp(container) {
   container.innerHTML = `<p class="loading">Carregando grupos...</p>`;
 
@@ -17,19 +21,53 @@ export async function renderGruposWhatsapp(container) {
     return;
   }
 
+  const gruposPorCidade = agruparPorCidade(grupos);
+
   container.innerHTML = `
     <section class="grupos-whatsapp">
       <div class="grupos-whatsapp__header">
         <h1>📱 Grupos de WhatsApp de caminhoneiros</h1>
         <p>Grupos parceiros por cidade — fale direto com o admin para participar</p>
+        <a
+          href="https://wa.me/${WHATSAPP_INCLUIR_GRUPO}?text=${encodeURIComponent(MENSAGEM_INCLUIR_GRUPO)}"
+          target="_blank"
+          rel="noopener"
+          class="grupos-whatsapp__incluir"
+        >➕ Incluir meu grupo</a>
       </div>
-      <div class="grupos-whatsapp__lista">
-        ${grupos.map(renderCardGrupo).join('')}
-      </div>
+      ${gruposPorCidade.map(renderGrupoCidade).join('')}
     </section>
   `;
 
   ativarModalConsentimento(container);
+}
+
+/**
+ * Agrupa os grupos pela cidade (ex: "Sobral/CE"), preservando a ordem de
+ * primeira aparição de cada cidade (que já vem ordenada pelo campo "ordem"
+ * do Firestore/planilha).
+ */
+function agruparPorCidade(grupos) {
+  const mapa = new Map();
+
+  grupos.forEach((grupo) => {
+    const cidade = grupo.cidade || 'Outras cidades';
+    if (!mapa.has(cidade)) mapa.set(cidade, []);
+    mapa.get(cidade).push(grupo);
+  });
+
+  return Array.from(mapa.entries()).map(([cidade, itens]) => ({ cidade, itens }));
+}
+
+function renderGrupoCidade({ cidade, itens }) {
+  return `
+    <div class="grupos-whatsapp__grupo">
+      <h2 class="grupos-whatsapp__grupo-titulo">📍 ${cidade}</h2>
+      <div class="grupos-whatsapp__lista">
+        ${itens.map(renderCardGrupo).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function renderCardGrupo(grupo) {
@@ -38,7 +76,6 @@ function renderCardGrupo(grupo) {
     <div class="grupo-card ${grupo.isExemplo ? 'grupo-card--exemplo' : ''}">
       ${grupo.isExemplo ? '<span class="mini-card__tag-exemplo">EXEMPLO</span>' : ''}
       <p class="grupo-card__nome">📱 ${grupo.nomeGrupo}</p>
-      <p class="grupo-card__local">📍 ${grupo.cidade}</p>
       <p class="grupo-card__admin">Admin: ${grupo.responsavel}</p>
       ${
         tel
@@ -47,7 +84,7 @@ function renderCardGrupo(grupo) {
               class="grupo-card__acao"
               data-nome-grupo="${escaparAtributo(grupo.nomeGrupo)}"
               data-telefone="${tel}"
-            >💬 Falar no WhatsApp</button>`
+            >💬 Falar com o Adm</button>`
           : ''
       }
     </div>
@@ -121,7 +158,7 @@ function abrirModalConsentimento({ nomeGrupo, telefone }) {
   overlay
     .querySelector('.grupo-consentimento-modal__confirmar')
     .addEventListener('click', () => {
-      const mensagem = `Opa, eu vim do site da TRA. Como faço pra entrar no grupo ${nomeGrupo}?`;
+      const mensagem = `Opa, vi o grupão ${nomeGrupo} de vocês na TRA, como faço pra participar?`;
       const link = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
       window.open(link, '_blank', 'noopener');
       fechar();

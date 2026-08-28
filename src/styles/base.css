@@ -1454,10 +1454,30 @@ button {
   font-size: 14px;
 }
 
+.grupos-whatsapp__incluir {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #25D366;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.grupos-whatsapp__grupo {
+  margin-bottom: 24px;
+}
+
+.grupos-whatsapp__grupo-titulo {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
 .grupos-whatsapp__lista {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .grupo-card {
@@ -2988,5 +3008,11 @@ button {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 12px;
     align-items: start;
+  }
+
+  /* --- Grupos de WhatsApp: volta pro grid automático em telas largas --- */
+
+  .grupos-whatsapp__lista {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
