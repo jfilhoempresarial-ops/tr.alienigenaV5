@@ -11,6 +11,7 @@ const CATEGORIAS = [
   { id: 'borracharia', label: 'Borracharia', icone: '🛞' },
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
+  { id: 'lavajato', label: 'Lava-Jato', icone: '🚿' },
   { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
