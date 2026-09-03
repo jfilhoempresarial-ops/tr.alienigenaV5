@@ -9,11 +9,6 @@ const COLLECTION = 'fretes';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const CACHE_KEY = 'tra:fretes:cache';
 
-// Cidades com mais visualização no Instagram nos últimos 30 dias.
-// Revisar/atualizar essa lista toda semana conforme os dados do Instagram —
-// é só editar esse array, o resto do filtro se adapta sozinho.
-const CIDADES_ALVO = ['São Paulo', 'Fortaleza', 'Goiânia', 'São Luís', 'Sobral'];
-
 export const NOME_ESTADO = {
   CE: 'Ceará', PI: 'Piauí', MA: 'Maranhão', PE: 'Pernambuco', RN: 'Rio Grande do Norte',
   PB: 'Paraíba', BA: 'Bahia', GO: 'Goiás', SP: 'São Paulo', MG: 'Minas Gerais',
@@ -28,30 +23,6 @@ const EXEMPLOS = [
   { veiculo: 'Carreta', carroceria: 'Graneleira', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Ipu', estadoDestino: 'CE', carga: 'Grãos', especie: 'Granel', preco: '35,00', pesoTon: 28, obs: null, isExemplo: true },
   { veiculo: 'Bitrem', carroceria: 'Caçamba', cidadeOrigem: 'Sobral', estadoOrigem: 'CE', cidadeDestino: 'Teresina', estadoDestino: 'PI', carga: 'Areia', especie: 'Granel', preco: '65,00', pesoTon: 32, obs: null, isExemplo: true },
 ];
-
-/** Remove acentos e normaliza maiúsculas/minúsculas para comparar nomes de cidade com segurança. */
-function normalizarNomeCidade(nome) {
-  if (!nome) return '';
-  return nome
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .trim()
-    .toLowerCase();
-}
-
-const CIDADES_ALVO_NORMALIZADAS = CIDADES_ALVO.map(normalizarNomeCidade);
-
-/**
- * Mantém só os fretes cuja cidade de origem OU destino está na lista de
- * cidades-alvo (foco atual: maior engajamento no Instagram nos últimos 30 dias).
- */
-function filtrarPorCidadesAlvo(itens) {
-  return itens.filter((item) => {
-    const origem = normalizarNomeCidade(item.cidadeOrigem);
-    const destino = normalizarNomeCidade(item.cidadeDestino);
-    return CIDADES_ALVO_NORMALIZADAS.includes(origem) || CIDADES_ALVO_NORMALIZADAS.includes(destino);
-  });
-}
 
 /** Lê o cache do sessionStorage, se ainda estiver dentro da validade. */
 function lerCache() {
@@ -93,8 +64,7 @@ export async function buscarTodosFretes() {
     const ref = collection(db, COLLECTION);
     const q = query(ref, orderBy('criadoEm', 'desc'));
     const snapshot = await getDocs(q);
-    const todos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const itens = filtrarPorCidadesAlvo(todos);
+    const itens = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     if (itens.length > 0) {
       salvarCache(itens);
@@ -103,7 +73,7 @@ export async function buscarTodosFretes() {
   } catch (erro) {
     console.error('Erro ao buscar fretes:', erro);
   }
-  return filtrarPorCidadesAlvo(EXEMPLOS);
+  return EXEMPLOS;
 }
 
 /**
