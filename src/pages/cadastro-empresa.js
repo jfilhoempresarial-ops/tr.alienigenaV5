@@ -1,8 +1,15 @@
-import { cadastrarEmpresa } from '../services/empresas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 
 const CLOUDINARY_CLOUD_NAME = 'djajspfnl';
 const CLOUDINARY_UPLOAD_PRESET = 'tralienigena_unsigned';
+
+// Credenciais do EmailJS (gratuito, envia e-mail direto do navegador, sem
+// precisar de servidor/backend). Criar conta em https://www.emailjs.com,
+// configurar um serviço de e-mail (ex: Gmail) e um template, e preencher
+// essas 3 variáveis no arquivo .env — ver .env.example.
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 const CATEGORIAS_CADASTRO = [
   { id: 'mecanico', label: 'Mecânico' },
@@ -178,24 +185,24 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
         const labelsCategorias = categorias.map(
           (id) => CATEGORIAS_CADASTRO.find((c) => c.id === id)?.label || id
         );
-        const palavrasChave = extrairPalavrasChave(labelsCategorias, especialidades);
 
-        await cadastrarEmpresa({
+        // Não escreve mais direto no Firestore — a planilha scripts/prestadores.xlsx
+        // é a única fonte de verdade da coleção "empresas" (ver scripts/importar-empresas.cjs).
+        // Aqui a gente só avisa o admin por e-mail com os dados; ele decide se e
+        // quando adiciona a empresa na planilha.
+        await enviarEmailNotificacao({
           nome: formData.get('nome'),
           telefone: formData.get('telefone') || '',
           whatsapp: formData.get('whatsapp'),
           instagram: (formData.get('instagram') || '').replace(/^@/, ''),
           endereco,
-          categorias,
+          labelsCategorias,
           especialidades,
-          palavrasChave,
-          fotos: fotosUrls,
-          ...(coordenadas ? { lat: coordenadas.lat, lng: coordenadas.lng } : {}),
+          fotosUrls,
+          coordenadas,
         });
 
-        status.textContent = coordenadas
-          ? 'Cadastro enviado! Sua empresa será revisada em breve.'
-          : 'Cadastro enviado! Não conseguimos localizar esse endereço no mapa automaticamente, mas nossa equipe ajusta isso na revisão.';
+        status.textContent = 'Cadastro enviado! Nossa equipe vai revisar e incluir sua empresa em breve.';
         event.target.reset();
         coordenadasDaLocalizacao = null;
         fotosInfo.textContent = '';
@@ -253,40 +260,56 @@ async function enviarFotos(arquivos) {
   return urls;
 }
 
-// Palavras pequenas/comuns que não ajudam na busca (ex: "sou", "com", "muito").
-const STOPWORDS_ESPECIALIDADE = new Set([
-  'sou', 'bom', 'boa', 'muito', 'em', 'de', 'da', 'do', 'com', 'pra', 'para',
-  'e', 'a', 'o', 'os', 'as', 'um', 'uma', 'no', 'na', 'nos', 'nas', 'tambem',
-  'também', 'mexo', 'faco', 'faço', 'sei', 'que', 'mais', 'meu', 'minha',
-]);
-
 /**
- * Extrai palavras-chave das categorias + do texto de especialidades que o
- * prestador digitou (ex: "mexo com mola, sou bom em injeção eletrônica"),
- * sem usar nenhuma IA — só separa as palavras e descarta as mais comuns.
- * Isso é usado depois na busca da home, pra alguém digitar "borracharia
- * em sobral" e encontrar prestadores que batem com essas palavras.
+ * Envia um e-mail pro admin (via EmailJS, direto do navegador, sem backend)
+ * avisando que alguém preencheu o formulário "Cadastrar minha empresa".
+ * O admin decide se/quando inclui a empresa em scripts/prestadores.xlsx.
  */
-function extrairPalavrasChave(labelsCategorias, especialidades) {
-  const palavras = new Set();
+async function enviarEmailNotificacao({
+  nome,
+  telefone,
+  whatsapp,
+  instagram,
+  endereco,
+  labelsCategorias,
+  especialidades,
+  fotosUrls,
+  coordenadas,
+}) {
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+    console.warn(
+      'EmailJS não configurado (faltam VITE_EMAILJS_SERVICE_ID / VITE_EMAILJS_TEMPLATE_ID / VITE_EMAILJS_PUBLIC_KEY no .env). ' +
+        'O cadastro não foi notificado por e-mail.'
+    );
+    return;
+  }
 
-  labelsCategorias.forEach((label) => {
-    label
-      .toLowerCase()
-      .split(/[^a-zà-ú0-9]+/i)
-      .forEach((p) => {
-        if (p.length > 2) palavras.add(p);
-      });
+  const templateParams = {
+    nome_empresa: nome,
+    telefone: telefone || '-',
+    whatsapp,
+    instagram: instagram || '-',
+    endereco,
+    categorias: labelsCategorias.join(', '),
+    especialidades: especialidades || '-',
+    fotos: fotosUrls.length ? fotosUrls.join('\n') : '-',
+    coordenadas: coordenadas ? `${coordenadas.lat}, ${coordenadas.lng}` : 'não localizado automaticamente',
+  };
+
+  const resposta = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_id: EMAILJS_SERVICE_ID,
+      template_id: EMAILJS_TEMPLATE_ID,
+      user_id: EMAILJS_PUBLIC_KEY,
+      template_params: templateParams,
+    }),
   });
 
-  (especialidades || '')
-    .toLowerCase()
-    .split(/[^a-zà-ú0-9]+/i)
-    .forEach((p) => {
-      if (p.length > 2 && !STOPWORDS_ESPECIALIDADE.has(p)) {
-        palavras.add(p);
-      }
-    });
-
-  return Array.from(palavras);
+  if (!resposta.ok) {
+    // Não interrompe o fluxo do usuário por causa disso — ele já enviou as
+    // fotos e preencheu tudo. Só loga pra investigar depois.
+    console.error('Falha ao enviar e-mail de notificação de cadastro:', await resposta.text());
+  }
 }

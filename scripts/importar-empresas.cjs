@@ -174,7 +174,7 @@ async function sincronizar() {
     const ref = db.collection(COLLECTION).doc(id);
     batchUpsert.set(
       ref,
-      { ...dados, ativo: true, atualizadoEm: new Date().toISOString() },
+      { ...dados, ativo: true, verificado: true, atualizadoEm: new Date().toISOString() },
       { merge: true }
     );
   });
