@@ -1,7 +1,13 @@
 /**
- * Script de importação: lê scripts/prestadores.xlsx e cadastra/atualiza
- * cada empresa como um documento na coleção "empresas" do Firestore — a
- * coleção que alimenta a busca de "Empresas e serviços" no site.
+ * Script de sincronização: lê scripts/prestadores.xlsx e faz a coleção
+ * "empresas" do Firestore refletir EXATAMENTE o que está na planilha —
+ * essa é a única fonte de verdade pra empresas/prestadores no site.
+ *
+ * Isso significa que qualquer empresa que exista no Firestore mas NÃO
+ * esteja na planilha é REMOVIDA automaticamente (por exemplo, cadastros
+ * feitos direto pelo site via "Cadastrar minha empresa", ou lixo de testes
+ * antigos). Se quiser que uma empresa apareça no site, ela precisa estar
+ * na planilha — não tem outro caminho.
  *
  * A planilha pode ter a MESMA empresa repetida em várias linhas, uma pra
  * cada Setor em que ela atende (ex: "Guiauto Serviços e Peças" aparece
@@ -10,14 +16,11 @@
  * os setores juntados no campo "setores" (array).
  *
  * SEGURO RODAR DE NOVO: cada empresa recebe um ID fixo — slug de
- * "nome cidade" (mesmo formato usado por scripts/limpar-empresas-duplicadas.cjs)
- * — então reimportar a planilha atualiza a mesma empresa em vez de duplicar.
- * O merge:true preserva campos que não vêm da planilha (como avaliações
- * cadastradas manualmente pelo admin).
- *
- * Esse script NÃO apaga empresas que saíram da planilha — só cria/atualiza.
- * Se quiser remover as que saíram, isso precisa ser um passo separado
- * (não incluído aqui de propósito, pra não apagar avaliações por engano).
+ * "nome cidade" (mesmo formato usado por scripts/limpar-empresas-duplicadas.cjs).
+ * Empresas que continuam na planilha são atualizadas com merge:true, o que
+ * preserva campos que não vêm da planilha (como avaliações cadastradas
+ * manualmente/pelos clientes). Só documentos cujo ID não corresponde a
+ * NENHUMA empresa da planilha atual são apagados.
  *
  * COMO USAR:
  *   node scripts/importar-empresas.cjs
@@ -81,16 +84,7 @@ function lerPlanilha() {
   return xlsx.utils.sheet_to_json(workbook.Sheets[primeiraAba], { defval: '' });
 }
 
-async function importar() {
-  if (!fs.existsSync(CAMINHO_PLANILHA)) {
-    console.error(`❌ Não encontrei o arquivo ${CAMINHO_PLANILHA}`);
-    process.exit(1);
-  }
-
-  const linhas = lerPlanilha();
-  console.log(`\nTotal de linhas na planilha: ${linhas.length}\n`);
-
-  // Agrupa as linhas por empresa (nome + cidade), juntando os setores numa lista.
+function montarEmpresasDaPlanilha(linhas) {
   const empresasPorChave = new Map();
   let puladas = 0;
 
@@ -98,6 +92,7 @@ async function importar() {
     const nome = String(linha['Empresa'] || '').trim();
     const cidade = String(linha['Cidade'] || '').trim();
     const setor = String(linha['Setor'] || '').trim();
+    const cadastradoPor = String(linha['Cadastrado por'] || '').trim();
 
     if (!nome) {
       console.warn(`Linha ${indice + 2} ignorada: sem nome de empresa.`);
@@ -117,6 +112,7 @@ async function importar() {
         endereco: String(linha['Endereço'] || '').trim(),
         whatsapp: normalizarTelefone(linha['Telefone/Whatssap']),
         descricao: String(linha['Descrição dos Serviços'] || '').trim(),
+        cadastradoPor: cadastradoPor || null,
         lat,
         lng,
         setores: [],
@@ -127,37 +123,69 @@ async function importar() {
     if (setor && !empresa.setores.includes(setor)) {
       empresa.setores.push(setor);
     }
-    // Se a descrição estava vazia na primeira linha da empresa mas essa
-    // linha (de outro setor) tem descrição, aproveita.
     const descricaoLinha = String(linha['Descrição dos Serviços'] || '').trim();
     if (!empresa.descricao && descricaoLinha) {
       empresa.descricao = descricaoLinha;
     }
   });
 
-  const empresas = [...empresasPorChave.values()];
+  return { empresas: [...empresasPorChave.values()], puladas };
+}
+
+async function sincronizar() {
+  if (!fs.existsSync(CAMINHO_PLANILHA)) {
+    console.error(`❌ Não encontrei o arquivo ${CAMINHO_PLANILHA}`);
+    process.exit(1);
+  }
+
+  const linhas = lerPlanilha();
+  console.log(`\nTotal de linhas na planilha: ${linhas.length}\n`);
+
+  const { empresas, puladas } = montarEmpresasDaPlanilha(linhas);
 
   if (empresas.length === 0) {
-    console.warn('Nenhuma empresa válida encontrada na planilha. Nada foi alterado no Firestore.');
+    console.warn('⚠️  Nenhuma empresa válida encontrada na planilha. Por segurança, nada foi alterado no Firestore.');
     return;
   }
 
-  const batch = db.batch();
+  const idsDaPlanilha = new Set(empresas.map((e) => e.id));
+
+  // Busca tudo que já existe no Firestore pra descobrir o que precisa ser removido.
+  const snapshot = await db.collection(COLLECTION).get();
+  const idsParaRemover = snapshot.docs
+    .map((doc) => doc.id)
+    .filter((id) => !idsDaPlanilha.has(id));
+
+  // Remove empresas que não estão mais (ou nunca estiveram) na planilha.
+  if (idsParaRemover.length > 0) {
+    console.log(`🗑️  Removendo ${idsParaRemover.length} empresa(s) que não estão na planilha:`);
+    idsParaRemover.forEach((id) => console.log(`   - ${id}`));
+
+    const batchDelete = db.batch();
+    idsParaRemover.forEach((id) => {
+      batchDelete.delete(db.collection(COLLECTION).doc(id));
+    });
+    await batchDelete.commit();
+  }
+
+  // Cria/atualiza as empresas da planilha (merge preserva avaliações etc.).
+  const batchUpsert = db.batch();
   empresas.forEach(({ id, ...dados }) => {
     const ref = db.collection(COLLECTION).doc(id);
-    batch.set(
+    batchUpsert.set(
       ref,
       { ...dados, ativo: true, atualizadoEm: new Date().toISOString() },
       { merge: true }
     );
   });
-  await batch.commit();
+  await batchUpsert.commit();
 
-  console.log(`✅ ${empresas.length} empresa(s) importada(s)/atualizada(s) com sucesso para "${COLLECTION}".`);
+  console.log(`\n✅ ${empresas.length} empresa(s) sincronizada(s) com sucesso na coleção "${COLLECTION}".`);
   console.log(`   ${puladas} linha(s) pulada(s) (sem nome preenchido).`);
+  console.log(`   ${idsParaRemover.length} empresa(s) removida(s) por não estarem na planilha.`);
 }
 
-importar().catch((erro) => {
-  console.error('❌ Erro ao importar empresas:', erro);
+sincronizar().catch((erro) => {
+  console.error('❌ Erro ao sincronizar empresas:', erro);
   process.exit(1);
 });
