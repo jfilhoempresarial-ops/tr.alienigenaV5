@@ -69,6 +69,21 @@ export async function renderResultados(container, categoria) {
     return;
   }
 
+  // A categoria "pontoapoio" mistura prestadores da planilha (Setor "Ponto
+  // de Apoio", cadastrados manualmente) com os PPDs oficiais certificados
+  // pelo governo (origem: "ppd-gov-br", via scripts/buscar-ppd-gov.cjs).
+  // Nessa página específica, mostramos só os PPDs de verdade — os
+  // prestadores da planilha continuam existindo normalmente e aparecem
+  // na busca geral do site, só não entram aqui.
+  if (categoria === 'pontoapoio') {
+    empresas = empresas.filter((e) => e.origem === 'ppd-gov-br');
+  }
+
+  if (empresas.length === 0) {
+    container.innerHTML = `<p class="vazio">Nenhum PPD certificado encontrado no momento.</p>`;
+    return;
+  }
+
   const RAIO_KM = 20;
 
   // NÃO pedimos localização automaticamente mais — o motorista decide se
@@ -137,12 +152,24 @@ export async function renderResultados(container, categoria) {
       return a.localeCompare(b);
     });
 
-    return ufsOrdenadas
+    const chips = `
+      <div class="fretes-pagina__filtros" id="ppd-filtro-estados">
+        <button class="chip chip--ativo" data-estado-ppd="">🌐 Todos</button>
+        ${ufsOrdenadas
+          .map((uf) => {
+            const nomeEstado = NOME_ESTADO[uf] || uf;
+            return `<button class="chip" data-estado-ppd="${uf}">${nomeEstado} (${porEstado.get(uf).length})</button>`;
+          })
+          .join('')}
+      </div>
+    `;
+
+    const grupos = ufsOrdenadas
       .map((uf) => {
         const itens = porEstado.get(uf);
         const nomeEstado = NOME_ESTADO[uf] || uf;
         return `
-          <div class="fretes-pagina__grupo">
+          <div class="fretes-pagina__grupo" data-grupo-estado-ppd="${uf}">
             <h2 class="fretes-pagina__grupo-titulo">📍 ${itens.length} PPD${itens.length !== 1 ? 's' : ''} ANTT em ${nomeEstado}</h2>
             <div class="resultados-lista">
               ${itens.map(renderCardEmpresa).join('')}
@@ -151,6 +178,8 @@ export async function renderResultados(container, categoria) {
         `;
       })
       .join('');
+
+    return chips + grupos;
   }
 
   function render() {
@@ -221,6 +250,22 @@ export async function renderResultados(container, categoria) {
         const alvo = container.querySelector('#resultados-busca');
         alvo.focus();
         alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
+      });
+    }
+
+    const filtroEstadosPpd = container.querySelector('#ppd-filtro-estados');
+    if (filtroEstadosPpd) {
+      filtroEstadosPpd.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          filtroEstadosPpd.querySelectorAll('.chip').forEach((c) => c.classList.remove('chip--ativo'));
+          chip.classList.add('chip--ativo');
+
+          const ufEscolhida = chip.dataset.estadoPpd;
+          container.querySelectorAll('[data-grupo-estado-ppd]').forEach((grupo) => {
+            const bate = !ufEscolhida || grupo.dataset.grupoEstadoPpd === ufEscolhida;
+            grupo.style.display = bate ? '' : 'none';
+          });
+        });
       });
     }
 

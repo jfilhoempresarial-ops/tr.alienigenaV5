@@ -73,8 +73,18 @@ export async function renderFretes(container, estadoInicial = null) {
 
       <div class="fretes-pagina__header">
         <h1>📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</h1>
-        <p>Filtre pelo seu tipo de veículo e toque no frete para ver os detalhes</p>
+        <p>Filtre pelo estado e pelo tipo de veículo, e toque no frete para ver os detalhes</p>
         <p class="fretes-pagina__atualizado">📅 Atualizado em: ${formatarDataHora(atualizadoEm)}</p>
+      </div>
+
+      <div class="fretes-pagina__filtros fretes-pagina__filtros--estados" id="fretes-filtro-estados">
+        <button class="chip chip--ativo" data-estado-geral="">🌐 Todos os estados</button>
+        ${ufsOrdenadas
+          .map((uf) => {
+            const nomeEstado = NOME_ESTADO[uf] || uf;
+            return `<button class="chip" data-estado-geral="${uf}">${nomeEstado} (${porEstado.get(uf).length})</button>`;
+          })
+          .join('')}
       </div>
 
       ${ufsOrdenadas
@@ -127,9 +137,10 @@ export async function renderFretes(container, estadoInicial = null) {
     });
   });
 
-  container.querySelectorAll('.fretes-pagina__filtros').forEach((filtro) => {
+  container.querySelectorAll('.fretes-pagina__filtros:not(.fretes-pagina__filtros--estados)').forEach((filtro) => {
     const uf = filtro.dataset.estado;
     const listaEl = container.querySelector(`[data-lista-estado="${uf}"]`);
+    if (!listaEl) return;
 
     filtro.querySelectorAll('.chip').forEach((chip) => {
       chip.addEventListener('click', () => {
@@ -144,6 +155,23 @@ export async function renderFretes(container, estadoInicial = null) {
       });
     });
   });
+
+  const filtroEstadosGeral = container.querySelector('#fretes-filtro-estados');
+  if (filtroEstadosGeral) {
+    filtroEstadosGeral.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        filtroEstadosGeral.querySelectorAll('.chip').forEach((c) => c.classList.remove('chip--ativo'));
+        chip.classList.add('chip--ativo');
+
+        const ufEscolhida = chip.dataset.estadoGeral;
+        container.querySelectorAll('.fretes-pagina__grupo').forEach((grupo) => {
+          const ufGrupo = grupo.id.replace('estado-', '');
+          const bate = !ufEscolhida || ufGrupo === ufEscolhida;
+          grupo.style.display = bate ? '' : 'none';
+        });
+      });
+    });
+  }
 
   if (estadoInicial) {
     const alvo = container.querySelector(`#estado-${estadoInicial}`);
