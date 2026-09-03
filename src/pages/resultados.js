@@ -132,16 +132,17 @@ export async function renderResultados(container, categoria) {
     render();
   }
 
-  // "Pontos de Apoio" mistura prestadores comuns com os PPDs oficiais do
-  // governo (scripts/buscar-ppd-gov.cjs) — como essa categoria pode ter
-  // muitos resultados espalhados pelo Brasil, agrupamos por estado (igual
-  // a página de fretes), em vez do grid corrido usado nas outras categorias.
-  const AGRUPAR_POR_ESTADO = categoria === 'pontoapoio';
+  // Agrupamos por estado em TODAS as categorias agora — ajuda a navegar
+  // quando tem muitos resultados espalhados pelo Brasil (ex: Mecânico,
+  // Borracharia). Igual a página de fretes.
+  const AGRUPAR_POR_ESTADO = true;
 
   function renderListaPorEstado(listaFinal) {
     const porEstado = new Map();
     listaFinal.forEach((empresa) => {
-      const uf = empresa.estado || '??';
+      // .toUpperCase() normaliza "Ce" e "CE" pro mesmo grupo — a planilha
+      // tem essa inconsistência em algumas linhas mais antigas.
+      const uf = (empresa.estado || '??').toUpperCase();
       if (!porEstado.has(uf)) porEstado.set(uf, []);
       porEstado.get(uf).push(empresa);
     });
@@ -152,13 +153,16 @@ export async function renderResultados(container, categoria) {
       return a.localeCompare(b);
     });
 
+    const textoItem = (qtd) =>
+      categoria === 'pontoapoio' ? `PPD${qtd !== 1 ? 's' : ''} ANTT` : `resultado${qtd !== 1 ? 's' : ''}`;
+
     const chips = `
-      <div class="fretes-pagina__filtros" id="ppd-filtro-estados">
-        <button class="chip chip--ativo" data-estado-ppd="">🌐 Todos</button>
+      <div class="fretes-pagina__filtros" id="resultados-filtro-estados">
+        <button class="chip chip--ativo" data-estado-resultado="">🌐 Todos</button>
         ${ufsOrdenadas
           .map((uf) => {
             const nomeEstado = NOME_ESTADO[uf] || uf;
-            return `<button class="chip" data-estado-ppd="${uf}">${nomeEstado} (${porEstado.get(uf).length})</button>`;
+            return `<button class="chip" data-estado-resultado="${uf}">${nomeEstado} (${porEstado.get(uf).length})</button>`;
           })
           .join('')}
       </div>
@@ -169,8 +173,8 @@ export async function renderResultados(container, categoria) {
         const itens = porEstado.get(uf);
         const nomeEstado = NOME_ESTADO[uf] || uf;
         return `
-          <div class="fretes-pagina__grupo" data-grupo-estado-ppd="${uf}">
-            <h2 class="fretes-pagina__grupo-titulo">📍 ${itens.length} PPD${itens.length !== 1 ? 's' : ''} ANTT em ${nomeEstado}</h2>
+          <div class="fretes-pagina__grupo" data-grupo-estado-resultado="${uf}">
+            <h2 class="fretes-pagina__grupo-titulo">📍 ${itens.length} ${textoItem(itens.length)} em ${nomeEstado}</h2>
             <div class="resultados-lista">
               ${itens.map(renderCardEmpresa).join('')}
             </div>
@@ -253,16 +257,16 @@ export async function renderResultados(container, categoria) {
       });
     }
 
-    const filtroEstadosPpd = container.querySelector('#ppd-filtro-estados');
-    if (filtroEstadosPpd) {
-      filtroEstadosPpd.querySelectorAll('.chip').forEach((chip) => {
+    const filtroEstadosResultados = container.querySelector('#resultados-filtro-estados');
+    if (filtroEstadosResultados) {
+      filtroEstadosResultados.querySelectorAll('.chip').forEach((chip) => {
         chip.addEventListener('click', () => {
-          filtroEstadosPpd.querySelectorAll('.chip').forEach((c) => c.classList.remove('chip--ativo'));
+          filtroEstadosResultados.querySelectorAll('.chip').forEach((c) => c.classList.remove('chip--ativo'));
           chip.classList.add('chip--ativo');
 
-          const ufEscolhida = chip.dataset.estadoPpd;
-          container.querySelectorAll('[data-grupo-estado-ppd]').forEach((grupo) => {
-            const bate = !ufEscolhida || grupo.dataset.grupoEstadoPpd === ufEscolhida;
+          const ufEscolhida = chip.dataset.estadoResultado;
+          container.querySelectorAll('[data-grupo-estado-resultado]').forEach((grupo) => {
+            const bate = !ufEscolhida || grupo.dataset.grupoEstadoResultado === ufEscolhida;
             grupo.style.display = bate ? '' : 'none';
           });
         });
