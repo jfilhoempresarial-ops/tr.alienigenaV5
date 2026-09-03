@@ -141,6 +141,7 @@ export function renderHome(container) {
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
+          <a href="/fretes" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
           <p class="home-secao__vazio">Carregando...</p>
@@ -438,8 +439,8 @@ async function carregarVagasDestaque(container) {
     const todosItens = dados.itens || [];
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
-    titulo.textContent = todosItens.length
-      ? `💼 ${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje`
+    titulo.innerHTML = todosItens.length
+      ? `💼 <span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''}</span> disponíve${total !== 1 ? 'is' : 'l'} hoje`
       : '💼 Vagas em destaque';
 
     const itens = [...todosItens]
@@ -617,8 +618,8 @@ async function carregarFretesResumo(container) {
   try {
     const fretes = await comTimeout(buscarTodosFretes());
 
-    titulo.textContent = fretes.length
-      ? `📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}`
+    titulo.innerHTML = fretes.length
+      ? `📦 <span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''}</span> disponíve${fretes.length !== 1 ? 'is' : 'l'}`
       : '📦 Fretes disponíveis';
 
     if (fretes.length === 0) {

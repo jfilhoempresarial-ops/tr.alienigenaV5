@@ -79,7 +79,13 @@ export async function renderFretes(container, estadoInicial = null) {
 
       ${ufsOrdenadas
         .map((uf) => {
-          const lista = [...porEstado.get(uf)].sort((a, b) => a.veiculo.localeCompare(b.veiculo));
+          // Ordenado por cidade de origem, pra manter uma sequência lógica
+          // dentro do estado mesmo sem sub-agrupamento por cidade.
+          const lista = [...porEstado.get(uf)].sort((a, b) => {
+            const cidadeA = a.cidadeOrigem || '';
+            const cidadeB = b.cidadeOrigem || '';
+            return cidadeA.localeCompare(cidadeB, 'pt-BR') || a.veiculo.localeCompare(b.veiculo);
+          });
 
           const contagemPorVeiculo = new Map();
           lista.forEach((f) => contagemPorVeiculo.set(f.veiculo, (contagemPorVeiculo.get(f.veiculo) || 0) + 1));
@@ -88,15 +94,6 @@ export async function renderFretes(container, estadoInicial = null) {
           );
 
           const nomeEstado = NOME_ESTADO[uf] || uf;
-
-          // Agrupa por cidade de origem para mostrar o somatório de fretes em cada cidade
-          const porCidade = new Map();
-          lista.forEach((f) => {
-            const cidade = f.cidadeOrigem || 'Não informado';
-            if (!porCidade.has(cidade)) porCidade.set(cidade, []);
-            porCidade.get(cidade).push(f);
-          });
-          const cidadesOrdenadas = [...porCidade.keys()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
           return `
             <div class="fretes-pagina__grupo" id="estado-${uf}">
@@ -113,17 +110,7 @@ export async function renderFretes(container, estadoInicial = null) {
               </div>
 
               <div class="fretes-pagina__lista" data-lista-estado="${uf}">
-                ${cidadesOrdenadas
-                  .map((cidade) => {
-                    const fretesCidade = porCidade.get(cidade);
-                    return `
-                      <div class="fretes-pagina__grupo-cidade">
-                        <h3 class="fretes-pagina__cidade-titulo">🏙️ ${cidade} — ${fretesCidade.length} frete${fretesCidade.length !== 1 ? 's' : ''}</h3>
-                        ${fretesCidade.map(renderCardFrete).join('')}
-                      </div>
-                    `;
-                  })
-                  .join('')}
+                ${lista.map(renderCardFrete).join('')}
               </div>
             </div>
           `;
