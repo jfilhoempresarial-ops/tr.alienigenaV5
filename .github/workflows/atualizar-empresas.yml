@@ -1,0 +1,37 @@
+name: Atualizar empresas (prestadores)
+
+# Roda 2x por dia (igual o de grupos de WhatsApp) E automaticamente sempre
+# que a planilha scripts/prestadores.xlsx ou o script scripts/importar-empresas.cjs
+# forem alterados e enviados pro branch main. Também pode ser disparado
+# manualmente pela aba Actions (botão "Run workflow").
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 08:00 horário de Brasília (11:00 UTC)
+    - cron: '0 21 * * *'  # 18:00 horário de Brasília (21:00 UTC)
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/prestadores.xlsx'
+      - 'scripts/importar-empresas.cjs'
+  workflow_dispatch: {}
+
+jobs:
+  atualizar-empresas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install xlsx firebase-admin
+
+      - name: Rodar importar-empresas.cjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/importar-empresas.cjs
