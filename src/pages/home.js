@@ -5,6 +5,8 @@ import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../se
 import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
+import { buscarEmpresasMaisAvaliadas } from '../services/avaliacoes.service.js';
+import { renderEstrelas, formatarNota } from '../components/estrelas.js';
 
 const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
@@ -195,6 +197,15 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🚛 Vários caminhoneiros atendidos gratuitamente</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-avaliacoes-destaque">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
     </section>
   `;
 
@@ -209,6 +220,7 @@ export function renderHome(container) {
   carregarAniversariantes(container);
   renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
   carregarPlaylist(container);
+  carregarAvaliacoesDestaque(container);
 }
 
 function configurarBuscaHome(container) {
@@ -429,6 +441,35 @@ async function carregarAniversariantes(container) {
     secao.style.display = 'none';
     console.error(erro);
   }
+}
+
+async function carregarAvaliacoesDestaque(container) {
+  const alvo = container.querySelector('#lista-avaliacoes-destaque');
+  try {
+    const empresas = await comTimeout(buscarEmpresasMaisAvaliadas(6));
+    if (empresas.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Ainda não temos avaliações suficientes — seja o primeiro a avaliar um prestador!</p>`;
+      return;
+    }
+    alvo.innerHTML = empresas.map(renderMiniCardAvaliacao).join('');
+  } catch (erro) {
+    renderErroComRetry(alvo, () => carregarAvaliacoesDestaque(container));
+    console.error(erro);
+  }
+}
+
+function renderMiniCardAvaliacao(empresa) {
+  const totalAvaliacoes = empresa.totalAvaliacoes || 0;
+  return `
+    <div class="mini-card">
+      <p class="mini-card__titulo">${empresa.nome}</p>
+      <p class="mini-card__avaliacao">
+        ${renderEstrelas(empresa.notaMedia)} ${formatarNota(empresa.notaMedia)}
+        <span class="mini-card__avaliacao-total">(${totalAvaliacoes} avaliaç${totalAvaliacoes !== 1 ? 'ões' : 'ão'})</span>
+      </p>
+      ${empresa.cidade ? `<p class="mini-card__sub">📍 ${empresa.cidade}${empresa.estado ? '/' + empresa.estado : ''}</p>` : ''}
+    </div>
+  `;
 }
 
 async function carregarVagasDestaque(container) {
