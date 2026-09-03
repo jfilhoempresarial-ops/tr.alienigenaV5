@@ -1,6 +1,8 @@
 import { cadastrarNewsletter } from '../services/newsletter.service.js';
 
 const NUMERO_WHATSAPP = '5588988621481';
+const MENSAGEM_WHATSAPP = encodeURIComponent('Olá, eu vim do site da TRA, você pode me ajudar?');
+const LINK_WHATSAPP = `https://wa.me/${NUMERO_WHATSAPP}?text=${MENSAGEM_WHATSAPP}`;
 
 const LINKS_NAVEGACAO = [
   { href: '/', label: 'Home' },
@@ -33,7 +35,7 @@ export function renderFooter() {
             Feito por caminhoneiro pra caminhoneiro.
           </p>
           <a
-            href="https://wa.me/${NUMERO_WHATSAPP}"
+            href="${LINK_WHATSAPP}"
             target="_blank"
             rel="noopener"
             class="footer__whatsapp"
@@ -125,7 +127,7 @@ export function renderWhatsappFloat() {
 
   el.innerHTML = `
     <a
-      href="https://wa.me/${NUMERO_WHATSAPP}"
+      href="${LINK_WHATSAPP}"
       target="_blank"
       rel="noopener"
       class="whatsapp-float"

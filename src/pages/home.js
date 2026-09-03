@@ -15,7 +15,7 @@ const CATEGORIAS = [
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
   { id: 'lavajato', label: 'Lava-Jato', icone: '🚿' },
-  { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
+  { id: 'pontoapoio', label: 'PPDs ANTT', icone: '📍' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
   { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
@@ -440,7 +440,7 @@ async function carregarVagasDestaque(container) {
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
     titulo.innerHTML = todosItens.length
-      ? `💼 <span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''}</span> disponíve${total !== 1 ? 'is' : 'l'} hoje`
+      ? `💼 <span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje</span>`
       : '💼 Vagas em destaque';
 
     const itens = [...todosItens]
@@ -619,7 +619,7 @@ async function carregarFretesResumo(container) {
     const fretes = await comTimeout(buscarTodosFretes());
 
     titulo.innerHTML = fretes.length
-      ? `📦 <span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''}</span> disponíve${fretes.length !== 1 ? 'is' : 'l'}`
+      ? `📦 <span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</span>`
       : '📦 Fretes disponíveis';
 
     if (fretes.length === 0) {

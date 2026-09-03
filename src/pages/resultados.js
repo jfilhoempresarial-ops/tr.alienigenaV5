@@ -4,6 +4,7 @@ import { ordenarPorDistancia } from '../utils/distancia.js';
 import { renderCardEmpresa } from '../components/card-empresa.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 import { avaliarEmpresa } from '../services/avaliacoes.service.js';
+import { NOME_ESTADO } from '../services/fretes.service.js';
 
 // Texto de exemplo (placeholder) da busca em cada categoria. Categorias que
 // não tinham um texto específico caem no placeholder genérico (pode buscar
@@ -116,6 +117,42 @@ export async function renderResultados(container, categoria) {
     render();
   }
 
+  // "Pontos de Apoio" mistura prestadores comuns com os PPDs oficiais do
+  // governo (scripts/buscar-ppd-gov.cjs) — como essa categoria pode ter
+  // muitos resultados espalhados pelo Brasil, agrupamos por estado (igual
+  // a página de fretes), em vez do grid corrido usado nas outras categorias.
+  const AGRUPAR_POR_ESTADO = categoria === 'pontoapoio';
+
+  function renderListaPorEstado(listaFinal) {
+    const porEstado = new Map();
+    listaFinal.forEach((empresa) => {
+      const uf = empresa.estado || '??';
+      if (!porEstado.has(uf)) porEstado.set(uf, []);
+      porEstado.get(uf).push(empresa);
+    });
+
+    const ufsOrdenadas = [...porEstado.keys()].sort((a, b) => {
+      if (a === 'CE') return -1;
+      if (b === 'CE') return 1;
+      return a.localeCompare(b);
+    });
+
+    return ufsOrdenadas
+      .map((uf) => {
+        const itens = porEstado.get(uf);
+        const nomeEstado = NOME_ESTADO[uf] || uf;
+        return `
+          <div class="fretes-pagina__grupo">
+            <h2 class="fretes-pagina__grupo-titulo">📍 ${itens.length} PPD${itens.length !== 1 ? 's' : ''} ANTT em ${nomeEstado}</h2>
+            <div class="resultados-lista">
+              ${itens.map(renderCardEmpresa).join('')}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
   function render() {
     const listaFinal = aplicarFiltro();
 
@@ -150,7 +187,11 @@ export async function renderResultados(container, categoria) {
           }
         </button>
 
-        <h2><span class="resultados__contador">${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''}</span> ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</h2>
+        <h2><span class="resultados__contador">${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</span></h2>
+        ${
+          AGRUPAR_POR_ESTADO && listaFinal.length
+            ? renderListaPorEstado(listaFinal)
+            : `
         <div class="resultados-lista">
           ${
             listaFinal.length
@@ -160,6 +201,8 @@ export async function renderResultados(container, categoria) {
               : '<p class="vazio">Nenhum resultado encontrado com esse filtro.</p>'
           }
         </div>
+        `
+        }
       </section>
     `;
 

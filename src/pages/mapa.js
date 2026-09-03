@@ -29,7 +29,7 @@ const LABEL_CATEGORIA = {
   borracharia: 'Borracharia',
   eletrica: 'Elétrica',
   guincho: 'Guincho',
-  pontoapoio: 'P. Apoio',
+  pontoapoio: 'PPDs ANTT',
   lavajato: 'Lava-Jato',
   autopecas: 'Auto Peças',
   tacografo: 'Tacógrafo',
