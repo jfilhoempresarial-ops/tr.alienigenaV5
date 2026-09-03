@@ -4,6 +4,9 @@ import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
+import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
+
+const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -342,14 +345,16 @@ function formatarDataBR(dataStr) {
 }
 
 function renderMiniCardEmpresa(empresa) {
-  const tel = (empresa.whatsapp || '').replace(/\D/g, '');
   const categoria = (empresa.categorias || [])[0];
   const label = LABEL_POR_CATEGORIA[categoria] || 'Serviço';
+  const linkWhats = empresa.whatsapp
+    ? gerarLinkWhatsapp(empresa.whatsapp, MENSAGEM_PADRAO_WHATSAPP)
+    : null;
   return `
     <div class="mini-card">
       <p class="mini-card__titulo">${empresa.nome}</p>
       <p class="mini-card__sub">${label}${empresa.endereco ? ' • ' + empresa.endereco : ''}</p>
-      ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
+      ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
     </div>
   `;
 }

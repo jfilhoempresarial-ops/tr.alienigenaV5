@@ -1,4 +1,7 @@
 import { buscarNoSite } from '../services/busca.service.js';
+import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
+
+const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
 export function renderBusca(container, termoInicial = '') {
   let termo = termoInicial;
@@ -85,12 +88,20 @@ function renderGrupo(titulo, itensHtml) {
 }
 
 function renderCardEmpresa(empresa) {
-  const tel = (empresa.whatsapp || '').replace(/\D/g, '');
+  const linkWhats = empresa.whatsapp
+    ? gerarLinkWhatsapp(empresa.whatsapp, MENSAGEM_PADRAO_WHATSAPP)
+    : null;
+  // Leva pro mapa já focado nessa empresa (ver tratamento de ?empresa= em mapa.js).
+  const linkMapa = empresa.id ? `/mapa?empresa=${encodeURIComponent(empresa.id)}` : null;
+
   return `
     <div class="mini-card">
       <p class="mini-card__titulo">${empresa.nome}</p>
       <p class="mini-card__sub">${empresa.endereco || ''}</p>
-      ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
+      <div class="mini-card__acoes">
+        ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
+        ${linkMapa ? `<a href="${linkMapa}" class="mini-card__acao mini-card__acao--secundaria">📍 Ver localização</a>` : ''}
+      </div>
     </div>
   `;
 }

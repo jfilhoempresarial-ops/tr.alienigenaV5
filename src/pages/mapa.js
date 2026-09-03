@@ -19,6 +19,12 @@ import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 
 const CENTRO_BRASIL = [-14.235, -51.9253];
 const ZOOM_INICIAL = 4;
+const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
+
+// Serviço de roteamento gratuito, sem chave de API (instância pública de
+// demonstração do projeto OSRM). Sem SLA garantido — se o volume de uso
+// crescer muito, vale considerar uma instância própria/paga no futuro.
+const OSRM_URL = 'https://router.project-osrm.org/route/v1/driving';
 
 // Mesmas categorias usadas no resto do site (home.js / admin.js), só pra
 // mostrar o nome bonito em vez do código interno (ex: "mecanico" -> "Mecânico").
@@ -62,6 +68,35 @@ const iconePpd = L.divIcon({
   iconSize: L.point(54, 54),
 });
 
+/**
+ * Busca a rota de carro entre dois pontos no OSRM, desenha ela no mapa
+ * (substituindo a rota anterior, se houver) e enquadra a view nela.
+ * Retorna a distância (km) e duração (min) formatadas.
+ */
+async function tracarRotaNoMapa(mapa, estadoRota, origem, destino) {
+  const url = `${OSRM_URL}/${origem.lng},${origem.lat};${destino.lng},${destino.lat}?overview=full&geometries=geojson`;
+  const resposta = await fetch(url);
+  if (!resposta.ok) throw new Error('Falha ao buscar rota no OSRM.');
+
+  const dados = await resposta.json();
+  if (!dados.routes || dados.routes.length === 0) throw new Error('Nenhuma rota encontrada.');
+
+  const rota = dados.routes[0];
+  // O OSRM devolve [lng, lat]; o Leaflet espera [lat, lng].
+  const coordenadas = rota.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+  if (estadoRota.linha) {
+    mapa.removeLayer(estadoRota.linha);
+  }
+  estadoRota.linha = L.polyline(coordenadas, { color: '#1a7a3c', weight: 5, opacity: 0.8 }).addTo(mapa);
+  mapa.fitBounds(estadoRota.linha.getBounds(), { padding: [40, 40] });
+
+  return {
+    distanciaKm: (rota.distance / 1000).toFixed(1),
+    duracaoMin: Math.round(rota.duration / 60),
+  };
+}
+
 export async function renderMapa(container) {
   container.innerHTML = `
     <section class="mapa-pagina">
@@ -81,6 +116,18 @@ export async function renderMapa(container) {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
   }).addTo(mapa);
+
+  // Guarda a localização do usuário (preenchida mais abaixo) e a linha de
+  // rota atualmente desenhada, pra poderem ser usadas pelo botão "Traçar
+  // rota" de qualquer popup, sem precisar pedir localização de novo toda vez.
+  let localizacaoUsuario = null;
+  const estadoRota = { linha: null };
+
+  // Empresa específica vinda da busca (ver /busca -> "📍 Ver localização"),
+  // ex: /mapa?empresa=oficina-tal-sobral — se vier, focamos nela direto.
+  const parametrosUrl = new URLSearchParams(window.location.search);
+  const empresaIdAlvo = parametrosUrl.get('empresa');
+  let marcadorAlvo = null;
 
   // zoomToBoundsOnClick: false — controlamos o clique manualmente (ver abaixo),
   // pra mostrar o resumo por categoria antes de dar zoom, em vez de já zoomar direto.
@@ -111,8 +158,12 @@ export async function renderMapa(container) {
       comCoordenadas++;
 
       const linkWhats = empresa.whatsapp
-        ? gerarLinkWhatsapp(empresa.whatsapp, `Olá! Vi seu contato no mapa do TRA da Estrada.`)
+        ? gerarLinkWhatsapp(empresa.whatsapp, MENSAGEM_PADRAO_WHATSAPP)
         : null;
+
+      // ID usado no botão de rota (pra achar o elemento certo no DOM quando
+      // o popup abrir) e pra identificar o marcador-alvo vindo da URL.
+      const idSeguro = (empresa.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
 
       // Guardamos as categorias direto nas opções do marcador, pra dar pra
       // somar por categoria quando ele estiver dentro de um cluster.
@@ -120,11 +171,45 @@ export async function renderMapa(container) {
         categorias: empresa.categorias || [],
         icon: empresa.origem === 'ppd-gov-br' ? iconePpd : iconeEmpresa,
       }).bindPopup(`
-        <strong>${empresa.nome}</strong><br/>
-        ${empresa.endereco ? `${empresa.endereco}<br/>` : ''}
-        ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener">💬 Chamar no WhatsApp</a>` : ''}
+        <div class="mapa-popup-empresa">
+          <strong>${empresa.nome}</strong><br/>
+          ${empresa.endereco ? `${empresa.endereco}<br/>` : ''}
+          ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener">💬 Chamar no WhatsApp</a><br/>` : ''}
+          <button class="mapa-popup-rota-btn" id="mapa-rota-btn-${idSeguro}">🧭 Traçar rota até aqui</button>
+          <div class="mapa-popup-rota-info" id="mapa-rota-info-${idSeguro}"></div>
+        </div>
       `);
+
+      // Liga o clique do botão de rota sempre que ESSE popup específico abrir
+      // (o conteúdo só existe no DOM depois de aberto).
+      marker.on('popupopen', () => {
+        const botao = document.getElementById(`mapa-rota-btn-${idSeguro}`);
+        const infoEl = document.getElementById(`mapa-rota-info-${idSeguro}`);
+        if (!botao) return;
+
+        botao.addEventListener('click', async () => {
+          infoEl.textContent = '📡 Calculando rota...';
+          try {
+            if (!localizacaoUsuario) {
+              localizacaoUsuario = await obterLocalizacaoAtual();
+            }
+            const resultado = await tracarRotaNoMapa(mapa, estadoRota, localizacaoUsuario, {
+              lat: empresa.lat,
+              lng: empresa.lng,
+            });
+            infoEl.textContent = `📍 ${resultado.distanciaKm} km • ⏱️ cerca de ${resultado.duracaoMin} min de carro`;
+          } catch (erro) {
+            infoEl.textContent = '❌ Não foi possível calcular a rota. Ative sua localização e tente de novo.';
+            console.error(erro);
+          }
+        });
+      });
+
       grupoPinos.addLayer(marker);
+
+      if (empresaIdAlvo && empresa.id === empresaIdAlvo) {
+        marcadorAlvo = marker;
+      }
     });
 
     mapa.addLayer(grupoPinos);
@@ -176,17 +261,31 @@ export async function renderMapa(container) {
     }, 0);
   });
 
-  // Ponto azul: localização do usuário (bônus, não trava o mapa se falhar)
+  // Se veio um ?empresa= específico na URL, foca nele: o markercluster
+  // expande automaticamente o cluster necessário pra revelar o marcador e,
+  // no callback, abrimos o popup dele já com o botão de rota disponível.
+  if (marcadorAlvo) {
+    grupoPinos.zoomToShowLayer(marcadorAlvo, () => {
+      marcadorAlvo.openPopup();
+    });
+  }
+
+  // Ponto azul: localização do usuário (bônus, não trava o mapa se falhar).
+  // Se já estamos focando numa empresa específica (marcadorAlvo), não
+  // sobrescrevemos a view — só adicionamos o ponto azul, se disponível.
   try {
-    const localizacao = await obterLocalizacaoAtual();
+    localizacaoUsuario = await obterLocalizacaoAtual();
     const iconeUsuario = L.divIcon({
       className: 'mapa-pino-usuario',
       iconSize: [18, 18],
     });
-    L.marker([localizacao.lat, localizacao.lng], { icon: iconeUsuario, zIndexOffset: 1000 })
+    L.marker([localizacaoUsuario.lat, localizacaoUsuario.lng], { icon: iconeUsuario, zIndexOffset: 1000 })
       .addTo(mapa)
       .bindPopup('Você está aqui');
-    mapa.setView([localizacao.lat, localizacao.lng], 12);
+
+    if (!marcadorAlvo) {
+      mapa.setView([localizacaoUsuario.lat, localizacaoUsuario.lng], 12);
+    }
   } catch (erro) {
     console.warn('Localização do usuário indisponível para o mapa.', erro);
   }
