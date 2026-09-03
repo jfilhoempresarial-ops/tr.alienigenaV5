@@ -15,7 +15,7 @@ function gerarLinkMapa(empresa) {
 /** Recebe um objeto empresa (já com distanciaKm calculada) e retorna o HTML do card. */
 export function renderCardEmpresa(empresa) {
   const linkWhats = empresa.whatsapp
-    ? gerarLinkWhatsapp(empresa.whatsapp, `Olá! Vi seu contato no TRA da Estrada e preciso de ajuda.`)
+    ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.')
     : null;
   const linkMapa = gerarLinkMapa(empresa);
 

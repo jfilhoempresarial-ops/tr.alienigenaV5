@@ -150,7 +150,7 @@ export async function renderResultados(container, categoria) {
           }
         </button>
 
-        <h2>${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</h2>
+        <h2><span class="resultados__contador">${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''}</span> ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</h2>
         <div class="resultados-lista">
           ${
             listaFinal.length

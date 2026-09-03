@@ -1,7 +1,6 @@
 import { buscarNoSite } from '../services/busca.service.js';
-import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
-
-const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
+import { renderCardEmpresa } from '../components/card-empresa.js';
+import { avaliarEmpresa } from '../services/avaliacoes.service.js';
 
 export function renderBusca(container, termoInicial = '') {
   let termo = termoInicial;
@@ -73,6 +72,10 @@ export function renderBusca(container, termoInicial = '') {
       ${resultado.grupos.length ? renderGrupo('📱 Grupos de WhatsApp', resultado.grupos.map(renderCardGrupo)) : ''}
       ${resultado.aniversariantes.length ? renderGrupo('🎂 Aniversariantes', resultado.aniversariantes.map(renderCardAniversariante)) : ''}
     `;
+
+    // Liga os botões "Avaliar esta empresa" e as notas — mesma lógica usada
+    // em resultados.js (páginas de categoria), agora reaproveitada aqui.
+    configurarAvaliacoes(alvo);
   }
 
   render();
@@ -83,25 +86,6 @@ function renderGrupo(titulo, itensHtml) {
     <div class="busca__grupo">
       <h2 class="busca__grupo-titulo">${titulo}</h2>
       <div class="busca__grupo-lista">${itensHtml.join('')}</div>
-    </div>
-  `;
-}
-
-function renderCardEmpresa(empresa) {
-  const linkWhats = empresa.whatsapp
-    ? gerarLinkWhatsapp(empresa.whatsapp, MENSAGEM_PADRAO_WHATSAPP)
-    : null;
-  // Leva pro mapa já focado nessa empresa (ver tratamento de ?empresa= em mapa.js).
-  const linkMapa = empresa.id ? `/mapa?empresa=${encodeURIComponent(empresa.id)}` : null;
-
-  return `
-    <div class="mini-card">
-      <p class="mini-card__titulo">${empresa.nome}</p>
-      <p class="mini-card__sub">${empresa.endereco || ''}</p>
-      <div class="mini-card__acoes">
-        ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
-        ${linkMapa ? `<a href="${linkMapa}" class="mini-card__acao mini-card__acao--secundaria">📍 Ver localização</a>` : ''}
-      </div>
     </div>
   `;
 }
@@ -150,4 +134,44 @@ function renderCardAniversariante(pessoa) {
       <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
     </div>
   `;
+}
+
+/** Mesma lógica de resultados.js — liga os botões "Avaliar esta empresa" e as notas de 1 a 10. */
+function configurarAvaliacoes(alvo) {
+  alvo.querySelectorAll('.card-empresa__avaliar-btn').forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const empresaId = botao.dataset.abrirAvaliacao;
+      const painel = alvo.querySelector(`#avaliar-notas-${empresaId}`);
+      if (painel) painel.hidden = !painel.hidden;
+    });
+  });
+
+  alvo.querySelectorAll('.nota-btn').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      const empresaId = botao.dataset.empresaAvaliar;
+      const nota = Number(botao.dataset.nota);
+      const chaveLocal = `tra-avaliou-${empresaId}`;
+      const painel = alvo.querySelector(`#avaliar-notas-${empresaId}`);
+
+      if (localStorage.getItem(chaveLocal)) {
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Você já avaliou esta empresa neste dispositivo. Obrigado! 🙌</p>`;
+        }
+        return;
+      }
+
+      try {
+        await avaliarEmpresa(empresaId, nota);
+        localStorage.setItem(chaveLocal, '1');
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Obrigado pela avaliação! 🙌</p>`;
+        }
+      } catch (erro) {
+        console.error(erro);
+        if (painel) {
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Não foi possível registrar agora. Tente novamente.</p>`;
+        }
+      }
+    });
+  });
 }
