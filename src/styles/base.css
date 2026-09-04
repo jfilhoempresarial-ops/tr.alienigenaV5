@@ -2949,3 +2949,26 @@ button {
   animation: brilho-pill 4.5s ease-in-out infinite;
   pointer-events: none;
 }
+
+/* ===== Selo de contagem regressiva nos cards de evento ===== */
+
+.card-evento__contagem {
+  display: inline-block;
+  background: #7ed321;
+  color: #0f2d1a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin: 4px 0 8px;
+}
+
+.card-evento__contagem--hoje {
+  background: #f5a623;
+  color: #fff;
+}
+
+.card-evento__contagem--passado {
+  background: #eee;
+  color: #888;
+}
