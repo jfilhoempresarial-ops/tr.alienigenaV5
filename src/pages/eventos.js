@@ -50,7 +50,23 @@ function renderContagemRegressiva(dataStr) {
   return `<p class="card-evento__contagem card-evento__contagem--passado">✅ Evento já realizado</p>`;
 }
 
-export async function renderEventos(container) {
+/** Monta a descrição em tópicos (evento.detalhes) ou, se não tiver, o texto corrido antigo (evento.descricao). */
+function renderDetalhes(evento) {
+  if (Array.isArray(evento.detalhes) && evento.detalhes.length > 0) {
+    return `<ul class="card-evento__detalhes">${evento.detalhes.map((item) => `<li>${item}</li>`).join('')}</ul>`;
+  }
+  if (evento.descricao) {
+    return `<p class="card-evento__descricao">${evento.descricao}</p>`;
+  }
+  return '';
+}
+
+/** Botão "Como chegar", usando o campo "local" (cidade/endereço) numa busca do Google Maps. */
+function renderBotaoLocalizacao(local) {
+  if (!local) return '';
+  const link = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(local)}`;
+  return `<a href="${link}" target="_blank" rel="noopener" class="card-evento__mapa-btn">🧭 Como chegar</a>`;
+}
   container.innerHTML = `<p class="loading">Carregando eventos...</p>`;
 
   let eventos;
@@ -87,8 +103,9 @@ export async function renderEventos(container) {
               <h3>${evento.titulo}</h3>
               <p class="card-evento__data">${formatarDataEvento(evento.data)}</p>
               ${renderContagemRegressiva(evento.data)}
-              <p class="card-evento__local">${evento.local ?? ''}</p>
-              <p class="card-evento__descricao">${evento.descricao ?? ''}</p>
+              ${evento.local ? `<p class="card-evento__local">📍 ${evento.local}</p>` : ''}
+              ${renderBotaoLocalizacao(evento.local)}
+              ${renderDetalhes(evento)}
               ${evento.link ? `<a href="${evento.link}" target="_blank" rel="noopener" class="card-evento__link">Saiba mais</a>` : ''}
             </div>
           </div>

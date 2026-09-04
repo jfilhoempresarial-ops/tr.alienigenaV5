@@ -2972,3 +2972,41 @@ button {
   background: #eee;
   color: #888;
 }
+
+/* ===== Tópicos e botão de localização no card de evento ===== */
+
+.card-evento__local {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.card-evento__mapa-btn {
+  display: inline-block;
+  background: #eef1ee;
+  color: #333;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  margin: 0 0 12px;
+}
+
+.card-evento__detalhes {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.card-evento__detalhes li {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.5;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-evento__detalhes li:last-child {
+  border-bottom: none;
+}

@@ -125,7 +125,8 @@ async function sincronizar() {
       titulo: evento.titulo,
       data: evento.data,
       local: evento.local || '',
-      descricao: evento.descricao || '',
+      detalhes: Array.isArray(evento.detalhes) ? evento.detalhes : [],
+      descricao: evento.descricao || '', // mantido por compatibilidade com eventos antigos sem "detalhes"
       link: evento.link || null,
       imagemUrl: evento.imagemUrl || null,
       ativo: true,
