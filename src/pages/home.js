@@ -4,6 +4,7 @@ import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
+import { buscarEventosAtivos } from '../services/eventos.service.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 import { buscarEmpresasMaisAvaliadas } from '../services/avaliacoes.service.js';
 import { renderEstrelas, formatarNota } from '../components/estrelas.js';
@@ -180,9 +181,11 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎪 Eventos para caminhoneiro</h2>
+          <h2 class="home-secao__titulo" id="titulo-eventos-resumo">🎪 Eventos para caminhoneiro</h2>
         </div>
-        <div id="carrossel-banners-eventos"></div>
+        <div id="eventos-resumo">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
       </div>
 
       <a href="https://wa.me/558881938793?text=${encodeURIComponent('Olá! Vi o anúncio da Lions Mutual no TRA da Estrada e quero saber mais sobre proteção veicular.')}" target="_blank" rel="noopener" class="banner-lions-mutual">
@@ -218,7 +221,7 @@ export function renderHome(container) {
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
   carregarManchetes(container);
   carregarAniversariantes(container);
-  renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
+  carregarEventosResumo(container);
   carregarPlaylist(container);
   carregarAvaliacoesDestaque(container);
 }
@@ -439,6 +442,43 @@ async function carregarAniversariantes(container) {
     `;
   } catch (erro) {
     secao.style.display = 'none';
+    console.error(erro);
+  }
+}
+
+async function carregarEventosResumo(container) {
+  const alvo = container.querySelector('#eventos-resumo');
+  const titulo = container.querySelector('#titulo-eventos-resumo');
+  try {
+    const eventos = await comTimeout(buscarEventosAtivos());
+
+    // Sem evento cadastrado: mantém o espaço publicitário (fallback de sempre).
+    if (eventos.length === 0) {
+      titulo.innerHTML = '🎪 Eventos para caminhoneiro';
+      renderCarrosselBanners('eventos-resumo', 'eventos');
+      return;
+    }
+
+    titulo.innerHTML = `🎪 <span class="resultados__contador">${eventos.length} evento${eventos.length !== 1 ? 's' : ''} próximo${eventos.length !== 1 ? 's' : ''}</span>`;
+
+    // Uma cidade só aparece uma vez, mesmo com mais de um evento nela.
+    const cidades = [...new Set(eventos.map((e) => e.local).filter(Boolean))];
+
+    alvo.innerHTML = `
+      <div class="home-secao__lista">
+        ${cidades
+          .map(
+            (cidade) => `
+          <a href="/eventos" class="frete-estado-card">
+            <p class="frete-estado-card__titulo">📍 ${cidade}</p>
+          </a>
+        `
+          )
+          .join('')}
+      </div>
+    `;
+  } catch (erro) {
+    renderErroComRetry(alvo, () => carregarEventosResumo(container));
     console.error(erro);
   }
 }
