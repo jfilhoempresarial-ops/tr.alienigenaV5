@@ -1,5 +1,47 @@
 [
   {
+    "titulo": "32º Festival dos Caminhoneiros - Tabuleiro do Norte",
+    "data": "2026-09-09",
+    "local": "Tabuleiro do Norte/CE",
+    "detalhes": [
+      "📅 De 09 a 13 de setembro",
+      "🎪 Feira Nordeste Transporte & Logística",
+      "🤝 Realização: ACATAN - Associação dos Caminhoneiros de Tabuleiro do Norte",
+      "🏛️ Apoio: Secretaria de Trabalho e Desenvolvimento e Governo Municipal de Tabuleiro do Norte"
+    ],
+    "link": "",
+    "imagemUrl": "/images/acatan.jpg"
+  },
+  {
+    "titulo": "10ª Festa dos Caminhoneiros de Paraipaba",
+    "data": "2026-09-20",
+    "local": "Paraipaba/CE",
+    "detalhes": [
+      "📅 Domingo, 20 de setembro",
+      "☕ 7h às 10h — Café da manhã na Rotatória D2 CE-085",
+      "🚛 10h30 — Desfile de caminhões",
+      "🎉 11h30 — Festa no Rancho Pesqueiro",
+      "🎶 Música ao vivo: Forró das Antigas",
+      "🤝 Realização: Grupo Elite de Paraipaba (G.E.P)"
+    ],
+    "link": "",
+    "imagemUrl": "/images/paraipaba.jpg"
+  },
+  {
+    "titulo": "Casa Siga Bem",
+    "data": "2026-09-23",
+    "local": "Sobral/CE",
+    "detalhes": [
+      "🕒 Das 14h30 às 21h30",
+      "📍 Auto Posto Gatão — Rod. BR 222, S/N, KM 218, Sobral - CE",
+      "🏆 Patrocínio Master: Rede Siga Bem e Postos Petrobras #SóVem",
+      "🤝 Patrocínio: Prometeon",
+      "🏛️ Apoio: Lubrax, Petrobras Premmia, Petrobras Grid e PRF"
+    ],
+    "link": "",
+    "imagemUrl": "/images/sigabem.jpg"
+  },
+  {
     "titulo": "1º GTA Fest Truck",
     "data": "2026-10-11",
     "local": "Maracanaú/CE",
