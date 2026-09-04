@@ -67,6 +67,8 @@ function renderBotaoLocalizacao(local) {
   const link = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(local)}`;
   return `<a href="${link}" target="_blank" rel="noopener" class="card-evento__mapa-btn">🧭 Como chegar</a>`;
 }
+
+export async function renderEventos(container) {
   container.innerHTML = `<p class="loading">Carregando eventos...</p>`;
 
   let eventos;
