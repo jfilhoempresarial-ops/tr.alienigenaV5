@@ -4,14 +4,14 @@ const LINKS_MENU = [
   { href: '/vagas', label: 'Vagas' },
   { href: '/fretes', label: 'Fretes' },
   { href: '/eventos', label: 'Eventos' },
-  { href: '/caminhoes', label: 'Caminhões' },
+  { href: 'https://www.aragaocaminhoes.com.br/', label: 'Vendas de Caminhões' },
   { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
   { href: 'https://digital.sestsenat.org.br/cursos?area=63&page=1', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
   // Itens que aparecem só no menu lateral (não entram na barra horizontal do desktop).
   { href: '#', label: 'Toxicológico', apenasMenuLateral: true },
   { href: 'https://lojadoalienigena.com.br', label: 'Loja do Motorista', apenasMenuLateral: true, externo: true },
-  { href: '#', label: 'Programa A Voz do Motorista', apenasMenuLateral: true },
+  { href: 'https://www.youtube.com/@TRAlienígena', label: 'Programa A Voz do Motorista', apenasMenuLateral: true, externo: true },
 ];
 
 export function renderNavbar() {
