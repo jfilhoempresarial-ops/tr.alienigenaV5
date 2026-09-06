@@ -31,8 +31,11 @@ function carregarCredencial() {
   return require(CAMINHO_CHAVE);
 }
 
+const credencial = carregarCredencial();
+console.log(`🔑 Gravando no projeto Firebase: ${credencial.project_id}`);
+
 initializeApp({
-  credential: cert(carregarCredencial()),
+  credential: cert(credencial),
 });
 const db = getFirestore();
 
