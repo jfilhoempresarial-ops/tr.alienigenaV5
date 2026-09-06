@@ -5,6 +5,7 @@ import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../se
 import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
 import { buscarEventosAtivos } from '../services/eventos.service.js';
+import { VIDEOS_VOZ_MOTORISTA } from '../data/videos-voz-motorista.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 import { buscarEmpresasMaisAvaliadas } from '../services/avaliacoes.service.js';
 import { renderEstrelas, formatarNota } from '../components/estrelas.js';
@@ -203,6 +204,13 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎙️ Programa A Voz do Motorista</h2>
+        </div>
+        <div id="voz-motorista"></div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
           <h2 class="home-secao__titulo">🚛 Vários caminhoneiros atendidos gratuitamente</h2>
         </div>
         <div class="home-secao__lista" id="lista-avaliacoes-destaque">
@@ -223,6 +231,7 @@ export function renderHome(container) {
   carregarAniversariantes(container);
   carregarEventosResumo(container);
   carregarPlaylist(container);
+  renderVozMotorista(container);
   carregarAvaliacoesDestaque(container);
 }
 
@@ -481,6 +490,55 @@ async function carregarEventosResumo(container) {
     renderErroComRetry(alvo, () => carregarEventosResumo(container));
     console.error(erro);
   }
+}
+
+function renderVozMotorista(container) {
+  const alvo = container.querySelector('#voz-motorista');
+  if (VIDEOS_VOZ_MOTORISTA.length === 0) {
+    alvo.innerHTML = `<p class="home-secao__vazio">Nenhum programa disponível no momento.</p>`;
+    return;
+  }
+
+  const [destaque, ...outros] = VIDEOS_VOZ_MOTORISTA;
+
+  alvo.innerHTML = `
+    <div class="playlist-embed">
+      <iframe
+        src="https://www.youtube.com/embed/${destaque.videoId}"
+        title="${destaque.titulo}"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    </div>
+    <p class="curso-card__titulo" style="margin: 10px 0 0;">${destaque.titulo}</p>
+    ${
+      outros.length > 0
+        ? `
+      <div class="playlist-lista">
+        ${outros
+          .map(
+            (video) => `
+          <a
+            href="https://www.youtube.com/watch?v=${video.videoId}"
+            target="_blank"
+            rel="noopener"
+            class="playlist-item"
+          >
+            <div class="playlist-item__miniatura-wrap">
+              <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="" class="playlist-item__miniatura" loading="lazy" />
+            </div>
+            <span class="playlist-item__titulo">${video.titulo}</span>
+          </a>
+        `
+          )
+          .join('')}
+      </div>
+    `
+        : ''
+    }
+  `;
 }
 
 async function carregarAvaliacoesDestaque(container) {
