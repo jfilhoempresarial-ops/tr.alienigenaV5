@@ -22,6 +22,7 @@ import { renderQuemSomos } from './pages/quem-somos.js';
 import { renderOQueFazemos } from './pages/o-que-fazemos.js';
 import { renderOndeEstamos } from './pages/onde-estamos.js';
 import { renderContato } from './pages/contato.js';
+import { renderCreditoTRA } from './pages/credito-tra.js';
 
 const app = document.getElementById('app');
 
@@ -42,6 +43,7 @@ const ROTAS_FIXAS = {
   'o-que-fazemos': renderOQueFazemos,
   'onde-estamos': renderOndeEstamos,
   contato: renderContato,
+  'credito-tra': renderCreditoTRA,
   mapa: renderMapa,
 };
 

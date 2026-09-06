@@ -30,7 +30,7 @@ export function renderFooter() {
     <footer class="footer">
       <div class="footer__grid">
         <div class="footer__coluna footer__coluna--logo">
-          <img src="/images/logo-tra.png" alt="TRA da Estrada" class="footer__logo" />
+          <img src="/images/logo-tra.png" alt="TRA Soluções pro Motorista" class="footer__logo" />
           <p class="footer__texto">
             Feito por caminhoneiro pra caminhoneiro.
           </p>
@@ -83,7 +83,7 @@ export function renderFooter() {
       </div>
 
       <div class="footer__base">
-        <p>© ${new Date().getFullYear()} TRA da Estrada. Todos os direitos reservados.</p>
+        <p>© ${new Date().getFullYear()} TRA Soluções pro Motorista. Todos os direitos reservados.</p>
         <a href="/admin" class="footer__admin-link" title="Área do admin">🔒</a>
       </div>
     </footer>

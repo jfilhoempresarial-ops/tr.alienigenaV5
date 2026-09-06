@@ -8,6 +8,7 @@ const LINKS_MENU = [
   { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
   { href: 'https://digital.sestsenat.org.br/cursos?area=63&page=1', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
+  { href: '/credito-tra', label: 'Crédito TRA' },
   // Itens que aparecem só no menu lateral (não entram na barra horizontal do desktop).
   { href: '#', label: 'Toxicológico', apenasMenuLateral: true },
   { href: 'https://lojadoalienigena.com.br', label: 'Loja do Motorista', apenasMenuLateral: true, externo: true },
@@ -23,7 +24,7 @@ export function renderNavbar() {
         <span></span>
         <span></span>
       </button>
-      <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo-tra.png" alt="TRA da Estrada" class="navbar__logo-img navbar__logo-img--grande"></a>
+      <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo-tra.png" alt="TRA Soluções pro Motorista" class="navbar__logo-img navbar__logo-img--grande"></a>
       <nav class="navbar__links-desktop">
         ${LINKS_MENU.filter((link) => !link.apenasMenuLateral)
           .map((link) => `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`)
@@ -37,7 +38,7 @@ export function renderNavbar() {
     <div class="menu-lateral__overlay" id="menu-lateral-overlay"></div>
     <aside class="menu-lateral" id="menu-lateral">
       <div class="menu-lateral__header">
-        <img src="/images/logo-tra.png" alt="TRA da Estrada" class="menu-lateral__logo" />
+        <img src="/images/logo-tra.png" alt="TRA Soluções pro Motorista" class="menu-lateral__logo" />
         <button class="menu-lateral__fechar" id="menu-lateral-fechar" aria-label="Fechar menu">✕</button>
       </div>
       <nav class="menu-lateral__links">
