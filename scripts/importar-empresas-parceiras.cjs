@@ -1,20 +1,25 @@
 /**
- * Script de importação: lê scripts/empresasparceiras.xlsx e cadastra/atualiza
- * cada empresa como um documento na coleção "banners" do Firestore — a
- * mesma coleção que já alimenta os carrosséis da home E a página de
- * Empresas Parceiras (que lista nomes distintos de qualquer banner ativo).
+ * Script de importação: lê scripts/empresasparceiras.xlsx e sincroniza com
+ * a coleção "banners" do Firestore — a mesma coleção que já alimenta os
+ * carrosséis da home E a página de Empresas Parceiras.
  *
  * Empresas importadas por aqui entram SEM imagem e SEM categoria de
  * carrossel (campo "categorias" não é definido) — então elas aparecem na
  * página de Empresas Parceiras, mas não em nenhum carrossel da home, até
  * que alguém adicione uma imagem/categoria manualmente pelo admin.
  *
+ * SINCRONIZAÇÃO COMPLETA: a cada execução, o script também REMOVE do
+ * Firestore qualquer documento com origem: 'importacao-planilha-parceiras'
+ * que não esteja mais na planilha atual — assim, tirar uma linha da
+ * planilha remove a empresa do site na próxima sincronização. Só mexe em
+ * documentos criados por ESTE script (identificados pela origem); banners
+ * cadastrados manualmente pelo admin nunca são tocados/apagados aqui.
+ *
  * SEGURO RODAR DE NOVO: cada empresa recebe um ID fixo (slug do nome), então
- * reimportar a planilha atualizada some ATUALIZA a mesma empresa em vez de
+ * reimportar a planilha atualizada ATUALIZA a mesma empresa em vez de
  * duplicar — mas só pra empresas que já foram cadastradas por ESTE script.
  * Empresas que já tinham banner cadastrado manualmente antes (com outro ID)
- * vão ganhar um SEGUNDO documento na primeira importação — é esperado,
- * revise/remova duplicatas pelo admin depois de rodar a primeira vez.
+ * não são afetadas.
  *
  * COMO USAR:
  *   node scripts/importar-empresas-parceiras.cjs
@@ -28,6 +33,7 @@ const { getFirestore } = require('firebase-admin/firestore');
 
 const CAMINHO_PLANILHA = path.join(__dirname, 'empresasparceiras.xlsx');
 const CAMINHO_CHAVE = path.join(__dirname, 'serviceAccountKey.json');
+const ORIGEM_PARCEIRAS = 'importacao-planilha-parceiras';
 
 function carregarCredencial() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
@@ -78,6 +84,7 @@ async function main() {
   let novas = 0;
   let atualizadas = 0;
   let puladas = 0;
+  const idsDaPlanilha = new Set();
 
   for (const linha of linhas) {
     const nome = (linha['Empresa'] || '').toString().trim();
@@ -95,7 +102,7 @@ async function main() {
       empresaNome: nome,
       descricao,
       ativo: true,
-      origem: 'importacao-planilha-parceiras',
+      origem: ORIGEM_PARCEIRAS,
     };
     if (whatsapp) dados.whatsapp = whatsapp;
     if (instagram) dados.instagram = instagram;
@@ -105,6 +112,8 @@ async function main() {
     dados.link = fonteLink || null;
 
     const id = gerarIdParceira(nome);
+    idsDaPlanilha.add(id);
+
     const docRef = db.collection('banners').doc(id);
     const existente = await docRef.get();
 
@@ -122,11 +131,26 @@ async function main() {
     }
   }
 
+  // Remove do Firestore quem foi importado por este script alguma vez, mas
+  // não está mais na planilha atual. Só mexe em documentos com a origem
+  // certa — banners cadastrados manualmente pelo admin nunca são tocados.
+  const snapshot = await db.collection('banners').where('origem', '==', ORIGEM_PARCEIRAS).get();
+  const idsParaRemover = snapshot.docs.map((doc) => doc.id).filter((id) => !idsDaPlanilha.has(id));
+
+  if (idsParaRemover.length > 0) {
+    console.log(`\n🗑️  Removendo ${idsParaRemover.length} empresa(s) que saíram da planilha:`);
+    idsParaRemover.forEach((id) => console.log(`   - ${id}`));
+
+    const batch = db.batch();
+    idsParaRemover.forEach((id) => batch.delete(db.collection('banners').doc(id)));
+    await batch.commit();
+  }
+
   console.log(`\n🎉 Concluído!`);
   console.log(`   ${novas} empresas novas.`);
   console.log(`   ${atualizadas} empresas já existentes (com esse ID), atualizadas.`);
   console.log(`   ${puladas} linhas puladas (sem nome preenchido).`);
-  console.log(`\n⚠️  Lembre-se de conferir no admin se alguma empresa dessas já tinha banner cadastrado com outro ID (duplicata).`);
+  console.log(`   ${idsParaRemover.length} empresa(s) removida(s) por não estarem mais na planilha.`);
 }
 
 main().catch((erro) => {

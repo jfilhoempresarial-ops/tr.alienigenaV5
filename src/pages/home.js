@@ -156,6 +156,13 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎙️ Programa A Voz do Motorista</h2>
+        </div>
+        <div id="voz-motorista"></div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
           <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
           <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
         </div>
@@ -204,13 +211,6 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎙️ Programa A Voz do Motorista</h2>
-        </div>
-        <div id="voz-motorista"></div>
-      </div>
-
-      <div class="home-secao">
-        <div class="home-secao__header">
           <h2 class="home-secao__titulo">🚛 Vários caminhoneiros atendidos gratuitamente</h2>
         </div>
         <div class="home-secao__lista" id="lista-avaliacoes-destaque">
@@ -227,11 +227,11 @@ export function renderHome(container) {
   carregarVagasDestaque(container);
   carregarFretesResumo(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
+  renderVozMotorista(container);
   carregarManchetes(container);
   carregarAniversariantes(container);
   carregarEventosResumo(container);
   carregarPlaylist(container);
-  renderVozMotorista(container);
   carregarAvaliacoesDestaque(container);
 }
 
