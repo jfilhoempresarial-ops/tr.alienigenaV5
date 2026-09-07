@@ -244,9 +244,9 @@ async function carregarCoberturaPorCidade(container) {
       }
     });
 
-    const todasCidades = Array.from(cidadesMapa.values()).sort((a, b) => a.localeCompare(b));
+    const todasCidadesBrutas = Array.from(cidadesMapa.values());
 
-    if (todasCidades.length === 0) {
+    if (todasCidadesBrutas.length === 0) {
       alvo.innerHTML = `<p class="vazio">Nenhuma cidade encontrada ainda (nem em vagas, nem em empresas).</p>`;
       return;
     }
@@ -260,6 +260,17 @@ async function carregarCoberturaPorCidade(container) {
       (empresa.categorias || []).forEach((cat) => {
         contagem[cidadeNorm][cat] = (contagem[cidadeNorm][cat] || 0) + 1;
       });
+    });
+
+    // Soma o total de prestadores de cada cidade, pra ordenar quem tem
+    // MENOS cobertura primeiro — assim dá pra ver de cara onde focar o
+    // cadastro de novos prestadores.
+    const totalPorCidade = (cidade) =>
+      Object.values(contagem[normalizarCidade(cidade)] || {}).reduce((soma, qtd) => soma + qtd, 0);
+
+    const todasCidades = todasCidadesBrutas.sort((a, b) => {
+      const diferenca = totalPorCidade(a) - totalPorCidade(b);
+      return diferenca !== 0 ? diferenca : a.localeCompare(b);
     });
 
     alvo.innerHTML = `
