@@ -1,9 +1,9 @@
 import { buscarEmpresasPorCategoria } from '../services/empresas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { ordenarPorDistancia } from '../utils/distancia.js';
-import { renderCardEmpresa, renderCardAvaliacao } from '../components/card-empresa.js';
+import { renderCardEmpresa } from '../components/card-empresa.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { avaliarEmpresa, buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
+import { avaliarEmpresa } from '../services/avaliacoes.service.js';
 import { fazerLoginGoogle, usuarioAtual } from '../services/auth.service.js';
 import { NOME_ESTADO } from '../services/fretes.service.js';
 
@@ -202,15 +202,6 @@ export async function renderResultados(container, categoria) {
           Cadastre sua empresa grátis
         </a>
 
-        <div class="home-secao">
-          <div class="home-secao__header">
-            <h2 class="home-secao__titulo">💬 Últimas avaliações</h2>
-          </div>
-          <div id="ultimas-avaliacoes-categoria">
-            <p class="home-secao__vazio">Carregando...</p>
-          </div>
-        </div>
-
         <input
           type="text"
           id="resultados-busca"
@@ -249,7 +240,6 @@ export async function renderResultados(container, categoria) {
     `;
 
     renderCarrosselBanners('carrossel-categoria', categoria);
-    carregarUltimasAvaliacoes(container, categoria);
 
     const botaoLocalizacao = container.querySelector('#usar-localizacao-btn');
     if (botaoLocalizacao && !localizacao) {
@@ -389,21 +379,5 @@ function atualizarPainelLoginAvaliacao(container, empresaId) {
   const logado = Boolean(usuarioAtual());
   loginDiv.hidden = logado;
   formDiv.hidden = !logado;
-}
-
-async function carregarUltimasAvaliacoes(container, categoria) {
-  const alvo = container.querySelector('#ultimas-avaliacoes-categoria');
-  if (!alvo) return;
-  try {
-    const avaliacoes = await buscarUltimasAvaliacoes(6, categoria);
-    if (avaliacoes.length === 0) {
-      alvo.closest('.home-secao')?.remove();
-      return;
-    }
-    alvo.innerHTML = avaliacoes.map(renderCardAvaliacao).join('');
-  } catch (erro) {
-    alvo.closest('.home-secao')?.remove();
-    console.error(erro);
-  }
 }
 

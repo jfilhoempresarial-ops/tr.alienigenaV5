@@ -7,8 +7,8 @@ import { buscarPlaylist } from '../services/playlist.service.js';
 import { buscarEventosAtivos } from '../services/eventos.service.js';
 import { VIDEOS_VOZ_MOTORISTA } from '../data/videos-voz-motorista.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
-import { buscarEmpresasMaisAvaliadas } from '../services/avaliacoes.service.js';
-import { renderEstrelas, formatarNota } from '../components/estrelas.js';
+import { buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
+import { renderCardAvaliacao } from '../components/card-empresa.js';
 
 const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
@@ -211,9 +211,9 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🚛 Vários caminhoneiros atendidos gratuitamente</h2>
+          <h2 class="home-secao__titulo">💬 Últimas avaliações</h2>
         </div>
-        <div class="home-secao__lista" id="lista-avaliacoes-destaque">
+        <div class="home-secao__lista" id="lista-ultimas-avaliacoes">
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
@@ -232,7 +232,7 @@ export function renderHome(container) {
   carregarAniversariantes(container);
   carregarEventosResumo(container);
   carregarPlaylist(container);
-  carregarAvaliacoesDestaque(container);
+  carregarUltimasAvaliacoesHome(container);
 }
 
 function configurarBuscaHome(container) {
@@ -541,33 +541,19 @@ function renderVozMotorista(container) {
   `;
 }
 
-async function carregarAvaliacoesDestaque(container) {
-  const alvo = container.querySelector('#lista-avaliacoes-destaque');
+async function carregarUltimasAvaliacoesHome(container) {
+  const alvo = container.querySelector('#lista-ultimas-avaliacoes');
   try {
-    const empresas = await comTimeout(buscarEmpresasMaisAvaliadas(6));
-    if (empresas.length === 0) {
-      alvo.innerHTML = `<p class="home-secao__vazio">Ainda não temos avaliações suficientes — seja o primeiro a avaliar um prestador!</p>`;
+    const avaliacoes = await comTimeout(buscarUltimasAvaliacoes(6));
+    if (avaliacoes.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Ainda não temos avaliações — seja o primeiro a avaliar um prestador!</p>`;
       return;
     }
-    alvo.innerHTML = empresas.map(renderMiniCardAvaliacao).join('');
+    alvo.innerHTML = avaliacoes.map(renderCardAvaliacao).join('');
   } catch (erro) {
-    renderErroComRetry(alvo, () => carregarAvaliacoesDestaque(container));
+    renderErroComRetry(alvo, () => carregarUltimasAvaliacoesHome(container));
     console.error(erro);
   }
-}
-
-function renderMiniCardAvaliacao(empresa) {
-  const totalAvaliacoes = empresa.totalAvaliacoes || 0;
-  return `
-    <div class="mini-card">
-      <p class="mini-card__titulo">${empresa.nome}</p>
-      <p class="mini-card__avaliacao">
-        ${renderEstrelas(empresa.notaMedia)} ${formatarNota(empresa.notaMedia)}
-        <span class="mini-card__avaliacao-total">(${totalAvaliacoes} avaliaç${totalAvaliacoes !== 1 ? 'ões' : 'ão'})</span>
-      </p>
-      ${empresa.cidade ? `<p class="mini-card__sub">📍 ${empresa.cidade}${empresa.estado ? '/' + empresa.estado : ''}</p>` : ''}
-    </div>
-  `;
 }
 
 async function carregarVagasDestaque(container) {
