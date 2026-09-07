@@ -314,7 +314,7 @@ export async function renderResultados(container, categoria) {
   }
 }
 
-function configurarAvaliacoes(container) {
+export function configurarAvaliacoes(container) {
   container.querySelectorAll('[data-copiar-link]').forEach((botao) => {
     botao.addEventListener('click', async () => {
       const empresaId = botao.dataset.copiarLink;

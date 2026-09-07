@@ -9,6 +9,7 @@ const LINKS_MENU = [
   { href: 'https://digital.sestsenat.org.br/cursos?area=63&page=1', label: 'Cursos' },
   { href: '/grupos-whatsapp', label: 'Grupos de WhatsApp' },
   { href: '/credito-tra', label: 'Crédito TRA' },
+  { href: '/ranking', label: 'Ranking das Empresas' },
   // Itens que aparecem só no menu lateral (não entram na barra horizontal do desktop).
   { href: '#', label: 'Toxicológico', apenasMenuLateral: true },
   { href: 'https://lojadoalienigena.com.br', label: 'Loja do Motorista', apenasMenuLateral: true, externo: true },
