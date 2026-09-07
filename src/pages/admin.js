@@ -268,6 +268,7 @@ async function carregarCoberturaPorCidade(container) {
           <thead>
             <tr>
               <th>Cidade</th>
+              <th>Total</th>
               ${CATEGORIAS_COBERTURA.map((c) => `<th>${c.label}</th>`).join('')}
             </tr>
           </thead>
@@ -276,9 +277,11 @@ async function carregarCoberturaPorCidade(container) {
               .map((cidade) => {
                 const cidadeNorm = normalizarCidade(cidade);
                 const linha = contagem[cidadeNorm] || {};
+                const total = Object.values(linha).reduce((soma, qtd) => soma + qtd, 0);
                 return `
                   <tr>
                     <td class="cobertura-tabela__cidade">${cidade}</td>
+                    <td class="cobertura-tabela__total">${total}</td>
                     ${CATEGORIAS_COBERTURA.map((c) => {
                       const qtd = linha[c.id] || 0;
                       return `<td class="${qtd === 0 ? 'cobertura-tabela__vazio' : ''}">${qtd}</td>`;
