@@ -191,7 +191,7 @@ export async function renderResultados(container, categoria) {
               .map((cidade) => {
                 const itensCidade = porCidade.get(cidade);
                 return `
-                  <h3 style="margin:16px 0 8px;font-size:1rem;font-weight:700;">
+                  <h3 class="resultados__subtitulo-cidade" style="display:none;margin:16px 0 8px;font-size:1rem;font-weight:700;">
                     🏙️ ${cidade} (${itensCidade.length})
                   </h3>
                   <div class="resultados-lista">
@@ -289,6 +289,13 @@ export async function renderResultados(container, categoria) {
           container.querySelectorAll('[data-grupo-estado-resultado]').forEach((grupo) => {
             const bate = !ufEscolhida || grupo.dataset.grupoEstadoResultado === ufEscolhida;
             grupo.style.display = bate ? '' : 'none';
+
+            // Cidades só aparecem dentro do estado que foi escolhido
+            // especificamente — em "Todos", fica tudo escondido (mais limpo).
+            const mostrarCidades = Boolean(ufEscolhida) && grupo.dataset.grupoEstadoResultado === ufEscolhida;
+            grupo.querySelectorAll('.resultados__subtitulo-cidade').forEach((titulo) => {
+              titulo.style.display = mostrarCidades ? '' : 'none';
+            });
           });
         });
       });
