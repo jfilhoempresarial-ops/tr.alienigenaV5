@@ -173,12 +173,33 @@ export async function renderResultados(container, categoria) {
       .map((uf) => {
         const itens = porEstado.get(uf);
         const nomeEstado = NOME_ESTADO[uf] || uf;
+
+        // Dentro do estado, agrupa também por cidade — assim, ao filtrar
+        // um estado, já dá pra ver de cara quais cidades têm resultado.
+        const porCidade = new Map();
+        itens.forEach((empresa) => {
+          const cidade = (empresa.cidade || '').trim() || 'Cidade não informada';
+          if (!porCidade.has(cidade)) porCidade.set(cidade, []);
+          porCidade.get(cidade).push(empresa);
+        });
+        const cidadesOrdenadas = [...porCidade.keys()].sort((a, b) => a.localeCompare(b));
+
         return `
           <div class="fretes-pagina__grupo" data-grupo-estado-resultado="${uf}">
             <h2 class="fretes-pagina__grupo-titulo">📍 ${itens.length} ${textoItem(itens.length)} em ${nomeEstado}</h2>
-            <div class="resultados-lista">
-              ${itens.map(renderCardEmpresa).join('')}
-            </div>
+            ${cidadesOrdenadas
+              .map((cidade) => {
+                const itensCidade = porCidade.get(cidade);
+                return `
+                  <h3 style="margin:16px 0 8px;font-size:1rem;font-weight:700;">
+                    🏙️ ${cidade} (${itensCidade.length})
+                  </h3>
+                  <div class="resultados-lista">
+                    ${itensCidade.map(renderCardEmpresa).join('')}
+                  </div>
+                `;
+              })
+              .join('')}
           </div>
         `;
       })
