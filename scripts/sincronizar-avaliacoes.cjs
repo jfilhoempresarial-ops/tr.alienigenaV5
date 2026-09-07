@@ -170,7 +170,7 @@ async function main() {
         const empresaRef = db.collection('empresas').doc(avaliacao.empresaId);
         await db.runTransaction(async (transaction) => {
           const empresaSnap = await transaction.get(empresaRef);
-          if (!empresaSnap.exists()) return;
+          if (!empresaSnap.exists) return;
           const dadosEmpresa = empresaSnap.data();
           const totalAtual = dadosEmpresa.totalAvaliacoes || 0;
           if (totalAtual <= 1) {
