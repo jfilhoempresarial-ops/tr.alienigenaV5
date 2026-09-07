@@ -31,7 +31,7 @@ const { getFirestore } = require('firebase-admin/firestore');
 const CAMINHO_CHAVE = require('path').join(__dirname, 'serviceAccountKey.json');
 const PLANILHA_ID = '192gf5Sg6ViGDcoxDdUCQmm6cWsGUDpLwpc87KwBtX5s';
 const ABA = 'Avaliações';
-const CABECALHO = ['ID (não editar)', 'Empresa', 'Nota', 'Comentário', 'Avaliador', 'Data'];
+const CABECALHO = ['ID (não editar)', 'Empresa', 'Nota', 'Comentário', 'Avaliador (nome e email)', 'Data'];
 
 function carregarCredencial() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
@@ -87,6 +87,12 @@ function formatarData(criadoEm) {
   }
 }
 
+function formatarAvaliador(dados) {
+  const nome = dados.nomeAvaliador || 'Motorista';
+  const email = dados.avaliadorEmail || '';
+  return email ? `${nome} (${email})` : nome;
+}
+
 async function main() {
   const sheets = await autenticarGoogleSheets();
   await garantirAba(sheets);
@@ -136,7 +142,7 @@ async function main() {
         dados.empresaNome || '-',
         dados.nota ?? '-',
         dados.comentario || '',
-        dados.nomeAvaliador || '-',
+        formatarAvaliador(dados),
         formatarData(dados.criadoEm),
       ]);
       idsParaMarcarComoSincronizadas.push(doc.id);

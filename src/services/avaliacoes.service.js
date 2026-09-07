@@ -63,6 +63,7 @@ export async function avaliarEmpresa(empresaId, nota, comentario, usuario) {
     nota,
     comentario: comentario || '',
     nomeAvaliador: usuario.displayName || 'Motorista',
+    avaliadorEmail: usuario.email || '',
     avaliadorUid: usuario.uid,
     criadoEm: serverTimestamp(),
   });
