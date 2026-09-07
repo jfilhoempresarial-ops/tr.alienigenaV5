@@ -252,6 +252,20 @@ async function carregarCoberturaPorCidade(container) {
     }
 
     // Monta um contador: contagem[cidadeNormalizada][categoria] = quantidade
+    // Estado de cada cidade: as vagas do SINE são só do Ceará, então serve
+    // de padrão pras cidades que só têm vaga (sem prestador ainda). Quando
+    // existe empresa cadastrada naquela cidade, o estado dela (mais
+    // confiável, vem direto do cadastro) sobrescreve o padrão.
+    const estadoPorCidade = {};
+    cidadesSine.forEach((cidadeBruta) => {
+      const chave = normalizarCidade(capitalizarCidade(cidadeBruta));
+      if (chave) estadoPorCidade[chave] = 'CE';
+    });
+    empresas.forEach((empresa) => {
+      const chave = normalizarCidade(extrairCidadeBase(empresa.cidade));
+      if (chave && empresa.estado) estadoPorCidade[chave] = empresa.estado.toUpperCase();
+    });
+
     const contagem = {};
     empresas.forEach((empresa) => {
       const cidadeNorm = normalizarCidade(extrairCidadeBase(empresa.cidade));
@@ -279,6 +293,7 @@ async function carregarCoberturaPorCidade(container) {
           <thead>
             <tr>
               <th>Cidade</th>
+              <th>Estado</th>
               <th>Total</th>
               ${CATEGORIAS_COBERTURA.map((c) => `<th>${c.label}</th>`).join('')}
             </tr>
@@ -292,6 +307,7 @@ async function carregarCoberturaPorCidade(container) {
                 return `
                   <tr>
                     <td class="cobertura-tabela__cidade">${cidade}</td>
+                    <td class="cobertura-tabela__estado">${estadoPorCidade[cidadeNorm] || '-'}</td>
                     <td class="cobertura-tabela__total">${total}</td>
                     ${CATEGORIAS_COBERTURA.map((c) => {
                       const qtd = linha[c.id] || 0;
