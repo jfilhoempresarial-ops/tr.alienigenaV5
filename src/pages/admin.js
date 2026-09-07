@@ -2,6 +2,7 @@ import { fazerLogin, fazerLogout, observarAutenticacao } from '../services/auth.
 import { criarEvento } from '../services/eventos.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
 import { buscarTodasEmpresas, buscarEmpresasPendentes, aprovarEmpresa, recusarEmpresa } from '../services/empresas.service.js';
+import { otimizarFotoCloudinary } from '../utils/cloudinary.js';
 
 // Mesma lista de categorias usada no resto do site (home.js), pra bater
 // certinho com o campo "categorias" salvo em cada empresa.
@@ -189,7 +190,12 @@ function renderCardPendente(empresa) {
       ${
         (empresa.fotos || []).length > 0
           ? `<div class="admin-pendente-card__fotos">
-              ${empresa.fotos.map((url) => `<img src="${url}" alt="" class="admin-pendente-card__foto" />`).join('')}
+              ${empresa.fotos
+                .map(
+                  (url) =>
+                    `<img src="${otimizarFotoCloudinary(url, { largura: 300, altura: 220 })}" alt="" class="admin-pendente-card__foto" style="width:150px;height:110px;object-fit:cover;border-radius:8px;" />`
+                )
+                .join('')}
             </div>`
           : ''
       }

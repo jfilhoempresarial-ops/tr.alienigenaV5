@@ -1,6 +1,7 @@
 import { formatarDistancia } from '../utils/formatters.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 import { renderEstrelas, formatarNota } from './estrelas.js';
+import { otimizarFotoCloudinary } from '../utils/cloudinary.js';
 
 const NOTAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -21,9 +22,20 @@ export function renderCardEmpresa(empresa) {
 
   const totalAvaliacoes = empresa.totalAvaliacoes || 0;
   const distancia = formatarDistancia(empresa.distanciaKm);
+  const foto = empresa.fotos && empresa.fotos.length > 0 ? empresa.fotos[0] : null;
 
   return `
     <div class="card-empresa">
+      ${
+        foto
+          ? `<img
+              src="${otimizarFotoCloudinary(foto, { largura: 600, altura: 300 })}"
+              alt="Foto de ${empresa.nome}"
+              loading="lazy"
+              style="width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:10px;display:block;"
+            />`
+          : ''
+      }
       <div class="card-empresa__topo">
         <h3 class="card-empresa__nome">${empresa.nome}</h3>
         ${distancia ? `<span class="card-empresa__distancia">${distancia}</span>` : ''}
