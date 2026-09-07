@@ -1,9 +1,10 @@
 import { buscarEmpresasPorCategoria } from '../services/empresas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { ordenarPorDistancia } from '../utils/distancia.js';
-import { renderCardEmpresa } from '../components/card-empresa.js';
+import { renderCardEmpresa, renderCardAvaliacao } from '../components/card-empresa.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { avaliarEmpresa } from '../services/avaliacoes.service.js';
+import { avaliarEmpresa, buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
+import { fazerLoginGoogle, usuarioAtual } from '../services/auth.service.js';
 import { NOME_ESTADO } from '../services/fretes.service.js';
 
 // Texto de exemplo (placeholder) da busca em cada categoria. Categorias que
@@ -201,6 +202,15 @@ export async function renderResultados(container, categoria) {
           Cadastre sua empresa grátis
         </a>
 
+        <div class="home-secao">
+          <div class="home-secao__header">
+            <h2 class="home-secao__titulo">💬 Últimas avaliações</h2>
+          </div>
+          <div id="ultimas-avaliacoes-categoria">
+            <p class="home-secao__vazio">Carregando...</p>
+          </div>
+        </div>
+
         <input
           type="text"
           id="resultados-busca"
@@ -239,6 +249,7 @@ export async function renderResultados(container, categoria) {
     `;
 
     renderCarrosselBanners('carrossel-categoria', categoria);
+    carregarUltimasAvaliacoes(container, categoria);
 
     const botaoLocalizacao = container.querySelector('#usar-localizacao-btn');
     if (botaoLocalizacao && !localizacao) {
@@ -279,18 +290,59 @@ export async function renderResultados(container, categoria) {
 }
 
 function configurarAvaliacoes(container) {
-  container.querySelectorAll('.card-empresa__avaliar-btn').forEach((botao) => {
+  container.querySelectorAll('.card-empresa__avaliar-btn[data-abrir-avaliacao]').forEach((botao) => {
     botao.addEventListener('click', () => {
       const empresaId = botao.dataset.abrirAvaliacao;
       const painel = container.querySelector(`#avaliar-notas-${empresaId}`);
-      if (painel) painel.hidden = !painel.hidden;
+      if (!painel) return;
+      const vaiAbrir = painel.hidden;
+      painel.hidden = !vaiAbrir;
+      if (vaiAbrir) atualizarPainelLoginAvaliacao(container, empresaId);
     });
   });
 
-  container.querySelectorAll('.nota-btn').forEach((botao) => {
+  container.querySelectorAll('[data-login-google]').forEach((botao) => {
     botao.addEventListener('click', async () => {
-      const empresaId = botao.dataset.empresaAvaliar;
-      const nota = Number(botao.dataset.nota);
+      const empresaId = botao.dataset.loginGoogle;
+      const textoOriginal = botao.textContent;
+      botao.disabled = true;
+      botao.textContent = 'Entrando...';
+      try {
+        await fazerLoginGoogle();
+        atualizarPainelLoginAvaliacao(container, empresaId);
+      } catch (erro) {
+        botao.disabled = false;
+        botao.textContent = textoOriginal;
+        alert('Não foi possível entrar com o Google. Tente novamente.');
+        console.error(erro);
+      }
+    });
+  });
+
+  container.querySelectorAll('[data-notas-empresa]').forEach((grupo) => {
+    grupo.querySelectorAll('.nota-btn').forEach((botaoNota) => {
+      botaoNota.addEventListener('click', () => {
+        grupo.querySelectorAll('.nota-btn').forEach((b) => {
+          b.style.background = '';
+          b.style.color = '';
+        });
+        botaoNota.style.background = '#16a34a';
+        botaoNota.style.color = '#fff';
+        grupo.dataset.notaSelecionada = botaoNota.dataset.notaValor;
+
+        const empresaId = grupo.dataset.notasEmpresa;
+        const botaoEnviar = container.querySelector(`[data-enviar-avaliacao="${empresaId}"]`);
+        if (botaoEnviar) botaoEnviar.disabled = false;
+      });
+    });
+  });
+
+  container.querySelectorAll('[data-enviar-avaliacao]').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      const empresaId = botao.dataset.enviarAvaliacao;
+      const grupo = container.querySelector(`[data-notas-empresa="${empresaId}"]`);
+      const nota = Number(grupo?.dataset.notaSelecionada);
+      const comentario = (container.querySelector(`#avaliar-comentario-${empresaId}`)?.value || '').trim();
       const chaveLocal = `tra-avaliou-${empresaId}`;
       const painel = container.querySelector(`#avaliar-notas-${empresaId}`);
 
@@ -301,18 +353,57 @@ function configurarAvaliacoes(container) {
         return;
       }
 
+      const usuario = usuarioAtual();
+      if (!usuario) {
+        atualizarPainelLoginAvaliacao(container, empresaId);
+        return;
+      }
+
+      if (!nota) return;
+
+      botao.disabled = true;
+      botao.textContent = 'Enviando...';
+
       try {
-        await avaliarEmpresa(empresaId, nota);
+        await avaliarEmpresa(empresaId, nota, comentario, usuario);
         localStorage.setItem(chaveLocal, '1');
+        const primeiroNome = (usuario.displayName || '').split(' ')[0];
         if (painel) {
-          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Obrigado pela avaliação! 🙌</p>`;
+          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Obrigado pela avaliação${primeiroNome ? ', ' + primeiroNome : ''}! 🙌</p>`;
         }
       } catch (erro) {
+        botao.disabled = false;
+        botao.textContent = 'Enviar avaliação';
         console.error(erro);
-        if (painel) {
-          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Não foi possível registrar agora. Tente novamente.</p>`;
-        }
+        alert('Não foi possível registrar agora. Tente novamente.');
       }
     });
   });
 }
+
+/** Mostra o painel de login ou o formulário de nota, dependendo se já está logado com Google. */
+function atualizarPainelLoginAvaliacao(container, empresaId) {
+  const loginDiv = container.querySelector(`#avaliar-login-${empresaId}`);
+  const formDiv = container.querySelector(`#avaliar-form-${empresaId}`);
+  if (!loginDiv || !formDiv) return;
+  const logado = Boolean(usuarioAtual());
+  loginDiv.hidden = logado;
+  formDiv.hidden = !logado;
+}
+
+async function carregarUltimasAvaliacoes(container, categoria) {
+  const alvo = container.querySelector('#ultimas-avaliacoes-categoria');
+  if (!alvo) return;
+  try {
+    const avaliacoes = await buscarUltimasAvaliacoes(6, categoria);
+    if (avaliacoes.length === 0) {
+      alvo.closest('.home-secao')?.remove();
+      return;
+    }
+    alvo.innerHTML = avaliacoes.map(renderCardAvaliacao).join('');
+  } catch (erro) {
+    alvo.closest('.home-secao')?.remove();
+    console.error(erro);
+  }
+}
+

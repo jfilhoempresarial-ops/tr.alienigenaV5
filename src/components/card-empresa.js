@@ -59,11 +59,57 @@ export function renderCardEmpresa(empresa) {
         Avaliar esta empresa
       </button>
       <div class="card-empresa__avaliar-notas" id="avaliar-notas-${empresa.id}" hidden>
-        <p class="card-empresa__avaliar-instrucao">De 1 (ruim) a 10 (ótimo), qual sua nota?</p>
-        <div class="card-empresa__avaliar-botoes">
-          ${NOTAS.map((n) => `<button class="nota-btn" data-empresa-avaliar="${empresa.id}" data-nota="${n}">${n}</button>`).join('')}
+        <div id="avaliar-login-${empresa.id}">
+          <p class="card-empresa__avaliar-instrucao">Pra avaliar, entra com sua conta Google (rapidinho, sem senha):</p>
+          <button
+            type="button"
+            data-login-google="${empresa.id}"
+            style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" height="18" />
+            Entrar com Google
+          </button>
+        </div>
+        <div id="avaliar-form-${empresa.id}" hidden>
+          <p class="card-empresa__avaliar-instrucao">De 1 (ruim) a 10 (ótimo), qual sua nota?</p>
+          <div class="card-empresa__avaliar-botoes" data-notas-empresa="${empresa.id}">
+            ${NOTAS.map((n) => `<button type="button" class="nota-btn" data-nota-valor="${n}">${n}</button>`).join('')}
+          </div>
+          <textarea
+            id="avaliar-comentario-${empresa.id}"
+            rows="2"
+            placeholder="Quer contar como foi? (opcional)"
+            style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #ccc;font-family:inherit;"
+          ></textarea>
+          <button
+            type="button"
+            data-enviar-avaliacao="${empresa.id}"
+            class="card-empresa__avaliar-btn"
+            style="margin-top:8px;"
+            disabled
+          >
+            Enviar avaliação
+          </button>
         </div>
       </div>
+    </div>
+  `;
+}
+
+/** Card compacto pra listar uma avaliação recente (nota + comentário + quem avaliou). */
+export function renderCardAvaliacao(avaliacao) {
+  return `
+    <div class="mini-card">
+      <p class="mini-card__titulo">${avaliacao.empresaNome || 'Empresa'}</p>
+      <p class="mini-card__avaliacao">
+        ${renderEstrelas(avaliacao.nota)} ${formatarNota(avaliacao.nota)}
+      </p>
+      ${
+        avaliacao.comentario
+          ? `<p style="font-style:italic;color:#555;margin:6px 0;font-size:0.9em;">“${avaliacao.comentario}”</p>`
+          : ''
+      }
+      <p class="mini-card__sub">— ${avaliacao.nomeAvaliador || 'Motorista'}</p>
     </div>
   `;
 }

@@ -4,6 +4,14 @@ import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
+import { buscarEventosAtivos } from '../services/eventos.service.js';
+import { VIDEOS_VOZ_MOTORISTA } from '../data/videos-voz-motorista.js';
+import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
+import { buscarEmpresasMaisAvaliadas, buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
+import { renderCardAvaliacao } from '../components/card-empresa.js';
+import { renderEstrelas, formatarNota } from '../components/estrelas.js';
+
+const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
 const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
@@ -12,7 +20,7 @@ const CATEGORIAS = [
   { id: 'eletrica', label: 'Elétrica', icone: '⚡' },
   { id: 'guincho', label: 'Guincho/Socorro', icone: '🚨' },
   { id: 'lavajato', label: 'Lava-Jato', icone: '🚿' },
-  { id: 'pontoapoio', label: 'Pontos de Apoio', icone: '📍' },
+  { id: 'pontoapoio', label: 'PPDs ANTT', icone: '📍' },
   { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
   { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
@@ -138,6 +146,7 @@ export function renderHome(container) {
       <div class="home-secao">
         <div class="home-secao__header">
           <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
+          <a href="/fretes" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
           <p class="home-secao__vazio">Carregando...</p>
@@ -145,6 +154,13 @@ export function renderHome(container) {
       </div>
 
       <div id="carrossel-banners-marcas"></div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🎙️ Programa A Voz do Motorista</h2>
+        </div>
+        <div id="voz-motorista"></div>
+      </div>
 
       <div class="home-secao">
         <div class="home-secao__header">
@@ -174,9 +190,11 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎪 Eventos para caminhoneiro</h2>
+          <h2 class="home-secao__titulo" id="titulo-eventos-resumo">🎪 Eventos para caminhoneiro</h2>
         </div>
-        <div id="carrossel-banners-eventos"></div>
+        <div id="eventos-resumo">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
       </div>
 
       <a href="https://wa.me/558881938793?text=${encodeURIComponent('Olá! Vi o anúncio da Lions Mutual no TRA da Estrada e quero saber mais sobre proteção veicular.')}" target="_blank" rel="noopener" class="banner-lions-mutual">
@@ -191,6 +209,24 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🚛 Vários caminhoneiros atendidos gratuitamente</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-avaliacoes-destaque">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">💬 Últimas avaliações</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-ultimas-avaliacoes">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
     </section>
   `;
 
@@ -201,10 +237,13 @@ export function renderHome(container) {
   carregarVagasDestaque(container);
   carregarFretesResumo(container);
   renderCarrosselBanners('carrossel-banners-marcas', 'home-vertical');
+  renderVozMotorista(container);
   carregarManchetes(container);
   carregarAniversariantes(container);
-  renderCarrosselBanners('carrossel-banners-eventos', 'eventos');
+  carregarEventosResumo(container);
   carregarPlaylist(container);
+  carregarAvaliacoesDestaque(container);
+  carregarUltimasAvaliacoesHome(container);
 }
 
 function configurarBuscaHome(container) {
@@ -342,14 +381,16 @@ function formatarDataBR(dataStr) {
 }
 
 function renderMiniCardEmpresa(empresa) {
-  const tel = (empresa.whatsapp || '').replace(/\D/g, '');
   const categoria = (empresa.categorias || [])[0];
   const label = LABEL_POR_CATEGORIA[categoria] || 'Serviço';
+  const linkWhats = empresa.whatsapp
+    ? gerarLinkWhatsapp(empresa.whatsapp, MENSAGEM_PADRAO_WHATSAPP)
+    : null;
   return `
     <div class="mini-card">
       <p class="mini-card__titulo">${empresa.nome}</p>
       <p class="mini-card__sub">${label}${empresa.endereco ? ' • ' + empresa.endereco : ''}</p>
-      ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
+      ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="mini-card__acao">💬 WhatsApp</a>` : ''}
     </div>
   `;
 }
@@ -425,6 +466,136 @@ async function carregarAniversariantes(container) {
   }
 }
 
+async function carregarEventosResumo(container) {
+  const alvo = container.querySelector('#eventos-resumo');
+  const titulo = container.querySelector('#titulo-eventos-resumo');
+  try {
+    const eventos = await comTimeout(buscarEventosAtivos());
+
+    // Sem evento cadastrado: mantém o espaço publicitário (fallback de sempre).
+    if (eventos.length === 0) {
+      titulo.innerHTML = '🎪 Eventos para caminhoneiro';
+      renderCarrosselBanners('eventos-resumo', 'eventos');
+      return;
+    }
+
+    titulo.innerHTML = `🎪 <span class="resultados__contador">${eventos.length} evento${eventos.length !== 1 ? 's' : ''} próximo${eventos.length !== 1 ? 's' : ''}</span>`;
+
+    // Uma cidade só aparece uma vez, mesmo com mais de um evento nela.
+    const cidades = [...new Set(eventos.map((e) => e.local).filter(Boolean))];
+
+    alvo.innerHTML = `
+      <div class="home-secao__lista">
+        ${cidades
+          .map(
+            (cidade) => `
+          <a href="/eventos" class="frete-estado-card">
+            <p class="frete-estado-card__titulo">📍 ${cidade}</p>
+          </a>
+        `
+          )
+          .join('')}
+      </div>
+    `;
+  } catch (erro) {
+    renderErroComRetry(alvo, () => carregarEventosResumo(container));
+    console.error(erro);
+  }
+}
+
+function renderVozMotorista(container) {
+  const alvo = container.querySelector('#voz-motorista');
+  if (VIDEOS_VOZ_MOTORISTA.length === 0) {
+    alvo.innerHTML = `<p class="home-secao__vazio">Nenhum programa disponível no momento.</p>`;
+    return;
+  }
+
+  const [destaque, ...outros] = VIDEOS_VOZ_MOTORISTA;
+
+  alvo.innerHTML = `
+    <div class="playlist-embed">
+      <iframe
+        src="https://www.youtube.com/embed/${destaque.videoId}"
+        title="${destaque.titulo}"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    </div>
+    <p class="curso-card__titulo" style="margin: 10px 0 0;">${destaque.titulo}</p>
+    ${
+      outros.length > 0
+        ? `
+      <div class="playlist-lista">
+        ${outros
+          .map(
+            (video) => `
+          <a
+            href="https://www.youtube.com/watch?v=${video.videoId}"
+            target="_blank"
+            rel="noopener"
+            class="playlist-item"
+          >
+            <div class="playlist-item__miniatura-wrap">
+              <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="" class="playlist-item__miniatura" loading="lazy" />
+            </div>
+            <span class="playlist-item__titulo">${video.titulo}</span>
+          </a>
+        `
+          )
+          .join('')}
+      </div>
+    `
+        : ''
+    }
+  `;
+}
+
+async function carregarAvaliacoesDestaque(container) {
+  const alvo = container.querySelector('#lista-avaliacoes-destaque');
+  try {
+    const empresas = await comTimeout(buscarEmpresasMaisAvaliadas(6));
+    if (empresas.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Ainda não temos avaliações suficientes — seja o primeiro a avaliar um prestador!</p>`;
+      return;
+    }
+    alvo.innerHTML = empresas.map(renderMiniCardAvaliacao).join('');
+  } catch (erro) {
+    renderErroComRetry(alvo, () => carregarAvaliacoesDestaque(container));
+    console.error(erro);
+  }
+}
+
+async function carregarUltimasAvaliacoesHome(container) {
+  const alvo = container.querySelector('#lista-ultimas-avaliacoes');
+  try {
+    const avaliacoes = await comTimeout(buscarUltimasAvaliacoes(6));
+    if (avaliacoes.length === 0) {
+      alvo.innerHTML = `<p class="home-secao__vazio">Ainda não temos avaliações — seja o primeiro a avaliar um prestador!</p>`;
+      return;
+    }
+    alvo.innerHTML = avaliacoes.map(renderCardAvaliacao).join('');
+  } catch (erro) {
+    renderErroComRetry(alvo, () => carregarUltimasAvaliacoesHome(container));
+    console.error(erro);
+  }
+}
+
+function renderMiniCardAvaliacao(empresa) {
+  const totalAvaliacoes = empresa.totalAvaliacoes || 0;
+  return `
+    <div class="mini-card">
+      <p class="mini-card__titulo">${empresa.nome}</p>
+      <p class="mini-card__avaliacao">
+        ${renderEstrelas(empresa.notaMedia)} ${formatarNota(empresa.notaMedia)}
+        <span class="mini-card__avaliacao-total">(${totalAvaliacoes} avaliaç${totalAvaliacoes !== 1 ? 'ões' : 'ão'})</span>
+      </p>
+      ${empresa.cidade ? `<p class="mini-card__sub">📍 ${empresa.cidade}${empresa.estado ? '/' + empresa.estado : ''}</p>` : ''}
+    </div>
+  `;
+}
+
 async function carregarVagasDestaque(container) {
   const alvo = container.querySelector('#lista-vagas');
   const titulo = container.querySelector('#titulo-vagas-destaque');
@@ -433,8 +604,8 @@ async function carregarVagasDestaque(container) {
     const todosItens = dados.itens || [];
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
-    titulo.textContent = todosItens.length
-      ? `💼 ${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje`
+    titulo.innerHTML = todosItens.length
+      ? `💼 <span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje</span>`
       : '💼 Vagas em destaque';
 
     const itens = [...todosItens]
@@ -612,8 +783,8 @@ async function carregarFretesResumo(container) {
   try {
     const fretes = await comTimeout(buscarTodosFretes());
 
-    titulo.textContent = fretes.length
-      ? `📦 ${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}`
+    titulo.innerHTML = fretes.length
+      ? `📦 <span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</span>`
       : '📦 Fretes disponíveis';
 
     if (fretes.length === 0) {
