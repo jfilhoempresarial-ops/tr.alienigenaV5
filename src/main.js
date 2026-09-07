@@ -24,6 +24,7 @@ import { renderOndeEstamos } from './pages/onde-estamos.js';
 import { renderContato } from './pages/contato.js';
 import { renderCreditoTRA } from './pages/credito-tra.js';
 import { renderRankingEmpresas } from './pages/ranking-empresas.js';
+import { renderTickerCotacoes } from './components/ticker-cotacoes.js';
 
 const app = document.getElementById('app');
 
@@ -91,4 +92,5 @@ window.addEventListener('popstate', router);
 renderNavbar();
 renderFooter();
 renderWhatsappFloat();
+renderTickerCotacoes();
 router();
