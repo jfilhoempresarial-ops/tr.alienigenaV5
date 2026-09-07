@@ -193,13 +193,12 @@ export async function renderResultados(container, categoria) {
       <section class="resultados">
         <div id="carrossel-categoria" class="carrossel-categoria"></div>
 
-        <a href="/cadastro-empresa" class="banner-grupos">
-          <span class="banner-grupos__icone">🏢</span>
-          <span class="banner-grupos__texto">
-            <strong>Sua empresa não está aqui?</strong>
-            Cadastre grátis e apareça para motoristas da região
-          </span>
-          <span class="banner-grupos__seta">›</span>
+        <a
+          href="/cadastro-empresa"
+          class="banner-grupos"
+          style="display:block;text-align:center;background:#16a34a;color:#fff;font-weight:700;padding:14px 16px;border-radius:10px;text-decoration:none;"
+        >
+          Cadastre sua empresa grátis
         </a>
 
         <input
