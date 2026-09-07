@@ -62,7 +62,8 @@ function renderServicosLateral() {
       </button>
       <div class="menu-lateral__servicos-lista" id="servicos-lista-lateral" style="display:none; padding-left:16px;">
         ${CATEGORIAS_SERVICOS.map(
-          (cat) => `<a href="/${cat.id}" class="menu-lateral__link menu-lateral__servicos-item">${cat.label}</a>`
+          (cat) =>
+            `<a href="/${cat.id}" class="menu-lateral__link menu-lateral__servicos-item" style="display:block; width:100%; font-size:0.82em; padding:9px 0; opacity:0.9;">${cat.label}</a>`
         ).join('')}
       </div>
     </div>
