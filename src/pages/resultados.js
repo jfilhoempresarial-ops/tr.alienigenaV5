@@ -277,9 +277,46 @@ export async function renderResultados(container, categoria) {
   }
 
   render();
+
+  // Se a pessoa entrou por um link de "copiar link p/ avaliar" (?avaliar=ID),
+  // já abre o painel de avaliação daquela empresa direto, sem ela precisar
+  // procurar. Só roda na primeira vez que a página carrega.
+  const empresaParaAvaliar = new URLSearchParams(window.location.search).get('avaliar');
+  if (empresaParaAvaliar) {
+    setTimeout(() => {
+      const botaoAvaliar = container.querySelector(`[data-abrir-avaliacao="${empresaParaAvaliar}"]`);
+      if (botaoAvaliar) {
+        botaoAvaliar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        botaoAvaliar.click();
+      }
+    }, 300);
+  }
 }
 
 function configurarAvaliacoes(container) {
+  container.querySelectorAll('[data-copiar-link]').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      const empresaId = botao.dataset.copiarLink;
+      const link = `${window.location.origin}${window.location.pathname}?avaliar=${empresaId}`;
+      const textoOriginal = botao.textContent;
+
+      try {
+        await navigator.clipboard.writeText(link);
+        botao.textContent = '✅ Link copiado!';
+      } catch (erro) {
+        // Alguns navegadores (principalmente mobile mais antigos) não deixam
+        // copiar automático sem uma permissão específica — nesse caso, só
+        // mostra o link pra pessoa copiar na mão.
+        window.prompt('Copie o link abaixo:', link);
+        console.warn('Clipboard automático indisponível, usando prompt.', erro);
+      }
+
+      setTimeout(() => {
+        botao.textContent = textoOriginal;
+      }, 2000);
+    });
+  });
+
   container.querySelectorAll('.card-empresa__avaliar-btn[data-abrir-avaliacao]').forEach((botao) => {
     botao.addEventListener('click', () => {
       const empresaId = botao.dataset.abrirAvaliacao;
