@@ -23,6 +23,7 @@ const CATEGORIAS = [
   { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
   { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
+  { id: 'financiamento', label: 'Financiamento', icone: '💰' },
 ];
 
 const LABEL_POR_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
