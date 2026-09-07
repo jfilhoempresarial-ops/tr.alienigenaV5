@@ -5,6 +5,9 @@ import {
   query,
   where,
   limit,
+  doc,
+  updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 
@@ -48,12 +51,20 @@ export async function buscarTodasEmpresas() {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-/** Cadastra uma nova empresa (entra como não-verificada até aprovação manual). */
+/**
+ * Cadastra uma nova empresa vinda do formulário público do site.
+ * Entra como NÃO-verificada (verificado: false) — só aparece pro público
+ * depois que o admin aprovar em /admin (ver aprovarEmpresa). A origem
+ * 'cadastro-site' distingue esses registros dos importados da planilha
+ * scripts/prestadores.xlsx (que usam outra rotina de sincronização e não
+ * devem ser mexidos por aqui).
+ */
 export async function cadastrarEmpresa(dadosEmpresa) {
   const ref = collection(db, COLLECTION);
   const docRef = await addDoc(ref, {
     ...dadosEmpresa,
     verificado: false,
+    origem: 'cadastro-site',
     criadoEm: new Date().toISOString(),
   });
   return docRef.id;
@@ -65,4 +76,22 @@ export async function buscarEmpresasPendentes() {
   const q = query(ref, where('verificado', '==', false));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
+ * Aprova um cadastro pendente: marca verificado: true, e a empresa passa a
+ * aparecer no site imediatamente (busca, categorias, destaque na home).
+ */
+export async function aprovarEmpresa(id) {
+  const ref = doc(db, COLLECTION, id);
+  await updateDoc(ref, { verificado: true });
+}
+
+/**
+ * Recusa um cadastro pendente (ex: spam, dado incompleto, empresa duplicada)
+ * — apaga o documento em vez de deixá-lo parado como pendente pra sempre.
+ */
+export async function recusarEmpresa(id) {
+  const ref = doc(db, COLLECTION, id);
+  await deleteDoc(ref);
 }

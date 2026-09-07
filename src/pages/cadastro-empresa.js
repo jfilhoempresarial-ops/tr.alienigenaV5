@@ -1,4 +1,5 @@
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
+import { cadastrarEmpresa } from '../services/empresas.service.js';
 
 const CLOUDINARY_CLOUD_NAME = 'djajspfnl';
 const CLOUDINARY_UPLOAD_PRESET = 'tralienigena_unsigned';
@@ -186,10 +187,22 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
           (id) => CATEGORIAS_CADASTRO.find((c) => c.id === id)?.label || id
         );
 
-        // Não escreve mais direto no Firestore — a planilha scripts/prestadores.xlsx
-        // é a única fonte de verdade da coleção "empresas" (ver scripts/importar-empresas.cjs).
-        // Aqui a gente só avisa o admin por e-mail com os dados; ele decide se e
-        // quando adiciona a empresa na planilha.
+        // Grava no Firestore como pendente (verificado: false) — some da fila
+        // assim que o admin aprovar em /admin. Continua mandando o e-mail
+        // de aviso também, pra o admin saber na hora que chegou um cadastro novo.
+        await cadastrarEmpresa({
+          nome: formData.get('nome'),
+          telefone: formData.get('telefone') || '',
+          whatsapp: formData.get('whatsapp'),
+          instagram: (formData.get('instagram') || '').replace(/^@/, ''),
+          endereco,
+          categorias,
+          especialidades,
+          fotos: fotosUrls,
+          lat: coordenadas?.lat ?? null,
+          lng: coordenadas?.lng ?? null,
+        });
+
         await enviarEmailNotificacao({
           nome: formData.get('nome'),
           telefone: formData.get('telefone') || '',

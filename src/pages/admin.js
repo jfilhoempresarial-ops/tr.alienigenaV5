@@ -1,7 +1,7 @@
 import { fazerLogin, fazerLogout, observarAutenticacao } from '../services/auth.service.js';
 import { criarEvento } from '../services/eventos.service.js';
 import { buscarVagas } from '../services/vagas.service.js';
-import { buscarTodasEmpresas } from '../services/empresas.service.js';
+import { buscarTodasEmpresas, buscarEmpresasPendentes, aprovarEmpresa, recusarEmpresa } from '../services/empresas.service.js';
 
 // Mesma lista de categorias usada no resto do site (home.js), pra bater
 // certinho com o campo "categorias" salvo em cada empresa.
@@ -75,6 +75,15 @@ function renderPainel(container, usuario) {
       </form>
       <p id="evento-status"></p>
 
+      <h2 class="admin-painel__titulo-cobertura">📋 Cadastros pendentes de aprovação</h2>
+      <p class="admin-painel__subtitulo-cobertura">
+        Empresas que vieram pelo formulário "Cadastrar minha empresa" no site. Aprovar já coloca a
+        empresa no ar na hora; recusar apaga o cadastro (spam, dado incompleto, duplicado etc).
+      </p>
+      <div id="pendentes-lista">
+        <p class="loading">Carregando pendentes...</p>
+      </div>
+
       <h2 class="admin-painel__titulo-cobertura">📊 Cobertura de prestadores por cidade (SINE)</h2>
       <p class="admin-painel__subtitulo-cobertura">
         Cidades com vaga do SINE + cidades que já têm prestador cadastrado, cruzadas com quantos
@@ -111,6 +120,7 @@ function renderPainel(container, usuario) {
     }
   });
 
+  carregarPendentes(container);
   carregarCoberturaPorCidade(container);
 }
 
@@ -135,6 +145,80 @@ function capitalizarCidade(texto) {
     .trim()
     .toLowerCase()
     .replace(/(^|\s)\S/g, (letra) => letra.toUpperCase());
+}
+
+async function carregarPendentes(container) {
+  const alvo = container.querySelector('#pendentes-lista');
+
+  try {
+    const pendentes = await buscarEmpresasPendentes();
+
+    if (pendentes.length === 0) {
+      alvo.innerHTML = `<p class="vazio">Nenhum cadastro pendente no momento. 🎉</p>`;
+      return;
+    }
+
+    alvo.innerHTML = pendentes.map((empresa) => renderCardPendente(empresa)).join('');
+
+    alvo.querySelectorAll('[data-aprovar]').forEach((botao) => {
+      botao.addEventListener('click', () => processarPendente(botao, alvo, aprovarEmpresa, 'Aprovando...'));
+    });
+    alvo.querySelectorAll('[data-recusar]').forEach((botao) => {
+      botao.addEventListener('click', () => {
+        if (!confirm('Recusar e apagar esse cadastro? Não tem como desfazer.')) return;
+        processarPendente(botao, alvo, recusarEmpresa, 'Recusando...');
+      });
+    });
+  } catch (erro) {
+    alvo.innerHTML = `<p class="erro">Não foi possível carregar os pendentes agora.</p>`;
+    console.error(erro);
+  }
+}
+
+function renderCardPendente(empresa) {
+  const id = empresa.id;
+  const categorias = (empresa.categorias || []).join(', ') || '-';
+  return `
+    <div class="admin-pendente-card" id="pendente-${id}">
+      <p class="admin-pendente-card__nome">${empresa.nome || '(sem nome)'}</p>
+      <p class="admin-pendente-card__linha">📍 ${empresa.endereco || '-'}</p>
+      <p class="admin-pendente-card__linha">🏷️ ${categorias}</p>
+      <p class="admin-pendente-card__linha">💬 ${empresa.whatsapp || '-'} ${empresa.telefone ? `| ☎️ ${empresa.telefone}` : ''}</p>
+      ${empresa.instagram ? `<p class="admin-pendente-card__linha">📸 @${empresa.instagram}</p>` : ''}
+      ${empresa.especialidades ? `<p class="admin-pendente-card__linha">✏️ ${empresa.especialidades}</p>` : ''}
+      ${
+        (empresa.fotos || []).length > 0
+          ? `<div class="admin-pendente-card__fotos">
+              ${empresa.fotos.map((url) => `<img src="${url}" alt="" class="admin-pendente-card__foto" />`).join('')}
+            </div>`
+          : ''
+      }
+      <div class="admin-pendente-card__acoes">
+        <button class="btn-primario" data-aprovar="${id}">✅ Aprovar</button>
+        <button class="btn-secundario" data-recusar="${id}">🗑️ Recusar</button>
+      </div>
+    </div>
+  `;
+}
+
+async function processarPendente(botao, alvo, acao, textoCarregando) {
+  const id = botao.dataset.aprovar || botao.dataset.recusar;
+  const card = alvo.querySelector(`#pendente-${id}`);
+  const botoes = card.querySelectorAll('button');
+  botoes.forEach((b) => (b.disabled = true));
+  botao.textContent = textoCarregando;
+
+  try {
+    await acao(id);
+    card.remove();
+    if (!alvo.querySelector('.admin-pendente-card')) {
+      alvo.innerHTML = `<p class="vazio">Nenhum cadastro pendente no momento. 🎉</p>`;
+    }
+  } catch (erro) {
+    botoes.forEach((b) => (b.disabled = false));
+    alert('Não foi possível concluir. Tente novamente.');
+    console.error(erro);
+  }
 }
 
 async function carregarCoberturaPorCidade(container) {
