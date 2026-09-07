@@ -69,9 +69,9 @@ export function renderCardEmpresa(empresa) {
           type="button"
           class="card-empresa__botao"
           data-copiar-link="${empresa.id}"
-          style="cursor:pointer;border:1px solid #ccc;background:#f5f5f5;"
+          style="cursor:pointer;border:1px solid #ccc;background:#f5f5f5;color:#222;"
         >
-          🔗 Copiar link p/ avaliar
+          🔗 Copiar link
         </button>
       </div>
 
