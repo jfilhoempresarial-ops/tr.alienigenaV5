@@ -43,6 +43,13 @@ function carregarCredencial() {
 
 const credencial = carregarCredencial();
 
+// --- DIAGNÓSTICO TEMPORÁRIO (não expõe a chave, só confirma se os campos vieram) ---
+console.log('🔍 Diagnóstico da credencial:');
+console.log('  project_id:', credencial.project_id || 'AUSENTE');
+console.log('  client_email:', credencial.client_email ? `presente (${credencial.client_email})` : 'AUSENTE');
+console.log('  private_key:', credencial.private_key ? `presente (${credencial.private_key.length} caracteres)` : 'AUSENTE');
+// --- FIM DO DIAGNÓSTICO ---
+
 initializeApp({
   credential: cert(credencial),
 });
