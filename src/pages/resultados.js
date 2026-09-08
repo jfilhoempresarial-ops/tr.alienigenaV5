@@ -85,6 +85,21 @@ export async function renderResultados(container, categoria) {
     return;
   }
 
+  // Se a pessoa entrou por um link de "copiar link p/ avaliar" (?avaliar=ID),
+  // o link é daquela empresa específica — não faz sentido mostrar as outras
+  // junto. Filtra a lista pra só ela, e liga o modo "empresa única" (esconde
+  // busca/localização/agrupamento por estado, que não fazem sentido pra uma
+  // lista de 1 item só).
+  const empresaParaAvaliarId = new URLSearchParams(window.location.search).get('avaliar');
+  let modoEmpresaUnica = false;
+  if (empresaParaAvaliarId) {
+    const empresaUnica = empresas.find((e) => e.id === empresaParaAvaliarId);
+    if (empresaUnica) {
+      empresas = [empresaUnica];
+      modoEmpresaUnica = true;
+    }
+  }
+
   const RAIO_KM = 20;
 
   // NÃO pedimos localização automaticamente mais — o motorista decide se
@@ -215,6 +230,18 @@ export async function renderResultados(container, categoria) {
       <section class="resultados">
         <div id="carrossel-categoria" class="carrossel-categoria"></div>
 
+        ${
+          modoEmpresaUnica
+            ? `
+        <a
+          href="/${categoria}"
+          class="resultados__voltar"
+          style="display:inline-block;margin-bottom:12px;color:#1b5e20;font-weight:600;text-decoration:none;"
+        >
+          ← Ver todos os prestadores desta categoria
+        </a>
+        `
+            : `
         <a
           href="/cadastro-empresa"
           class="banner-grupos"
@@ -240,10 +267,12 @@ export async function renderResultados(container, categoria) {
                 : '📍 Usar minha localização (ordenar por distância)'
           }
         </button>
+        `
+        }
 
         <h2><span class="resultados__contador">${listaFinal.length} resultado${listaFinal.length !== 1 ? 's' : ''} ${localizacao ? 'perto de você' : 'disponíve' + (listaFinal.length !== 1 ? 'is' : 'l')}</span></h2>
         ${
-          AGRUPAR_POR_ESTADO && listaFinal.length
+          AGRUPAR_POR_ESTADO && listaFinal.length && !modoEmpresaUnica
             ? renderListaPorEstado(listaFinal)
             : `
         <div class="resultados-lista">
