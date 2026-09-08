@@ -1,4 +1,4 @@
-import { buscarNoSite } from '../services/busca.service.js';
+import { buscarNoSite, LABEL_CATEGORIA } from '../services/busca.service.js';
 import { renderCardEmpresa } from '../components/card-empresa.js';
 import { avaliarEmpresa } from '../services/avaliacoes.service.js';
 
@@ -61,12 +61,38 @@ export function renderBusca(container, termoInicial = '') {
       resultado.aniversariantes.length;
 
     if (total === 0) {
-      alvo.innerHTML = `<p class="vazio">Nenhum resultado para "${termo}". Tente outra palavra.</p>`;
+      const temSugestoes = resultado.sugestoes && resultado.sugestoes.length > 0;
+      alvo.innerHTML = `
+        <p class="vazio">Nenhum resultado para "${termo}".</p>
+        ${
+          temSugestoes
+            ? `
+          <p class="busca__sugestoes-titulo">Você quis dizer:</p>
+          <div class="busca__sugestoes">
+            ${resultado.sugestoes
+              .map((s) => `<button type="button" class="busca__sugestao-chip" data-sugestao="${s}">${s}</button>`)
+              .join('')}
+          </div>
+        `
+            : ''
+        }
+      `;
+      if (temSugestoes) {
+        const inputBusca = container.querySelector('#busca-input');
+        alvo.querySelectorAll('.busca__sugestao-chip').forEach((chip) => {
+          chip.addEventListener('click', () => {
+            termo = chip.dataset.sugestao;
+            if (inputBusca) inputBusca.value = termo;
+            window.history.replaceState({}, '', `/busca?q=${encodeURIComponent(termo)}`);
+            renderResultado();
+          });
+        });
+      }
       return;
     }
 
     alvo.innerHTML = `
-      ${resultado.empresas.length ? renderGrupo('🔧 Empresas e serviços', resultado.empresas.map(renderCardEmpresa)) : ''}
+      ${resultado.empresas.length ? renderGrupo('🔧 Empresas e serviços', resultado.empresas.map(renderCardEmpresaComEtiqueta)) : ''}
       ${resultado.vagas.length ? renderGrupo('💼 Vagas de emprego', resultado.vagas.map(renderCardVaga)) : ''}
       ${resultado.fretes.length ? renderGrupo('📦 Fretes', resultado.fretes.map(renderCardFrete)) : ''}
       ${resultado.grupos.length ? renderGrupo('📱 Grupos de WhatsApp', resultado.grupos.map(renderCardGrupo)) : ''}
@@ -86,6 +112,21 @@ function renderGrupo(titulo, itensHtml) {
     <div class="busca__grupo">
       <h2 class="busca__grupo-titulo">${titulo}</h2>
       <div class="busca__grupo-lista">${itensHtml.join('')}</div>
+    </div>
+  `;
+}
+
+function renderCardEmpresaComEtiqueta(empresa) {
+  const categoriaPrincipal = (empresa.categorias || [])[0];
+  const label = categoriaPrincipal ? LABEL_CATEGORIA[categoriaPrincipal] || categoriaPrincipal : null;
+  return `
+    <div style="position:relative;">
+      ${
+        label
+          ? `<span style="position:absolute; top:8px; right:8px; z-index:5; background:#1b5e20; color:#fff; font-size:0.72em; font-weight:600; padding:3px 9px; border-radius:999px; box-shadow:0 1px 4px rgba(0,0,0,0.25);">${label}</span>`
+          : ''
+      }
+      ${renderCardEmpresa(empresa)}
     </div>
   `;
 }

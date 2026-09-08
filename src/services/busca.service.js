@@ -11,7 +11,55 @@ function normalizar(txt) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-const LABEL_CATEGORIA = {
+/** Distância de edição (Levenshtein) entre duas palavras — quanto menor,
+ * mais parecidas são. Usada pra tolerar erro de digitação (1-2 letras
+ * trocadas/faltando) na busca. */
+function distanciaEdicao(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  let linhaAnterior = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const linhaAtual = [i];
+    for (let j = 1; j <= n; j++) {
+      const custo = a[i - 1] === b[j - 1] ? 0 : 1;
+      linhaAtual[j] = Math.min(
+        linhaAnterior[j] + 1, // remoção
+        linhaAtual[j - 1] + 1, // inserção
+        linhaAnterior[j - 1] + custo // substituição
+      );
+    }
+    linhaAnterior = linhaAtual;
+  }
+  return linhaAnterior[n];
+}
+
+/** Quantos erros de digitação tolerar, de acordo com o tamanho da palavra
+ * (palavra curta tolera menos, senão vira "achar tudo"). */
+function tolerancia(tamanho) {
+  if (tamanho <= 4) return 1;
+  return 2;
+}
+
+/** Separa um texto corrido em palavras individuais (pra comparar cada
+ * palavra do texto com o termo digitado, não o texto inteiro de uma vez). */
+function palavrasDoTexto(texto) {
+  return normalizar(texto)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+/** true se o token digitado aparece (exato OU com erro de digitação
+ * tolerável) em algum lugar do texto completo. */
+function tokenBateNoTexto(token, textoCompleto, palavrasTexto) {
+  if (textoCompleto.includes(token)) return true;
+  const limiar = tolerancia(token.length);
+  return palavrasTexto.some((palavra) => Math.abs(palavra.length - token.length) <= limiar && distanciaEdicao(token, palavra) <= limiar);
+}
+
+export const LABEL_CATEGORIA = {
   mecanico: 'Mecânico',
   posto: 'Posto Conveniência',
   borracharia: 'Borracharia',
@@ -64,12 +112,15 @@ export async function buscarNoSite(termo) {
     const textoCompleto = normalizar(
       [e.nome, e.endereco, e.cidade, ...categoriasLabel, ...(e.palavrasChave || [])].join(' ')
     );
+    const palavrasTexto = palavrasDoTexto(textoCompleto);
 
     // "Borracharia em Sobral" vira ["borracharia", "sobral"] — a empresa
     // só aparece se TODAS as palavras relevantes baterem em algum campo dela
     // (categoria, nome, endereço, cidade ou palavras-chave do cadastro).
+    // Cada palavra bate por igualdade OU por estar perto o suficiente de
+    // alguma palavra do texto (tolera 1-2 letras erradas/faltando).
     if (tokens.length > 0) {
-      return tokens.every((token) => textoCompleto.includes(token));
+      return tokens.every((token) => tokenBateNoTexto(token, textoCompleto, palavrasTexto));
     }
     // Termo era só conectivos/muito curto: cai no modo antigo, busca a frase inteira.
     return textoCompleto.includes(qn);
@@ -98,5 +149,47 @@ export async function buscarNoSite(termo) {
   const todosAniversariantes = aniversariantesR.status === 'fulfilled' ? aniversariantesR.value : [];
   const aniversariantes = todosAniversariantes.filter((a) => normalizar(a.nome).includes(qn));
 
-  return { empresas, vagas, fretes, grupos, aniversariantes };
+  const total = empresas.length + vagas.length + fretes.length + grupos.length + aniversariantes.length;
+  const sugestoes = total === 0 ? gerarSugestoes(tokens, todasEmpresas) : [];
+
+  return { empresas, vagas, fretes, grupos, aniversariantes, sugestoes };
+}
+
+/** Quando a busca não acha nada, sugere palavras-chave/nomes parecidos com o
+ * que a pessoa digitou, pra ela poder clicar em vez de tentar adivinhar de
+ * novo. Só entra em ação quando o resultado deu zero — não pesa na busca
+ * normal do dia a dia. */
+function gerarSugestoes(tokens, todasEmpresas) {
+  if (tokens.length === 0) return [];
+
+  const vocabulario = new Set();
+  todasEmpresas.forEach((e) => {
+    const categoriasLabel = (e.categorias || []).map((c) => LABEL_CATEGORIA[c] || c);
+    [e.nome, ...categoriasLabel, ...(e.palavrasChave || [])].forEach((texto) => {
+      palavrasDoTexto(texto).forEach((palavra) => {
+        if (palavra.length > 2) vocabulario.add(palavra);
+      });
+    });
+  });
+
+  const candidatas = [];
+  tokens.forEach((token) => {
+    vocabulario.forEach((palavra) => {
+      if (Math.abs(palavra.length - token.length) > 3) return; // muito diferente de tamanho, nem tenta
+      const dist = distanciaEdicao(token, palavra);
+      if (dist > 0 && dist <= 3) candidatas.push({ palavra, dist });
+    });
+  });
+
+  candidatas.sort((a, b) => a.dist - b.dist);
+
+  const vistas = new Set();
+  const sugestoes = [];
+  for (const { palavra } of candidatas) {
+    if (vistas.has(palavra)) continue;
+    vistas.add(palavra);
+    sugestoes.push(palavra);
+    if (sugestoes.length >= 5) break;
+  }
+  return sugestoes;
 }
