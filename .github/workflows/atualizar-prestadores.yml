@@ -1,7 +1,7 @@
 name: Atualizar Prestadores (planilha)
 on:
   schedule:
-    - cron: '30 9 * * *'  # 06:30 no horário de Brasília (UTC-3), 1x por dia
+    - cron: '0 11,16,21 * * *'  # 08:00, 13:00 e 18:00 no horário de Brasília (UTC-3), 3x por dia
   workflow_dispatch: {}    # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:
