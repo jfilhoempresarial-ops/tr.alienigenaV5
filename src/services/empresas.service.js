@@ -70,6 +70,32 @@ export async function cadastrarEmpresa(dadosEmpresa) {
   return docRef.id;
 }
 
+/**
+ * Cria (ou substitui) o cadastro de uma empresa direto pelo painel admin —
+ * usado na tela "Editar prestador". Diferente de cadastrarEmpresa():
+ *   - Entra já verificado (verificado: true), aparece no site na hora,
+ *     sem passar pela fila de aprovação (o admin já está logado e revisou
+ *     os dados na hora de editar).
+ *   - origem: 'admin-edicao', pra NUNCA ser tocado pelo script de
+ *     sincronização da planilha de prestadores (que só mexe em quem tem
+ *     origem "planilha-prestadores").
+ *
+ * Usado no fluxo: prestador pede alteração -> admin busca ele em /admin,
+ * edita e salva -> isso cria um cadastro novo aqui -> admin apaga a linha
+ * antiga na planilha do Google -> na próxima sincronização, a versão
+ * antiga (vinda da planilha) some sozinha, ficando só essa aqui.
+ */
+export async function criarEmpresaAdmin(dadosEmpresa) {
+  const ref = collection(db, COLLECTION);
+  const docRef = await addDoc(ref, {
+    ...dadosEmpresa,
+    verificado: true,
+    origem: 'admin-edicao',
+    atualizadoEm: new Date().toISOString(),
+  });
+  return docRef.id;
+}
+
 /** Lista todas as empresas pendentes de aprovação (uso no painel admin). */
 export async function buscarEmpresasPendentes() {
   const ref = collection(db, COLLECTION);

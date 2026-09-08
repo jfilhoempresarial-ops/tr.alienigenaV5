@@ -12,7 +12,7 @@ const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-const CATEGORIAS_CADASTRO = [
+export const CATEGORIAS_CADASTRO = [
   { id: 'mecanico', label: 'Mecânico' },
   { id: 'posto', label: 'Posto/Conveniência' },
   { id: 'borracharia', label: 'Borracharia' },
@@ -233,7 +233,7 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
  * segue mesmo assim, e a equipe pode geocodificar depois manualmente ou
  * rodando o script scripts/geocodificar-empresas.cjs.
  */
-async function geocodificarEndereco(endereco) {
+export async function geocodificarEndereco(endereco) {
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(endereco)}`;
     const resposta = await fetch(url);
@@ -248,7 +248,7 @@ async function geocodificarEndereco(endereco) {
 }
 
 /** Sobe até 3 fotos pro Cloudinary (upload sem assinatura) e retorna a lista de URLs públicas. */
-async function enviarFotos(arquivos) {
+export async function enviarFotos(arquivos) {
   if (!arquivos || arquivos.length === 0) return [];
 
   const urls = [];
