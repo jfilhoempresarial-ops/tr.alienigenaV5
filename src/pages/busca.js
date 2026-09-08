@@ -1,6 +1,6 @@
 import { buscarNoSite, LABEL_CATEGORIA } from '../services/busca.service.js';
 import { renderCardEmpresa } from '../components/card-empresa.js';
-import { avaliarEmpresa } from '../services/avaliacoes.service.js';
+import { configurarAvaliacoes } from './resultados.js';
 
 export function renderBusca(container, termoInicial = '') {
   let termo = termoInicial;
@@ -175,44 +175,4 @@ function renderCardAniversariante(pessoa) {
       <p class="mini-card__sub">${diaFormatado}/${mesFormatado}</p>
     </div>
   `;
-}
-
-/** Mesma lógica de resultados.js — liga os botões "Avaliar esta empresa" e as notas de 1 a 10. */
-function configurarAvaliacoes(alvo) {
-  alvo.querySelectorAll('.card-empresa__avaliar-btn').forEach((botao) => {
-    botao.addEventListener('click', () => {
-      const empresaId = botao.dataset.abrirAvaliacao;
-      const painel = alvo.querySelector(`#avaliar-notas-${empresaId}`);
-      if (painel) painel.hidden = !painel.hidden;
-    });
-  });
-
-  alvo.querySelectorAll('.nota-btn').forEach((botao) => {
-    botao.addEventListener('click', async () => {
-      const empresaId = botao.dataset.empresaAvaliar;
-      const nota = Number(botao.dataset.nota);
-      const chaveLocal = `tra-avaliou-${empresaId}`;
-      const painel = alvo.querySelector(`#avaliar-notas-${empresaId}`);
-
-      if (localStorage.getItem(chaveLocal)) {
-        if (painel) {
-          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Você já avaliou esta empresa neste dispositivo. Obrigado! 🙌</p>`;
-        }
-        return;
-      }
-
-      try {
-        await avaliarEmpresa(empresaId, nota);
-        localStorage.setItem(chaveLocal, '1');
-        if (painel) {
-          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Obrigado pela avaliação! 🙌</p>`;
-        }
-      } catch (erro) {
-        console.error(erro);
-        if (painel) {
-          painel.innerHTML = `<p class="card-empresa__avaliar-obrigado">Não foi possível registrar agora. Tente novamente.</p>`;
-        }
-      }
-    });
-  });
 }
