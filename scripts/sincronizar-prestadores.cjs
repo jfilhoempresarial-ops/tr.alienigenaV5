@@ -142,6 +142,39 @@ function lerPalavrasChave(valor) {
     .filter(Boolean);
 }
 
+/** Deixa o "Setor" só com letras minúsculas sem acento, pra comparar sem se
+ * importar com maiúscula/acentuação/hífen (ex: "Lava-Jato" -> "lavajato"). */
+function normalizarSetor(txt) {
+  return (txt || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z]+/g, '');
+}
+
+/** "Setor" (coluna da planilha, texto em português) -> código da categoria
+ * usado pelas páginas do site (mesmo código dos botões da home, em
+ * src/pages/home.js) — é isso que buscarEmpresasPorCategoria() usa pra
+ * filtrar no Firestore (campo "categorias"). Setores sem categoria
+ * correspondente aqui (ex: Funilaria, Retífica) continuam salvos em
+ * "setores" e aparecem na busca geral — só não têm página de categoria
+ * própria ainda no site. */
+const CATEGORIA_POR_SETOR = {
+  mecanico: 'mecanico',
+  eletrica: 'eletrica',
+  borracharia: 'borracharia',
+  guincho: 'guincho',
+  guinchosocorro: 'guincho',
+  lavajato: 'lavajato',
+  tacografo: 'tacografo',
+  autopecas: 'autopecas',
+  postodecombustivel: 'posto',
+  postoconveniencia: 'posto',
+  pontodeapoio: 'pontoapoio',
+  ppdsantt: 'pontoapoio',
+  outrosservicos: 'financiamento',
+};
+
 /** Agrupa as linhas da planilha por empresa+cidade (uma empresa pode ter
  * várias linhas, uma por setor em que atende). */
 function montarEmpresasDaPlanilha(linhas) {
@@ -177,6 +210,7 @@ function montarEmpresasDaPlanilha(linhas) {
         lat,
         lng,
         setores: [],
+        categorias: [],
       });
     }
 
@@ -184,6 +218,12 @@ function montarEmpresasDaPlanilha(linhas) {
     const setorTratado = (setor || '').trim();
     if (setorTratado && !empresa.setores.includes(setorTratado)) {
       empresa.setores.push(setorTratado);
+    }
+    // Converte o Setor (texto em português) pro código de categoria que as
+    // páginas do site usam pra filtrar (ex: "Lava-Jato" -> "lavajato").
+    const categoriaCorrespondente = CATEGORIA_POR_SETOR[normalizarSetor(setorTratado)];
+    if (categoriaCorrespondente && !empresa.categorias.includes(categoriaCorrespondente)) {
+      empresa.categorias.push(categoriaCorrespondente);
     }
     // Se essa linha específica tiver descrição/palavras-chave e a empresa
     // ainda não tiver pego nenhuma (primeira linha vazia nesse campo), usa.
