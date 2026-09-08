@@ -1,5 +1,5 @@
 import { buscarNoSite, LABEL_CATEGORIA } from '../services/busca.service.js';
-import { renderCardEmpresa } from '../components/card-empresa.js';
+import { renderCardEmpresa, resolverRotaCategoria } from '../components/card-empresa.js';
 import { configurarAvaliacoes } from './resultados.js';
 
 export function renderBusca(container, termoInicial = '') {
@@ -130,11 +130,10 @@ function renderCardEmpresaComEtiqueta(empresa) {
 
   if (categoriaSlug) {
     label = LABEL_CATEGORIA[categoriaSlug] || categoriaSlug;
-    rota = categoriaSlug;
   } else if (setorPlanilha) {
     label = setorPlanilha;
-    rota = ROTA_POR_SETOR[normalizarSetor(setorPlanilha)] || null;
   }
+  rota = resolverRotaCategoria(empresa);
 
   // Só vira link clicável quando a gente sabe pra qual página de categoria
   // mandar (ex: "Retífica" e "Funilaria" ainda não têm página própria —
@@ -152,35 +151,6 @@ function renderCardEmpresaComEtiqueta(empresa) {
     </div>
   `;
 }
-
-/** Deixa o nome do setor só com letras minúsculas sem acento, pra comparar
- * sem se importar com maiúscula/acentuação (ex: "Lava-Jato" -> "lavajato"). */
-function normalizarSetor(txt) {
-  return (txt || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z]+/g, '');
-}
-
-// Nome do "Setor" (como vem da coluna da planilha) -> id da rota da
-// categoria (mesmo usado nos botões da home, src/pages/home.js). Cobre as
-// variações de escrita que já apareceram na planilha até agora.
-const ROTA_POR_SETOR = {
-  mecanico: 'mecanico',
-  eletrica: 'eletrica',
-  borracharia: 'borracharia',
-  guincho: 'guincho',
-  guinchosocorro: 'guincho',
-  lavajato: 'lavajato',
-  tacografo: 'tacografo',
-  autopecas: 'autopecas',
-  postodecombustivel: 'posto',
-  postoconveniencia: 'posto',
-  pontodeapoio: 'pontoapoio',
-  ppdsantt: 'pontoapoio',
-  outrosservicos: 'financiamento',
-};
 
 function renderCardVaga(vaga) {
   const tel = (vaga.fone || '').replace(/\D/g, '');

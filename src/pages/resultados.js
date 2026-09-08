@@ -325,7 +325,17 @@ export function configurarAvaliacoes(container) {
   container.querySelectorAll('[data-copiar-link]').forEach((botao) => {
     botao.addEventListener('click', async () => {
       const empresaId = botao.dataset.copiarLink;
-      const link = `${window.location.origin}${window.location.pathname}?avaliar=${empresaId}`;
+
+      // O link sempre aponta pra página de categoria real da empresa
+      // (data-copiar-rota, calculado em card-empresa.js), não pra página
+      // onde a pessoa está no momento do clique. Isso é o que garante que
+      // o link funcione igual seja copiado a partir da busca geral, de uma
+      // página de categoria ou de qualquer outro lugar que reaproveite o
+      // card. Só cai de volta pro caminho atual (comportamento antigo) se
+      // por algum motivo não der pra saber a categoria da empresa.
+      const rota = botao.dataset.copiarRota;
+      const base = rota ? `${window.location.origin}/${rota}` : `${window.location.origin}${window.location.pathname}`;
+      const link = `${base}?avaliar=${empresaId}`;
       const textoOriginal = botao.textContent;
 
       try {

@@ -13,6 +13,58 @@ function gerarLinkMapa(empresa) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(empresa.endereco || empresa.nome)}`;
 }
 
+// Nome do "Setor" (como vem da coluna da planilha) -> id da rota da
+// categoria (mesmo usado nos botões da home, src/pages/home.js). Cobre as
+// variações de escrita que já apareceram na planilha até agora.
+const ROTA_POR_SETOR = {
+  mecanico: 'mecanico',
+  eletrica: 'eletrica',
+  borracharia: 'borracharia',
+  guincho: 'guincho',
+  guinchosocorro: 'guincho',
+  lavajato: 'lavajato',
+  tacografo: 'tacografo',
+  autopecas: 'autopecas',
+  postodecombustivel: 'posto',
+  postoconveniencia: 'posto',
+  pontodeapoio: 'pontoapoio',
+  ppdsantt: 'pontoapoio',
+  outrosservicos: 'financiamento',
+};
+
+/** Deixa o nome do setor só com letras minúsculas sem acento, pra comparar
+ * sem se importar com maiúscula/acentuação (ex: "Lava-Jato" -> "lavajato"). */
+function normalizarSetor(txt) {
+  return (txt || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z]+/g, '');
+}
+
+/**
+ * Descobre pra qual página de categoria (rota) uma empresa pertence, a
+ * partir do slug já pronto (empresa.categorias, cadastro pelo site/admin)
+ * ou do texto em português da planilha (empresa.setores).
+ *
+ * Usado tanto pra montar a etiqueta de categoria nos cards da busca quanto
+ * pro link do botão "Copiar link" — assim o link de avaliar sempre aponta
+ * pra página certa da empresa, não importa de onde a pessoa compartilhou
+ * (busca, página de categoria, ranking...).
+ *
+ * Retorna null quando não dá pra saber (categoria ainda sem página própria,
+ * ex: "Retífica", "Funilaria").
+ */
+export function resolverRotaCategoria(empresa) {
+  const categoriaSlug = (empresa.categorias || [])[0];
+  if (categoriaSlug) return categoriaSlug;
+
+  const setorPlanilha = (empresa.setores || [])[0];
+  if (setorPlanilha) return ROTA_POR_SETOR[normalizarSetor(setorPlanilha)] || null;
+
+  return null;
+}
+
 /** Recebe um objeto empresa (já com distanciaKm calculada) e retorna o HTML do card. */
 export function renderCardEmpresa(empresa) {
   const linkWhats = empresa.whatsapp
@@ -23,6 +75,12 @@ export function renderCardEmpresa(empresa) {
   const totalAvaliacoes = empresa.totalAvaliacoes || 0;
   const distancia = formatarDistancia(empresa.distanciaKm);
   const foto = empresa.fotos && empresa.fotos.length > 0 ? empresa.fotos[0] : null;
+
+  // Rota da página de categoria dessa empresa (ex: "borracharia"). Vai como
+  // data-attribute no botão de copiar link pra sempre montar a URL certa,
+  // mesmo quando o card aparece fora da própria página da categoria (ex: na
+  // busca geral do site).
+  const rotaEmpresa = resolverRotaCategoria(empresa) || '';
 
   return `
     <div class="card-empresa">
@@ -69,9 +127,10 @@ export function renderCardEmpresa(empresa) {
           type="button"
           class="card-empresa__botao"
           data-copiar-link="${empresa.id}"
-          style="cursor:pointer;border:1px solid #ccc;background:#f5f5f5;"
+          data-copiar-rota="${rotaEmpresa}"
+          style="cursor:pointer;border:1px solid #ccc;background:#f5f5f5;color:#222;"
         >
-          🔗 Copiar link p/ avaliar
+          🔗 Copiar link
         </button>
       </div>
 
