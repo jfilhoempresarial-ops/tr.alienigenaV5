@@ -110,7 +110,7 @@ export async function buscarNoSite(termo) {
   const empresas = todasEmpresas.filter((e) => {
     const categoriasLabel = (e.categorias || []).map((c) => LABEL_CATEGORIA[c] || c);
     const textoCompleto = normalizar(
-      [e.nome, e.endereco, e.cidade, ...categoriasLabel, ...(e.palavrasChave || [])].join(' ')
+      [e.nome, e.endereco, e.cidade, ...categoriasLabel, ...(e.setores || []), ...(e.palavrasChave || [])].join(' ')
     );
     const palavrasTexto = palavrasDoTexto(textoCompleto);
 

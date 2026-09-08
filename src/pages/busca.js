@@ -117,19 +117,70 @@ function renderGrupo(titulo, itensHtml) {
 }
 
 function renderCardEmpresaComEtiqueta(empresa) {
-  const categoriaPrincipal = (empresa.categorias || [])[0];
-  const label = categoriaPrincipal ? LABEL_CATEGORIA[categoriaPrincipal] || categoriaPrincipal : null;
+  // Duas fontes possíveis de categoria, dependendo de onde a empresa veio:
+  // - Cadastro pelo site (aprovado no admin): campo "categorias", com um
+  //   código (slug) tipo 'mecanico', que já bate com a rota da categoria.
+  // - Planilha de prestadores: campo "setores", com o nome em português
+  //   direto da coluna "Setor" (ex: "Mecânico"), sem slug nenhum.
+  const categoriaSlug = (empresa.categorias || [])[0];
+  const setorPlanilha = (empresa.setores || [])[0];
+
+  let label = null;
+  let rota = null;
+
+  if (categoriaSlug) {
+    label = LABEL_CATEGORIA[categoriaSlug] || categoriaSlug;
+    rota = categoriaSlug;
+  } else if (setorPlanilha) {
+    label = setorPlanilha;
+    rota = ROTA_POR_SETOR[normalizarSetor(setorPlanilha)] || null;
+  }
+
+  // Só vira link clicável quando a gente sabe pra qual página de categoria
+  // mandar (ex: "Retífica" e "Funilaria" ainda não têm página própria —
+  // nesse caso mostra só o texto, sem link quebrado).
+  const etiquetaHtml = !label
+    ? ''
+    : rota
+    ? `<a href="/${rota}" style="position:absolute; top:8px; right:8px; z-index:5; background:#1b5e20; color:#fff; font-size:0.72em; font-weight:600; padding:3px 9px; border-radius:999px; box-shadow:0 1px 4px rgba(0,0,0,0.25); text-decoration:none;">${label}</a>`
+    : `<span style="position:absolute; top:8px; right:8px; z-index:5; background:#555; color:#fff; font-size:0.72em; font-weight:600; padding:3px 9px; border-radius:999px; box-shadow:0 1px 4px rgba(0,0,0,0.25);">${label}</span>`;
+
   return `
     <div style="position:relative;">
-      ${
-        label
-          ? `<span style="position:absolute; top:8px; right:8px; z-index:5; background:#1b5e20; color:#fff; font-size:0.72em; font-weight:600; padding:3px 9px; border-radius:999px; box-shadow:0 1px 4px rgba(0,0,0,0.25);">${label}</span>`
-          : ''
-      }
+      ${etiquetaHtml}
       ${renderCardEmpresa(empresa)}
     </div>
   `;
 }
+
+/** Deixa o nome do setor só com letras minúsculas sem acento, pra comparar
+ * sem se importar com maiúscula/acentuação (ex: "Lava-Jato" -> "lavajato"). */
+function normalizarSetor(txt) {
+  return (txt || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z]+/g, '');
+}
+
+// Nome do "Setor" (como vem da coluna da planilha) -> id da rota da
+// categoria (mesmo usado nos botões da home, src/pages/home.js). Cobre as
+// variações de escrita que já apareceram na planilha até agora.
+const ROTA_POR_SETOR = {
+  mecanico: 'mecanico',
+  eletrica: 'eletrica',
+  borracharia: 'borracharia',
+  guincho: 'guincho',
+  guinchosocorro: 'guincho',
+  lavajato: 'lavajato',
+  tacografo: 'tacografo',
+  autopecas: 'autopecas',
+  postodecombustivel: 'posto',
+  postoconveniencia: 'posto',
+  pontodeapoio: 'pontoapoio',
+  ppdsantt: 'pontoapoio',
+  outrosservicos: 'financiamento',
+};
 
 function renderCardVaga(vaga) {
   const tel = (vaga.fone || '').replace(/\D/g, '');
