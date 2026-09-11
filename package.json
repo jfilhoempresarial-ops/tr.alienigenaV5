@@ -14,7 +14,8 @@
     "firebase-admin": "^14.2.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@google-cloud/firestore": "^8.6.0"
   },
   "devDependencies": {
     "vite": "^5.4.0"
