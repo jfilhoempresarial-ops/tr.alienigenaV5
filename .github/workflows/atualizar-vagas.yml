@@ -13,9 +13,9 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Instalar dependências
-        run: npm install cheerio firebase-admin
+        run: npm ci
       - name: Buscar vagas do IDT/SINE
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
