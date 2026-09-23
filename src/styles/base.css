@@ -3010,3 +3010,80 @@ button {
 .card-evento__detalhes li:last-child {
   border-bottom: none;
 }
+
+
+/* ---------------------------------------------------------------
+   Home: linha do "Ver mapa" + botão "Cadastre-se" (novos prestadores)
+   Toque = abre o cadastro • Segurar = copia o link
+   --------------------------------------------------------------- */
+.home-atalhos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+
+.home-atalhos .banner-mapa-pill {
+  margin: 0;
+  min-width: 0;
+}
+
+.botao-cadastre-se {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #1f6b3a;
+  background: #ffffff;
+  color: #1f6b3a;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.botao-cadastre-se:hover {
+  background: #1f6b3a;
+  color: #ffffff;
+}
+
+/* Enquanto segura: vai "enchendo" de verde até copiar */
+.botao-cadastre-se--segurando {
+  background: #1f6b3a;
+  color: #ffffff;
+  transform: scale(0.95);
+  transition: background 0.6s, color 0.6s, transform 0.6s;
+}
+
+.aviso-copiado {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  background: #0f2d1a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+.aviso-copiado--visivel {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

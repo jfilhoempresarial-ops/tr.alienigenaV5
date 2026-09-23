@@ -92,6 +92,88 @@ function agruparPorData(pessoas) {
   return grupos;
 }
 
+/**
+ * Botão "Cadastre-se" (novos prestadores):
+ *  - toque rápido  → abre a página de cadastro
+ *  - toque e segure (0,6s) → copia o link do cadastro, pra mandar no WhatsApp
+ */
+async function copiarTexto(texto) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch {
+    // Plano B para navegadores antigos / app Android (TWA)
+    const campo = document.createElement('textarea');
+    campo.value = texto;
+    campo.setAttribute('readonly', '');
+    campo.style.position = 'fixed';
+    campo.style.opacity = '0';
+    document.body.appendChild(campo);
+    campo.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+    campo.remove();
+    return ok;
+  }
+}
+
+function configurarBotaoCadastreSe(container) {
+  const botao = container.querySelector('#btn-cadastre-se');
+  const aviso = container.querySelector('#aviso-link-copiado');
+  if (!botao) return;
+
+  const LINK_CADASTRO = `${window.location.origin}/cadastro-empresa`;
+  const TEMPO_SEGURAR = 600; // ms
+  let timer = null;
+  let copiou = false;
+  let timerAviso = null;
+
+  function mostrarAviso(texto) {
+    if (!aviso) return;
+    aviso.textContent = texto;
+    aviso.classList.add('aviso-copiado--visivel');
+    clearTimeout(timerAviso);
+    timerAviso = setTimeout(() => aviso.classList.remove('aviso-copiado--visivel'), 2500);
+  }
+
+  function cancelar() {
+    clearTimeout(timer);
+    timer = null;
+    botao.classList.remove('botao-cadastre-se--segurando');
+  }
+
+  botao.addEventListener('pointerdown', () => {
+    copiou = false;
+    botao.classList.add('botao-cadastre-se--segurando');
+    timer = setTimeout(async () => {
+      copiou = true;
+      botao.classList.remove('botao-cadastre-se--segurando');
+      const ok = await copiarTexto(LINK_CADASTRO);
+      if (navigator.vibrate) navigator.vibrate(40);
+      mostrarAviso(ok ? '🔗 Link do cadastro copiado! É só colar no WhatsApp.' : `Copie o link: ${LINK_CADASTRO}`);
+    }, TEMPO_SEGURAR);
+  });
+
+  botao.addEventListener('pointerup', cancelar);
+  botao.addEventListener('pointerleave', cancelar);
+  botao.addEventListener('pointercancel', cancelar);
+
+  // Se foi um "segurar", não abre a página
+  botao.addEventListener('click', (e) => {
+    if (copiou) {
+      e.preventDefault();
+      copiou = false;
+    }
+  });
+
+  // Impede o menu padrão do celular ("abrir em nova aba", etc.) ao segurar
+  botao.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
 export function renderHome(container) {
   container.innerHTML = `
     <section class="home">
@@ -125,11 +207,19 @@ export function renderHome(container) {
         <button class="categorias-carrossel__seta categorias-carrossel__seta--direita" aria-label="Próximas categorias">›</button>
       </div>
 
-      <a href="/mapa" class="banner-mapa-pill">
-        <span class="banner-mapa-pill__icone">🗺️</span>
-        <span class="banner-mapa-pill__texto">Ver mapa de prestadores</span>
-        <span class="banner-mapa-pill__seta">›</span>
-      </a>
+      <div class="home-atalhos">
+        <a href="/mapa" class="banner-mapa-pill">
+          <span class="banner-mapa-pill__icone">🗺️</span>
+          <span class="banner-mapa-pill__texto">Ver mapa de prestadores</span>
+          <span class="banner-mapa-pill__seta">›</span>
+        </a>
+
+        <a href="/cadastro-empresa" class="botao-cadastre-se" id="btn-cadastre-se"
+           title="Toque para se cadastrar • Segure para copiar o link">
+          ➕ Cadastre-se
+        </a>
+      </div>
+      <div class="aviso-copiado" id="aviso-link-copiado" role="status" aria-live="polite"></div>
 
       <div class="home-secao">
         <div class="home-secao__header">
@@ -237,6 +327,8 @@ export function renderHome(container) {
 }
 
 function configurarBuscaHome(container) {
+  configurarBotaoCadastreSe(container);
+
   const form = container.querySelector('#busca-home-form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
