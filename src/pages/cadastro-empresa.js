@@ -22,7 +22,16 @@ export const CATEGORIAS_CADASTRO = [
   { id: 'lavajato', label: 'Lava-Jato' },
   { id: 'autopecas', label: 'Auto Peças' },
   { id: 'tacografo', label: 'Tacógrafo' },
+  { id: 'molas', label: 'Molas e Suspensão' },
+  { id: 'funilaria', label: 'Funilaria e Retífica' },
+  { id: 'vidros', label: 'Vidros e Para-brisa' },
+  { id: 'restaurante', label: 'Restaurante e Hospedagem' },
+  // "Outros Serviços" usa o id 'financiamento' (é o id da página já existente
+  // no site, /financiamento). Pra quem não se encaixa em nenhuma categoria.
+  { id: 'financiamento', label: 'Outros Serviços' },
 ];
+
+const ID_OUTROS_SERVICOS = 'financiamento';
 
 const MAX_FOTOS = 3;
 const MAX_CATEGORIAS_EXTRAS = 3;
@@ -91,8 +100,8 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
         </div>
 
         <label>
-          Especialidades (opcional)
-          <textarea name="especialidades" rows="3" placeholder="Ex: mexo com mola, sou bom em injeção eletrônica, troco embreagem rápido..."></textarea>
+          <span id="especialidades-titulo">Especialidades (opcional)</span>
+          <textarea name="especialidades" id="cadastro-especialidades" rows="3" placeholder="Ex: mexo com mola, sou bom em injeção eletrônica, troco embreagem rápido..."></textarea>
         </label>
 
         <label>
@@ -106,6 +115,29 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
       <p id="cadastro-status"></p>
     </section>
   `;
+
+  // Quem escolhe "Outros Serviços" precisa dizer QUAL serviço oferece —
+  // senão o cadastro chega sem informação nenhuma do que a empresa faz.
+  const selectPrincipal = container.querySelector('select[name="categoriaPrincipal"]');
+  const campoEspecialidades = container.querySelector('#cadastro-especialidades');
+  const tituloEspecialidades = container.querySelector('#especialidades-titulo');
+  const placeholderOriginal = campoEspecialidades ? campoEspecialidades.placeholder : '';
+
+  function ajustarCampoEspecialidades() {
+    if (!campoEspecialidades) return;
+    const principal = selectPrincipal ? selectPrincipal.value : categoriaTravada;
+    const ehOutros = principal === ID_OUTROS_SERVICOS;
+    campoEspecialidades.required = ehOutros;
+    tituloEspecialidades.textContent = ehOutros
+      ? 'Qual serviço você oferece? (obrigatório)'
+      : 'Especialidades (opcional)';
+    campoEspecialidades.placeholder = ehOutros
+      ? 'Ex: despachante, ar-condicionado automotivo, radiador, capotaria, carroceria...'
+      : placeholderOriginal;
+  }
+
+  if (selectPrincipal) selectPrincipal.addEventListener('change', ajustarCampoEspecialidades);
+  ajustarCampoEspecialidades();
 
   let coordenadasDaLocalizacao = null; // preenchido só se o motorista usar o botão de localização
 

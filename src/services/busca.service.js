@@ -69,6 +69,11 @@ export const LABEL_CATEGORIA = {
   autopecas: 'Auto Peças',
   lavajato: 'Lava-Jato',
   tacografo: 'Tacógrafo',
+  molas: 'Molas e Suspensão',
+  funilaria: 'Funilaria e Retífica',
+  vidros: 'Vidros e Para-brisa',
+  restaurante: 'Restaurante e Hospedagem',
+  financiamento: 'Outros Serviços',
 };
 
 // Palavras pequenas/comuns que a gente ignora ao separar a busca em partes

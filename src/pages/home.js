@@ -23,6 +23,10 @@ const CATEGORIAS = [
   { id: 'truckfest', label: 'Truck Fest', icone: '🔊', rotaInterna: '/eventos' },
   { id: 'autopecas', label: 'Auto Peças', icone: '⚙️' },
   { id: 'tacografo', label: 'Tacógrafo', icone: '📟' },
+  { id: 'molas', label: 'Molas e Suspensão', icone: '🔩' },
+  { id: 'funilaria', label: 'Funilaria e Retífica', icone: '🔨' },
+  { id: 'vidros', label: 'Vidros e Para-brisa', icone: '🪟' },
+  { id: 'restaurante', label: 'Restaurante e Hospedagem', icone: '🍽️' },
   { id: 'financiamento', label: 'Outros Serviços', icone: '🧩' },
 ];
 

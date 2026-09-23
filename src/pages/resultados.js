@@ -18,6 +18,10 @@ const PLACEHOLDER_BUSCA = {
   pontoapoio: 'Digite o que você procura ou a cidade',
   autopecas: 'Digite a peça ou a cidade que você procura',
   tacografo: 'Digite o que você precisa ou a cidade (ex: aferição, Sobral)',
+  molas: 'Digite o serviço ou a cidade (ex: mola, feixe, amortecedor, Sobral)',
+  funilaria: 'Digite o serviço ou a cidade (ex: lanternagem, pintura, retífica, Sobral)',
+  vidros: 'Digite o que você precisa ou a cidade (ex: para-brisa, vidro lateral, Sobral)',
+  restaurante: 'Digite o que você procura ou a cidade (ex: almoço, pernoite, Sobral)',
 };
 const PLACEHOLDER_BUSCA_PADRAO = 'Digite a cidade ou o que você procura';
 

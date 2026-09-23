@@ -33,6 +33,11 @@ const LABEL_CATEGORIA = {
   lavajato: 'Lava-Jato',
   autopecas: 'Auto Peças',
   tacografo: 'Tacógrafo',
+  molas: 'Molas e Suspensão',
+  funilaria: 'Funilaria e Retífica',
+  vidros: 'Vidros e Para-brisa',
+  restaurante: 'Restaurante e Hospedagem',
+  financiamento: 'Outros Serviços',
 };
 
 // Ícone usado nos marcadores individuais (empresas que não formaram cluster).

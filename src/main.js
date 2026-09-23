@@ -73,6 +73,7 @@ function router() {
 }
 
 document.addEventListener('click', (e) => {
+  if (e.defaultPrevented) return; // algum botão já tratou o clique (ex: "segurar pra copiar")
   const link = e.target.closest('a');
   if (!link) return;
 
