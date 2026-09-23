@@ -1,21 +1,27 @@
 /**
- * Busca vagas de transporte no site do IDT/SINE e salva no Firestore.
- * Roda automaticamente pelo GitHub Actions, 2x por dia — sem depender
- * de proxies de CORS (que ficam instáveis), porque roda no servidor,
- * não no navegador do usuário.
+ * Busca vagas de transporte do IDT/SINE e salva no Firestore.
+ * Roda automaticamente pelo GitHub Actions, 2x por dia.
+ *
+ * O IDT trocou o site em set/2026: a página antiga com tabela
+ * (idt.org.br/vagas-disponiveis) agora redireciona para vagas.idt.org.br,
+ * que carrega tudo de uma API em JSON. Lemos direto dessa API — os dados já
+ * vêm separados (município, unidade, tipo de vaga), sem precisar "adivinhar"
+ * pela tabela.
+ *
+ * PRIVACIDADE: a API também traz nome da empresa, nomes e celulares pessoais
+ * de funcionários do IDT. NADA disso é salvo — só o telefone da unidade.
  *
  * COMO TESTAR LOCALMENTE:
- *   npm install cheerio firebase-admin
+ *   npm install firebase-admin
  *   node scripts/buscar-vagas-idt.cjs
  * (usa o scripts/serviceAccountKey.json que você já tem)
  */
 
-const cheerio = require('cheerio');
 const path = require('path');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
-const IDT_URL = 'https://idt.org.br/vagas-disponiveis';
+const IDT_API = 'https://vagas.idt.org.br/api/vagas';
 
 const PALAVRAS_TRANSPORTE = [
   'motorista', 'caminhão', 'caminhao', 'caminhoneiro', 'carreta', 'carreteiro',
@@ -42,124 +48,130 @@ function chaveServiceAccount() {
   return require(path.join(__dirname, 'serviceAccountKey.json'));
 }
 
-// O IDT passou a separar as vagas em 3 tipos, com uma linha de título
-// própria (1 célula só, igual à linha da cidade). Sem essa checagem o
-// script achava que "Vagas regulares" era o nome de uma cidade.
-function detectarTipo(texto) {
-  const t = (texto || '')
+function normalizar(txt) {
+  return String(txt || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (/exclusiv/.test(t) && /pcd|deficien/.test(t)) return 'Exclusiva PcD';
-  if (/^vagas? inclusiv|^inclusiv/.test(t)) return 'Inclusiva';
-  if (/^vagas? regular|^regular/.test(t)) return 'Regular';
-  return '';
 }
 
 function capitalizar(txt) {
   return txt ? txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase() : txt;
 }
 
-function parseCidade(texto) {
-  const raw = texto.split(/[\n\r]/)[0].replace(/[*]/g, '').trim();
-  if (raw.includes(':')) {
-    const [baseRaw, restoRaw] = raw.split(':');
-    const base = baseRaw.trim();
-    const bairro = (restoRaw || '').split(/[-–]/)[0].split('/')[0].trim();
-    const nome = capitalizar(base) + (bairro ? ' - ' + capitalizar(bairro) : '');
-    return { base, nome };
-  }
-  const clean = raw.split(/[-–\s]+(?:Rua|Av\.|Fone|R\.)/)[0].trim();
-  return { base: clean, nome: capitalizar(clean) };
+// "Fortaleza" -> "Fortaleza"; "JUAZEIRO DO NORTE" -> "Juazeiro do Norte"
+function nomeProprio(txt) {
+  const minusculas = ['de', 'da', 'do', 'das', 'dos', 'e'];
+  return String(txt || '')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p, i) => (i > 0 && minusculas.includes(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(' ');
 }
 
-async function buscarHtml() {
-  const resposta = await fetch(IDT_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (TraV5-Bot; +https://github.com/jfilhoempresarial-ops/tr.alienigenaV5)',
-    },
-  });
-  if (!resposta.ok) {
-    throw new Error(`Falha ao acessar o IDT: HTTP ${resposta.status}`);
-  }
-  return resposta.text();
+function tipoDaVaga(pcd) {
+  const t = normalizar(pcd);
+  if (t.includes('exclusiv')) return 'Exclusiva PcD';
+  if (t.includes('inclusiv')) return 'Inclusiva';
+  return 'Regular';
 }
 
-function extrairVagas(html) {
-  const $ = cheerio.load(html);
+// Pega o primeiro campo que exista, entre vários nomes possíveis
+function campo(obj, ...nomes) {
+  for (const n of nomes) {
+    if (obj[n] !== undefined && obj[n] !== null && String(obj[n]).trim() !== '') return obj[n];
+  }
+  return '';
+}
+
+async function buscarJson() {
+  // Tenta 3 vezes, com espera entre as tentativas. Cada tentativa: até 30s.
+  let ultimoErro;
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      const resposta = await fetch(IDT_API, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          Accept: 'application/json, text/plain, */*',
+          'Accept-Language': 'pt-BR,pt;q=0.9',
+          Referer: 'https://vagas.idt.org.br/',
+        },
+        signal: AbortSignal.timeout(30000),
+      });
+      console.log(`↪️  Tentativa ${tentativa}: HTTP ${resposta.status}`);
+      if (!resposta.ok) throw new Error(`Falha ao acessar a API do IDT: HTTP ${resposta.status}`);
+      return await resposta.json();
+    } catch (erro) {
+      ultimoErro = erro;
+      const causa = erro.cause ? ` | motivo: ${erro.cause.code || ''} ${erro.cause.message || erro.cause}` : '';
+      console.warn(`⚠️  Tentativa ${tentativa} falhou: ${erro.message}${causa}`);
+      if (tentativa < 3) await new Promise((r) => setTimeout(r, tentativa * 10000));
+    }
+  }
+  throw ultimoErro;
+}
+
+// A API pode devolver a lista direto ou dentro de um objeto ({ data: [...] })
+function extrairLista(json) {
+  if (Array.isArray(json)) return json;
+  if (json && typeof json === 'object') {
+    for (const chave of ['data', 'vagas', 'items', 'itens', 'results', 'resultado']) {
+      if (Array.isArray(json[chave])) return json[chave];
+    }
+    const primeiraLista = Object.values(json).find(Array.isArray);
+    if (primeiraLista) return primeiraLista;
+  }
+  return [];
+}
+
+function montarItens(lista) {
   const itens = [];
-  let cidadeAtual = '';
-  let cidadeBase = '';
-  let enderecoAtual = '';
-  let foneAtual = '';
-  let emailAtual = '';
-  let tipoAtual = 'Regular';
 
-  $('table tr').each((_, tr) => {
-    const tds = $(tr).find('td');
-    if (!tds.length) return;
+  for (const v of lista) {
+    const cargoOriginal = String(campo(v, 'ocupacao', 'cargo')).trim();
+    const cargo = cargoOriginal.toLowerCase();
+    const qtd = parseInt(campo(v, 'qtde_vagas', 'quantidade', 'qtd'), 10) || 0;
+    const municipio = String(campo(v, 'municipio', 'cidade')).trim();
+    if (!cargo || !qtd || !municipio) continue;
 
-    const primeiraColuna = $(tds[0]).text().trim();
+    const relevante =
+      PALAVRAS_TRANSPORTE.some((p) => cargo.includes(p)) &&
+      !EXCLUIR_TRANSPORTE.some((p) => cargo.includes(p));
+    if (!relevante) continue;
 
-    // Linha de título do tipo de vaga (Regulares / Inclusivas / Exclusiva PcD):
-    // guarda o tipo e NÃO mexe na cidade atual.
-    if (tds.length === 1) {
-      const tipo = detectarTipo(primeiraColuna);
-      if (tipo) {
-        tipoAtual = tipo;
-        return;
-      }
-    }
+    const unidade = String(campo(v, 'unidade')).trim();
+    const nomeMunicipio = nomeProprio(municipio);
+    // Em cidade com mais de um posto (Fortaleza), mostra também a unidade.
+    // Se o nome da unidade já contém a cidade ("U.A. Sobral"), não repete.
+    const cidade =
+      unidade && !normalizar(unidade).includes(normalizar(municipio))
+        ? `${nomeMunicipio} - ${unidade}`
+        : nomeMunicipio;
 
-    if (
-      tds.length === 1 &&
-      primeiraColuna &&
-      !primeiraColuna.includes('OCUPAÇÕES') &&
-      !primeiraColuna.includes('Total') &&
-      !primeiraColuna.includes('PESSOA COM')
-    ) {
-      const pc = parseCidade(primeiraColuna);
-      if (pc.base.length > 1 && pc.base.length < 60) {
-        cidadeBase = pc.base;
-        cidadeAtual = pc.nome;
+    // Endereço: usa o campo que existir com "endereco" no nome
+    const chaveEndereco = Object.keys(v).find((k) => normalizar(k).includes('endereco'));
 
-        const endMatch = primeiraColuna.match(/(?:Rua|Av\.|Avenida|Praça|R\.|Al\.)[^\n\r,]*/i);
-        enderecoAtual = endMatch ? endMatch[0].trim() : '';
+    const lat = parseFloat(v.latitude);
+    const lng = parseFloat(v.longitude);
 
-        const foneMatch = primeiraColuna.match(/(?:Fone|Tel|Telefone)[:\s]*\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4}/i);
-        foneAtual = foneMatch ? foneMatch[0].replace(/(?:Fone|Tel|Telefone)[:\s]*/i, '').trim() : '';
-
-        const emailMatch = primeiraColuna.match(/[\w.-]+@[\w.-]+\.[\w]+/);
-        emailAtual = emailMatch ? emailMatch[0] : '';
-      }
-      return;
-    }
-
-    if (tds.length >= 2) {
-      const cargo = $(tds[0]).text().trim().toLowerCase();
-      const qtd = parseInt($(tds[1]).text().trim(), 10) || 0;
-      if (!cargo || !qtd || cargo === 'ocupações' || cargo.startsWith('total')) return;
-
-      const relevante =
-        PALAVRAS_TRANSPORTE.some((p) => cargo.includes(p)) &&
-        !EXCLUIR_TRANSPORTE.some((p) => cargo.includes(p));
-
-      if (relevante && cidadeAtual) {
-        itens.push({
-          cidade: cidadeAtual,
-          cidadeBase,
-          cargo: capitalizar(cargo),
-          quantidade: qtd,
-          tipo: tipoAtual,
-          endereco: enderecoAtual,
-          fone: foneAtual,
-          email: emailAtual,
-        });
-      }
-    }
-  });
+    itens.push({
+      cidade,
+      cidadeBase: municipio.toUpperCase(),
+      cargo: capitalizar(cargoOriginal),
+      quantidade: qtd,
+      tipo: tipoDaVaga(v.pcd),
+      unidade,
+      endereco: chaveEndereco ? String(v[chaveEndereco] || '').trim() : '',
+      // Só o telefone da UNIDADE (público). Nunca celular/nome de funcionário.
+      fone: String(campo(v, 'telefone_unidade', 'telefone')).trim(),
+      email: String(campo(v, 'email_unidade')).trim(),
+      ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : {}),
+    });
+  }
 
   return itens;
 }
@@ -168,23 +180,18 @@ async function main() {
   initializeApp({ credential: cert(chaveServiceAccount()) });
   const db = getFirestore();
 
-  console.log('🌐 Buscando vagas no site do IDT/SINE...');
-  const html = await buscarHtml();
+  console.log('🌐 Buscando vagas na API do IDT/SINE...');
+  const json = await buscarJson();
+  const lista = extrairLista(json);
+  console.log(`📦 ${lista.length} vagas recebidas no total (todas as áreas).`);
 
-  if (!html.includes('OCUPAÇÕES') && !html.includes('SOBRAL')) {
-    throw new Error('A página do IDT não retornou o conteúdo esperado. O site pode ter mudado de layout.');
+  if (!lista.length || !lista.some((v) => v && v.ocupacao !== undefined)) {
+    throw new Error('A API do IDT não retornou o formato esperado (campo "ocupacao"). Nada foi salvo.');
   }
 
-  const itens = extrairVagas(html);
+  const itens = montarItens(lista);
   if (!itens.length) {
-    throw new Error('Nenhuma vaga de transporte encontrada. Verifique se o layout do site do IDT mudou.');
-  }
-
-  // Trava de segurança: se alguma "cidade" parecer um tipo de vaga, o layout
-  // mudou de novo — melhor falhar do que publicar dado errado no site.
-  const cidadeSuspeita = itens.find((v) => detectarTipo(v.cidadeBase) || /^vagas?\b/i.test(v.cidadeBase));
-  if (cidadeSuspeita) {
-    throw new Error(`Cidade inválida detectada ("${cidadeSuspeita.cidadeBase}"). O layout do IDT pode ter mudado — nada foi salvo.`);
+    throw new Error('Nenhuma vaga de transporte encontrada. Nada foi salvo.');
   }
 
   await db.collection('vagas').doc('atual').set({
@@ -194,10 +201,12 @@ async function main() {
   });
 
   const totalPostos = itens.reduce((s, v) => s + v.quantidade, 0);
-  console.log(`✅ ${itens.length} tipos de vaga salvos (${totalPostos} postos no total).`);
+  const cidades = new Set(itens.map((v) => v.cidadeBase)).size;
+  console.log(`✅ ${itens.length} tipos de vaga salvos (${totalPostos} postos em ${cidades} cidades).`);
 }
 
 main().catch((erro) => {
   console.error('❌ Erro:', erro.message);
+  if (erro.cause) console.error('   Motivo:', erro.cause.code || '', erro.cause.message || erro.cause);
   process.exit(1);
 });
