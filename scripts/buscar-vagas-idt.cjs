@@ -42,6 +42,22 @@ function chaveServiceAccount() {
   return require(path.join(__dirname, 'serviceAccountKey.json'));
 }
 
+// O IDT passou a separar as vagas em 3 tipos, com uma linha de título
+// própria (1 célula só, igual à linha da cidade). Sem essa checagem o
+// script achava que "Vagas regulares" era o nome de uma cidade.
+function detectarTipo(texto) {
+  const t = (texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (/exclusiv/.test(t) && /pcd|deficien/.test(t)) return 'Exclusiva PcD';
+  if (/^vagas? inclusiv|^inclusiv/.test(t)) return 'Inclusiva';
+  if (/^vagas? regular|^regular/.test(t)) return 'Regular';
+  return '';
+}
+
 function capitalizar(txt) {
   return txt ? txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase() : txt;
 }
@@ -79,12 +95,23 @@ function extrairVagas(html) {
   let enderecoAtual = '';
   let foneAtual = '';
   let emailAtual = '';
+  let tipoAtual = 'Regular';
 
   $('table tr').each((_, tr) => {
     const tds = $(tr).find('td');
     if (!tds.length) return;
 
     const primeiraColuna = $(tds[0]).text().trim();
+
+    // Linha de título do tipo de vaga (Regulares / Inclusivas / Exclusiva PcD):
+    // guarda o tipo e NÃO mexe na cidade atual.
+    if (tds.length === 1) {
+      const tipo = detectarTipo(primeiraColuna);
+      if (tipo) {
+        tipoAtual = tipo;
+        return;
+      }
+    }
 
     if (
       tds.length === 1 &&
@@ -125,6 +152,7 @@ function extrairVagas(html) {
           cidadeBase,
           cargo: capitalizar(cargo),
           quantidade: qtd,
+          tipo: tipoAtual,
           endereco: enderecoAtual,
           fone: foneAtual,
           email: emailAtual,
@@ -150,6 +178,13 @@ async function main() {
   const itens = extrairVagas(html);
   if (!itens.length) {
     throw new Error('Nenhuma vaga de transporte encontrada. Verifique se o layout do site do IDT mudou.');
+  }
+
+  // Trava de segurança: se alguma "cidade" parecer um tipo de vaga, o layout
+  // mudou de novo — melhor falhar do que publicar dado errado no site.
+  const cidadeSuspeita = itens.find((v) => detectarTipo(v.cidadeBase) || /^vagas?\b/i.test(v.cidadeBase));
+  if (cidadeSuspeita) {
+    throw new Error(`Cidade inválida detectada ("${cidadeSuspeita.cidadeBase}"). O layout do IDT pode ter mudado — nada foi salvo.`);
   }
 
   await db.collection('vagas').doc('atual').set({

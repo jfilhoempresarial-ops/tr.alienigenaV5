@@ -48,6 +48,7 @@ function renderCardVaga(vaga) {
     <div class="vaga-card">
       <div class="vaga-card__cargo">${vaga.cargo}</div>
       <div class="vaga-card__local">📍 ${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</div>
+      ${vaga.tipo === 'Exclusiva PcD' ? `<div class="vaga-card__local">♿ Exclusiva para PcD</div>` : ''}
       <div class="vaga-card__acoes">
         ${tel ? `<a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>` : ''}
         ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="btn-whatsapp">💬 WhatsApp</a>` : ''}
