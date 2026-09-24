@@ -22,8 +22,11 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
 const CAMINHO_CHAVE = require('path').join(__dirname, 'serviceAccountKey.json');
-const PLANILHA_ID = '192gf5Sg6ViGDcoxDdUCQmm6cWsGUDpLwpc87KwBtX5s';
-const ABA = 'Página1'; // nome da aba dentro da planilha — ajuste se a sua tiver outro nome
+// Inscritos agora ficam na planilha principal (arquivos_nuvem_tra), numa aba
+// própria "Newsletter" — criada automaticamente na 1ª vez.
+// (Antes ficavam na planilha 192gf5Sg6ViGDcoxDdUCQmm6cWsGUDpLwpc87KwBtX5s, aba "Página1".)
+const PLANILHA_ID = '1csMdl7mts1mTZTF7BcZskjdPdIqYwnHmbXAlsRaAggg';
+const ABA = 'Newsletter';
 const CABECALHO = ['Nome', 'E-mail', 'Data do cadastro'];
 
 function carregarCredencial() {
@@ -42,12 +45,13 @@ initializeApp({
 const db = getFirestore();
 
 async function autenticarGoogleSheets() {
-  const auth = new google.auth.JWT(
-    credencial.client_email,
-    null,
-    credencial.private_key,
-    ['https://www.googleapis.com/auth/spreadsheets']
-  );
+  // Formato em objeto: a versão atual da biblioteca googleapis não aceita
+  // mais o formato antigo (email, null, chave, escopos) — ele falhava calado.
+  const auth = new google.auth.JWT({
+    email: credencial.client_email,
+    key: credencial.private_key,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
   await auth.authorize();
   return google.sheets({ version: 'v4', auth });
 }
@@ -63,14 +67,25 @@ function formatarData(criadoEm) {
   }
 }
 
+async function garantirAba(sheets) {
+  const planilha = await sheets.spreadsheets.get({ spreadsheetId: PLANILHA_ID });
+  if (planilha.data.sheets.some((s) => s.properties.title === ABA)) return;
+  console.log(`Aba "${ABA}" não existe ainda — criando...`);
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: PLANILHA_ID,
+    requestBody: { requests: [{ addSheet: { properties: { title: ABA, gridProperties: { frozenRowCount: 1 } } } }] },
+  });
+}
+
 async function main() {
   const sheets = await autenticarGoogleSheets();
+  await garantirAba(sheets);
 
   // Lê o que já existe na planilha, pra saber quais e-mails já foram
   // adicionados antes e não duplicar linha.
   const resposta = await sheets.spreadsheets.values.get({
     spreadsheetId: PLANILHA_ID,
-    range: `${ABA}!A:C`,
+    range: `'${ABA}'!A:C`,
   });
   const linhasAtuais = resposta.data.values || [];
   const temCabecalho = linhasAtuais.length > 0 && linhasAtuais[0][0] === CABECALHO[0];
@@ -81,7 +96,7 @@ async function main() {
   if (linhasAtuais.length === 0) {
     await sheets.spreadsheets.values.append({
       spreadsheetId: PLANILHA_ID,
-      range: `${ABA}!A:C`,
+      range: `'${ABA}'!A:C`,
       valueInputOption: 'RAW',
       requestBody: { values: [CABECALHO] },
     });
@@ -107,7 +122,7 @@ async function main() {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: PLANILHA_ID,
-    range: `${ABA}!A:C`,
+    range: `'${ABA}'!A:C`,
     valueInputOption: 'RAW',
     requestBody: { values: linhasNovas },
   });

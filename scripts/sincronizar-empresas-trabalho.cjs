@@ -47,12 +47,13 @@ initializeApp({
 const db = getFirestore();
 
 async function autenticarGoogleSheets() {
-  const auth = new google.auth.JWT(
-    credencial.client_email,
-    null,
-    credencial.private_key,
-    ['https://www.googleapis.com/auth/spreadsheets']
-  );
+  // Formato em objeto: a versão atual da biblioteca googleapis não aceita
+  // mais o formato antigo (email, null, chave, escopos) — ele falhava calado.
+  const auth = new google.auth.JWT({
+    email: credencial.client_email,
+    key: credencial.private_key,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
   await auth.authorize();
   return google.sheets({ version: 'v4', auth });
 }
