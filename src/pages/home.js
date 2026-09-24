@@ -9,6 +9,7 @@ import { VIDEOS_VOZ_MOTORISTA } from '../data/videos-voz-motorista.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 import { buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
 import { renderCardAvaliacao } from '../components/card-empresa.js';
+import { buscarTodasEmpresas } from '../services/empresas.service.js';
 
 const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
@@ -204,6 +205,7 @@ export function renderHome(container) {
             <a href="${href}" ${targetBlank} class="categoria-card" data-categoria-id="${cat.id}">
               <span class="categoria-card__icone">${cat.icone}</span>
               <span class="categoria-card__label">${cat.label}</span>
+              ${cat.rotaInterna || cat.externo ? '' : `<span class="categoria-card__contagem" data-contagem-categoria="${cat.id}" title="Cadastrados"></span>`}
             </a>
           `;
           }).join('')}
@@ -312,6 +314,15 @@ export function renderHome(container) {
           <p class="home-secao__vazio">Carregando...</p>
         </div>
       </div>
+
+      <div class="home-secao">
+        <div class="home-secao__header">
+          <h2 class="home-secao__titulo">🆕 Novas empresas cadastradas</h2>
+        </div>
+        <div class="home-secao__lista" id="lista-novas-empresas">
+          <p class="home-secao__vazio">Carregando...</p>
+        </div>
+      </div>
     </section>
   `;
 
@@ -328,6 +339,7 @@ export function renderHome(container) {
   carregarEventosResumo(container);
   carregarPlaylist(container);
   carregarUltimasAvaliacoesHome(container);
+  carregarNovasEmpresasEContagem(container);
 }
 
 function configurarBuscaHome(container) {
@@ -636,6 +648,86 @@ function renderVozMotorista(container) {
         : ''
     }
   `;
+}
+
+// ---------------------------------------------------------------------------
+// Novas empresas cadastradas + total por categoria
+// Uma consulta só alimenta as duas seções.
+// ---------------------------------------------------------------------------
+const QTD_NOVAS_EMPRESAS = 10; // sempre as 10 mais recentes; a 11ª empurra a mais antiga pra fora
+const ORIGEM_PPD = 'ppd-gov-br';
+
+function escaparHtml(txt) {
+  return String(txt ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// criadoEm pode vir como texto ISO ou como Timestamp do Firestore
+function dataDeCadastro(empresa) {
+  const valor = empresa.criadoEm;
+  if (!valor) return null;
+  if (typeof valor.toDate === 'function') return valor.toDate();
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? null : data;
+}
+
+function textoQuandoCadastrou(data) {
+  const dias = Math.floor((Date.now() - data.getTime()) / 86400000);
+  if (dias <= 0) return 'Hoje';
+  if (dias === 1) return 'Ontem';
+  if (dias < 7) return `Há ${dias} dias`;
+  return `Em ${data.toLocaleDateString('pt-BR')}`;
+}
+
+function renderCardNovaEmpresa(empresa, data) {
+  const categoriasConhecidas = (empresa.categorias || []).filter((id) => LABEL_POR_CATEGORIA[id]);
+  const principal = CATEGORIAS.find((c) => c.id === categoriasConhecidas[0]);
+  const rotulos = categoriasConhecidas.map((id) => LABEL_POR_CATEGORIA[id]).join(' • ');
+  const local = [empresa.cidade, (empresa.estado || '').toUpperCase()].filter(Boolean).join(' - ');
+  const link = principal ? `/busca?q=${encodeURIComponent(empresa.nome || '')}` : '/';
+  return `
+    <a href="${link}" class="nova-empresa-card">
+      <span class="nova-empresa-card__selo">NOVO</span>
+      <span class="nova-empresa-card__icone">${principal ? principal.icone : '🏪'}</span>
+      <strong class="nova-empresa-card__nome">${escaparHtml(empresa.nome)}</strong>
+      ${rotulos ? `<span class="nova-empresa-card__categoria">${escaparHtml(rotulos)}</span>` : ''}
+      ${local ? `<span class="nova-empresa-card__local">📍 ${escaparHtml(local)}</span>` : ''}
+      <span class="nova-empresa-card__data">${textoQuandoCadastrou(data)}</span>
+    </a>
+  `;
+}
+
+async function carregarNovasEmpresasEContagem(container) {
+  const alvoNovas = container.querySelector('#lista-novas-empresas');
+  try {
+    const empresas = await comTimeout(buscarTodasEmpresas());
+
+    // --- Novas empresas (PPDs da ANTT ficam de fora: não são cadastros) ---
+    const novas = empresas
+      .filter((e) => e.origem !== ORIGEM_PPD)
+      .map((e) => ({ empresa: e, data: dataDeCadastro(e) }))
+      .filter((item) => item.data)
+      .sort((a, b) => b.data - a.data)
+      .slice(0, QTD_NOVAS_EMPRESAS);
+
+    alvoNovas.innerHTML = novas.length
+      ? novas.map(({ empresa, data }) => renderCardNovaEmpresa(empresa, data)).join('')
+      : `<p class="home-secao__vazio">Em breve, as novas empresas cadastradas aparecem aqui.</p>`;
+
+    // --- Número de cadastrados no cantinho de cada botão de categoria ---
+    // (o carrossel repete os botões pra rolar sem fim, por isso querySelectorAll)
+    container.querySelectorAll('[data-contagem-categoria]').forEach((selo) => {
+      const id = selo.dataset.contagemCategoria;
+      const total = empresas.filter((e) => (e.categorias || []).includes(id)).length;
+      selo.textContent = total > 0 ? String(total) : ''; // vazio = selo some (CSS :empty)
+    });
+  } catch (erro) {
+    renderErroComRetry(alvoNovas, () => carregarNovasEmpresasEContagem(container));
+    console.error(erro);
+  }
 }
 
 async function carregarUltimasAvaliacoesHome(container) {

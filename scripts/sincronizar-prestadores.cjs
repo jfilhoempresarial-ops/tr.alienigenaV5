@@ -197,12 +197,26 @@ const CATEGORIA_POR_SETOR = {
 
 /** Agrupa as linhas da planilha por empresa+cidade (uma empresa pode ter
  * várias linhas, uma por setor em que atende). */
+/**
+ * Lê a coluna "Última atualização" (ex: "23/09/2026 17:00") e devolve em
+ * formato ISO. Usada só pra preencher "criadoEm" de quem ainda não tem —
+ * é o que a seção "Novas empresas" da home usa pra saber quem é recente.
+ */
+function lerDataPlanilha(valor) {
+  const m = String(valor || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  const [, dia, mes, ano, hora = '12', minuto = '00'] = m;
+  // Horário de Brasília (UTC-3)
+  const data = new Date(Date.UTC(+ano, +mes - 1, +dia, +hora + 3, +minuto));
+  return Number.isNaN(data.getTime()) ? null : data.toISOString();
+}
+
 function montarEmpresasDaPlanilha(linhas) {
   const empresasPorChave = new Map();
   let puladas = 0;
 
   linhas.forEach((linha, indice) => {
-    const [setor, nomeBruto, descricao, endereco, telefone, cidade, estado, latLng, cadastradoPor, palavrasChave] =
+    const [setor, nomeBruto, descricao, endereco, telefone, cidade, estado, latLng, cadastradoPor, palavrasChave, ultimaAtualizacao] =
       linha;
     const nome = (nomeBruto || '').trim();
 
@@ -231,6 +245,7 @@ function montarEmpresasDaPlanilha(linhas) {
         lng,
         setores: [],
         categorias: [],
+        dataDaLinha: lerDataPlanilha(ultimaAtualizacao),
       });
     }
 
@@ -247,6 +262,10 @@ function montarEmpresasDaPlanilha(linhas) {
     }
     // Se essa linha específica tiver descrição/palavras-chave e a empresa
     // ainda não tiver pego nenhuma (primeira linha vazia nesse campo), usa.
+    // Empresa com várias linhas (um setor por linha): fica a data mais antiga
+    const dataLinha = lerDataPlanilha(ultimaAtualizacao);
+    if (dataLinha && (!empresa.dataDaLinha || dataLinha < empresa.dataDaLinha)) empresa.dataDaLinha = dataLinha;
+
     const descricaoLinha = (descricao || '').trim();
     if (!empresa.descricao && descricaoLinha) empresa.descricao = descricaoLinha;
   });
@@ -260,7 +279,7 @@ async function main() {
 
   const resposta = await sheets.spreadsheets.values.get({
     spreadsheetId: PLANILHA_ID,
-    range: `${ABA}!A:J`,
+    range: `${ABA}!A:K`,
   });
   const linhasAtuais = resposta.data.values || [];
   const temCabecalho = linhasAtuais.length > 0 && linhasAtuais[0][0] === CABECALHO[0];
@@ -281,6 +300,11 @@ async function main() {
   // empresas cadastradas de outro jeito (site, admin, etc.).
   const snapshot = await db.collection(COLLECTION).where('origem', '==', ORIGEM).get();
   const idsParaRemover = snapshot.docs.map((doc) => doc.id).filter((id) => !idsDaPlanilha.has(id));
+  // Quem já existe no site e já tem "criadoEm" guardado — essa data nunca muda
+  const criadoEmExistente = new Map(
+    snapshot.docs.filter((doc) => doc.data().criadoEm).map((doc) => [doc.id, doc.data().criadoEm])
+  );
+  const agora = new Date().toISOString();
 
   if (idsParaRemover.length > 0) {
     console.log(`🗑️  Removendo ${idsParaRemover.length} empresa(s) que saíram da planilha:`);
@@ -295,10 +319,13 @@ async function main() {
   // eventual localização capturada por GPS no futuro, etc.).
   const batchUpsert = db.batch();
   let semCoordenada = 0;
-  empresas.forEach(({ id, lat, lng, ...dados }) => {
+  empresas.forEach(({ id, lat, lng, dataDaLinha, ...dados }) => {
     const ref = db.collection(COLLECTION).doc(id);
     const dadosParaGravar = {
       ...dados,
+      // Data de entrada no site: fixa depois de gravada. Pra quem ainda não
+      // tem, usa a data da coluna "Última atualização" da planilha (ou agora).
+      criadoEm: criadoEmExistente.get(id) || dataDaLinha || agora,
       origem: ORIGEM,
       ativo: true,
       verificado: true,

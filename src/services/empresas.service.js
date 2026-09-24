@@ -91,6 +91,7 @@ export async function criarEmpresaAdmin(dadosEmpresa) {
     ...dadosEmpresa,
     verificado: true,
     origem: 'admin-edicao',
+    criadoEm: new Date().toISOString(),
     atualizadoEm: new Date().toISOString(),
   });
   return docRef.id;

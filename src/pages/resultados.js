@@ -157,12 +157,36 @@ export async function renderResultados(container, categoria) {
   // Borracharia). Igual a página de fretes.
   const AGRUPAR_POR_ESTADO = true;
 
+  // Descobre a sigla do estado da empresa. Antes, empresa sem o campo
+  // "estado" aparecia num grupo "??". Agora tenta, nesta ordem:
+  //   1. o campo estado ("CE", "Ce", "ce" ou "Ceará")
+  //   2. a sigla no fim do endereço ("... Sobral - CE, 62050-382")
+  //   3. se nada der, vai pro grupo "Estado não informado" (no fim da lista)
+  const SEM_UF = 'SEM_UF';
+  function normalizarTexto(txt) {
+    return String(txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+  function descobrirUF(empresa) {
+    const estado = String(empresa.estado || '').trim();
+    if (estado) {
+      const sigla = estado.toUpperCase();
+      if (NOME_ESTADO[sigla]) return sigla;
+      const porNome = Object.keys(NOME_ESTADO).find((uf) => normalizarTexto(NOME_ESTADO[uf]) === normalizarTexto(estado));
+      if (porNome) return porNome;
+    }
+    const endereco = String(empresa.endereco || '');
+    const achados = [...endereco.matchAll(/(?:^|[\s,\-])([A-Za-z]{2})(?=\s*(?:,|$|\d))/g)]
+      .map((m) => m[1].toUpperCase())
+      .filter((uf) => NOME_ESTADO[uf]);
+    if (achados.length) return achados[achados.length - 1];
+    return SEM_UF;
+  }
+  const nomeDoEstado = (uf) => (uf === SEM_UF ? 'Estado não informado' : NOME_ESTADO[uf] || uf);
+
   function renderListaPorEstado(listaFinal) {
     const porEstado = new Map();
     listaFinal.forEach((empresa) => {
-      // .toUpperCase() normaliza "Ce" e "CE" pro mesmo grupo — a planilha
-      // tem essa inconsistência em algumas linhas mais antigas.
-      const uf = (empresa.estado || '??').toUpperCase();
+      const uf = descobrirUF(empresa);
       if (!porEstado.has(uf)) porEstado.set(uf, []);
       porEstado.get(uf).push(empresa);
     });
@@ -170,6 +194,8 @@ export async function renderResultados(container, categoria) {
     const ufsOrdenadas = [...porEstado.keys()].sort((a, b) => {
       if (a === 'CE') return -1;
       if (b === 'CE') return 1;
+      if (a === SEM_UF) return 1;
+      if (b === SEM_UF) return -1;
       return a.localeCompare(b);
     });
 
@@ -181,7 +207,7 @@ export async function renderResultados(container, categoria) {
         <button class="chip chip--ativo" data-estado-resultado="">🌐 Todos</button>
         ${ufsOrdenadas
           .map((uf) => {
-            const nomeEstado = NOME_ESTADO[uf] || uf;
+            const nomeEstado = nomeDoEstado(uf);
             return `<button class="chip" data-estado-resultado="${uf}">${nomeEstado} (${porEstado.get(uf).length})</button>`;
           })
           .join('')}
@@ -191,7 +217,7 @@ export async function renderResultados(container, categoria) {
     const grupos = ufsOrdenadas
       .map((uf) => {
         const itens = porEstado.get(uf);
-        const nomeEstado = NOME_ESTADO[uf] || uf;
+        const nomeEstado = nomeDoEstado(uf);
 
         // Dentro do estado, agrupa também por cidade — assim, ao filtrar
         // um estado, já dá pra ver de cara quais cidades têm resultado.
