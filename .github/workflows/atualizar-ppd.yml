@@ -1,7 +1,10 @@
 name: Atualizar Pontos de Parada e Descanso (PPD)
 on:
   schedule:
-    - cron: '0 9 * * *'  # 06:00 no horário de Brasília (UTC-3), 1x por dia
+    # 2x por dia, em minutos "quebrados": no horário cheio (ex: 09:00) o
+    # GitHub fica sobrecarregado e às vezes atrasa ou pula a execução.
+    - cron: '17 9 * * *'   # 06:17 no horário de Brasília (UTC-3)
+    - cron: '17 21 * * *'  # 18:17 no horário de Brasília (UTC-3)
   workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:
