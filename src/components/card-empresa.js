@@ -93,7 +93,7 @@ export function renderCardEmpresa(empresa) {
   const ehCelular = /^9\d{8}$/.test(numeroLocal);
   const ehFixo = /^\d{8}$/.test(numeroLocal);
 
-  const linkWhats = ehCelular
+  const linkWhats = ehCelular || ehFixo
     ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.')
     : null;
   const linkTelefone = ehFixo ? `tel:+55${numeroSemPais}` : null;
@@ -145,11 +145,14 @@ export function renderCardEmpresa(empresa) {
             ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--whatsapp">
           💬 WhatsApp
         </a>`
-            : linkTelefone
-              ? `<a href="${linkTelefone}" class="card-empresa__botao card-empresa__botao--whatsapp">
+            : ''
+        }
+        ${
+          linkTelefone
+            ? `<a href="${linkTelefone}" class="card-empresa__botao card-empresa__botao--whatsapp">
           📞 Ligar
         </a>`
-              : ''
+            : ''
         }
         <a href="${linkMapa}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--mapa">
           📍 Como chegar
