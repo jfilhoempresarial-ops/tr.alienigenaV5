@@ -33,6 +33,31 @@ export const CATEGORIAS_CADASTRO = [
 
 const ID_OUTROS_SERVICOS = 'financiamento';
 
+// "Loja/Conveniência" aparece como opção SÓ no formulário de cadastro.
+// Não é uma categoria nova no site: quem escolher entra na página de
+// Outros Serviços, com "Loja/Conveniência" no começo das especialidades.
+const ID_LOJA = 'loja';
+const LABEL_LOJA = 'Loja/Conveniência';
+
+// Lista de opções do formulário: as categorias do site + Loja/Conveniência,
+// com "Outros Serviços" sempre por último. (O /admin continua usando
+// CATEGORIAS_CADASTRO puro, sem a opção de loja.)
+const OPCOES_FORMULARIO = [
+  ...CATEGORIAS_CADASTRO.filter((c) => c.id !== ID_OUTROS_SERVICOS),
+  { id: ID_LOJA, label: LABEL_LOJA },
+  ...CATEGORIAS_CADASTRO.filter((c) => c.id === ID_OUTROS_SERVICOS),
+];
+
+const DIAS_SEMANA = [
+  { id: 'seg', curto: 'Seg' },
+  { id: 'ter', curto: 'Ter' },
+  { id: 'qua', curto: 'Qua' },
+  { id: 'qui', curto: 'Qui' },
+  { id: 'sex', curto: 'Sex' },
+  { id: 'sab', curto: 'Sáb' },
+  { id: 'dom', curto: 'Dom' },
+];
+
 const MAX_FOTOS = 3;
 const MAX_CATEGORIAS_EXTRAS = 3;
 
@@ -43,7 +68,7 @@ const MAX_CATEGORIAS_EXTRAS = 3;
  * categorias ADICIONAIS (até 3) nas quais também atua.
  */
 export function renderCadastroEmpresa(container, categoriaTravada) {
-  const categoriaInfo = CATEGORIAS_CADASTRO.find((c) => c.id === categoriaTravada);
+  const categoriaInfo = OPCOES_FORMULARIO.find((c) => c.id === categoriaTravada);
 
   container.innerHTML = `
     <section class="cadastro">
@@ -79,7 +104,7 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
           <label>
             Categoria principal
             <select name="categoriaPrincipal" required>
-              ${CATEGORIAS_CADASTRO.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
+              ${OPCOES_FORMULARIO.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
             </select>
           </label>
         `
@@ -87,7 +112,7 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
 
         <p class="cadastro__label-extra">Também atua em outras áreas? Escolha até ${MAX_CATEGORIAS_EXTRAS}:</p>
         <div class="cadastro__categorias-extras" id="categorias-extras">
-          ${CATEGORIAS_CADASTRO.filter((c) => c.id !== categoriaTravada)
+          ${OPCOES_FORMULARIO.filter((c) => c.id !== categoriaTravada)
             .map(
               (c) => `
             <label class="cadastro__categoria-extra-item">
@@ -103,6 +128,33 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
           <span id="especialidades-titulo">Especialidades (opcional)</span>
           <textarea name="especialidades" id="cadastro-especialidades" rows="3" placeholder="Ex: mexo com mola, sou bom em injeção eletrônica, troco embreagem rápido..."></textarea>
         </label>
+
+        <fieldset class="cadastro__horario">
+          <legend>Horário de atendimento</legend>
+
+          <label class="cadastro__horario-24h">
+            <input type="checkbox" name="funciona24h" id="cadastro-24h" />
+            <span>🕐 Funciona 24 horas</span>
+          </label>
+
+          <div id="cadastro-horario-detalhes">
+            <p class="cadastro__label-extra">Dias em que atende:</p>
+            <div class="cadastro__dias">
+              ${DIAS_SEMANA.map(
+                (d) => `
+                <label class="cadastro__dia">
+                  <input type="checkbox" name="diasAtendimento" value="${d.id}" />
+                  <span>${d.curto}</span>
+                </label>
+              `
+              ).join('')}
+            </div>
+            <div class="cadastro__horas">
+              <label>Abre às <input type="time" name="horaAbre" /></label>
+              <label>Fecha às <input type="time" name="horaFecha" /></label>
+            </div>
+          </div>
+        </fieldset>
 
         <label>
           Fotos do local (até ${MAX_FOTOS})
@@ -127,17 +179,35 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
     if (!campoEspecialidades) return;
     const principal = selectPrincipal ? selectPrincipal.value : categoriaTravada;
     const ehOutros = principal === ID_OUTROS_SERVICOS;
+    const ehLoja = principal === ID_LOJA;
     campoEspecialidades.required = ehOutros;
-    tituloEspecialidades.textContent = ehOutros
-      ? 'Qual serviço você oferece? (obrigatório)'
-      : 'Especialidades (opcional)';
-    campoEspecialidades.placeholder = ehOutros
-      ? 'Ex: despachante, ar-condicionado automotivo, radiador, capotaria, carroceria...'
-      : placeholderOriginal;
+    if (ehOutros) {
+      tituloEspecialidades.textContent = 'Qual serviço você oferece? (obrigatório)';
+      campoEspecialidades.placeholder = 'Ex: despachante, ar-condicionado automotivo, radiador, capotaria, carroceria...';
+    } else if (ehLoja) {
+      tituloEspecialidades.textContent = 'O que a sua loja vende? (opcional)';
+      campoEspecialidades.placeholder = 'Ex: acessórios para caminhão, peças, bebidas, lanches, itens para cabine...';
+    } else {
+      tituloEspecialidades.textContent = 'Especialidades (opcional)';
+      campoEspecialidades.placeholder = placeholderOriginal;
+    }
   }
 
   if (selectPrincipal) selectPrincipal.addEventListener('change', ajustarCampoEspecialidades);
   ajustarCampoEspecialidades();
+
+  // "Funciona 24 horas" marcado → esconde dias e horários (não precisa).
+  const checkbox24h = container.querySelector('#cadastro-24h');
+  const detalhesHorario = container.querySelector('#cadastro-horario-detalhes');
+  function ajustarHorario() {
+    const eh24h = checkbox24h.checked;
+    detalhesHorario.hidden = eh24h;
+    detalhesHorario.querySelectorAll('input').forEach((campo) => {
+      campo.disabled = eh24h;
+    });
+  }
+  checkbox24h.addEventListener('change', ajustarHorario);
+  ajustarHorario();
 
   let coordenadasDaLocalizacao = null; // preenchido só se o motorista usar o botão de localização
 
@@ -196,6 +266,14 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
     .addEventListener('submit', async (event) => {
       event.preventDefault();
       const status = document.getElementById('cadastro-status');
+
+      const horario = lerHorario(new FormData(event.target));
+      if (horario.erro) {
+        status.textContent = `⚠️ ${horario.erro}`;
+        detalhesHorario.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       status.textContent = 'Localizando endereço...';
 
       try {
@@ -203,8 +281,17 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
         const endereco = formData.get('endereco');
         const categoriaPrincipal = formData.get('categoriaPrincipal');
         const categoriasExtras = formData.getAll('categoriasExtras');
-        const categorias = [categoriaPrincipal, ...categoriasExtras];
-        const especialidades = formData.get('especialidades') || '';
+        const escolhidas = [categoriaPrincipal, ...categoriasExtras];
+
+        // Loja/Conveniência vira "Outros Serviços" no site (sem repetir).
+        const ehLoja = escolhidas.includes(ID_LOJA);
+        const categorias = [
+          ...new Set(escolhidas.map((id) => (id === ID_LOJA ? ID_OUTROS_SERVICOS : id))),
+        ];
+        let especialidades = (formData.get('especialidades') || '').trim();
+        if (ehLoja) {
+          especialidades = especialidades ? `${LABEL_LOJA}: ${especialidades}` : LABEL_LOJA;
+        }
 
         // Se o motorista já usou o botão "usar localização atual", usamos essas
         // coordenadas direto. Senão, geocodificamos o endereço digitado.
@@ -215,8 +302,10 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
         const fotosUrls = await enviarFotos(arquivos);
 
         status.textContent = 'Enviando cadastro...';
-        const labelsCategorias = categorias.map(
-          (id) => CATEGORIAS_CADASTRO.find((c) => c.id === id)?.label || id
+        const labelsCategorias = escolhidas.map((id) =>
+          id === ID_LOJA
+            ? `${LABEL_LOJA} (Outros Serviços)`
+            : OPCOES_FORMULARIO.find((c) => c.id === id)?.label || id
         );
 
         // Grava no Firestore como pendente (verificado: false) — some da fila
@@ -230,6 +319,8 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
           endereco,
           categorias,
           especialidades,
+          horario: horario.dados,
+          horarioTexto: horario.texto,
           fotos: fotosUrls,
           lat: coordenadas?.lat ?? null,
           lng: coordenadas?.lng ?? null,
@@ -243,6 +334,7 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
           endereco,
           labelsCategorias,
           especialidades,
+          horarioTexto: horario.texto,
           fotosUrls,
           coordenadas,
         });
@@ -252,11 +344,69 @@ export function renderCadastroEmpresa(container, categoriaTravada) {
         coordenadasDaLocalizacao = null;
         fotosInfo.textContent = '';
         document.getElementById('localizacao-status').textContent = '';
+        ajustarHorario();
+        ajustarCampoEspecialidades();
       } catch (erro) {
         status.textContent = 'Erro ao enviar. Tente novamente.';
         console.error(erro);
       }
     });
+}
+
+/**
+ * Lê o bloco "Horário de atendimento" do formulário.
+ * Retorna { dados, texto } ou { erro } se faltar alguma informação.
+ *   dados: o que vai pro Firestore (campo "horario")
+ *   texto: resumo legível, ex: "Seg a Sex, das 07:00 às 18:00"
+ */
+function lerHorario(formData) {
+  if (formData.get('funciona24h')) {
+    return { dados: { funciona24h: true }, texto: '24 horas, todos os dias' };
+  }
+  const dias = formData.getAll('diasAtendimento');
+  const abre = formData.get('horaAbre');
+  const fecha = formData.get('horaFecha');
+  if (dias.length === 0) {
+    return { erro: 'Horário de atendimento: marque os dias em que atende ou "Funciona 24 horas".' };
+  }
+  if (!abre || !fecha) {
+    return { erro: 'Horário de atendimento: informe a hora que abre e a hora que fecha.' };
+  }
+  return {
+    dados: { funciona24h: false, dias, abre, fecha },
+    texto: `${resumirDias(dias)}, das ${abre} às ${fecha}`,
+  };
+}
+
+/** Junta dias seguidos: [seg,ter,qua,qui,sex] → "Seg a Sex"; [seg,qua] → "Seg, Qua". */
+function resumirDias(ids) {
+  const indices = ids
+    .map((id) => DIAS_SEMANA.findIndex((d) => d.id === id))
+    .filter((i) => i >= 0)
+    .sort((a, b) => a - b);
+  if (indices.length === 7) return 'Todos os dias';
+
+  const grupos = [];
+  let inicio = indices[0];
+  let anterior = indices[0];
+  for (let k = 1; k <= indices.length; k++) {
+    const atual = indices[k];
+    if (atual === anterior + 1) {
+      anterior = atual;
+      continue;
+    }
+    grupos.push([inicio, anterior]);
+    inicio = atual;
+    anterior = atual;
+  }
+
+  return grupos
+    .map(([a, b]) => {
+      if (a === b) return DIAS_SEMANA[a].curto;
+      if (b === a + 1) return `${DIAS_SEMANA[a].curto}, ${DIAS_SEMANA[b].curto}`;
+      return `${DIAS_SEMANA[a].curto} a ${DIAS_SEMANA[b].curto}`;
+    })
+    .join(', ');
 }
 
 /**
@@ -318,6 +468,7 @@ async function enviarEmailNotificacao({
   endereco,
   labelsCategorias,
   especialidades,
+  horarioTexto,
   fotosUrls,
   coordenadas,
 }) {
@@ -337,6 +488,7 @@ async function enviarEmailNotificacao({
     endereco,
     categorias: labelsCategorias.join(', '),
     especialidades: especialidades || '-',
+    horario: horarioTexto || '-',
     fotos: fotosUrls.length ? fotosUrls.join('\n') : '-',
     coordenadas: coordenadas ? `${coordenadas.lat}, ${coordenadas.lng}` : 'não localizado automaticamente',
   };

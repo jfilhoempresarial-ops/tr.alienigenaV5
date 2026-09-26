@@ -100,30 +100,43 @@ function agruparPorData(pessoas) {
 /**
  * Botão "Cadastre-se" (novos prestadores):
  *  - toque rápido  → abre a página de cadastro
- *  - toque e segure (0,6s) → copia o link do cadastro, pra mandar no WhatsApp
+ *  - toque e segure (0,6s) → o botão avisa "Solte para copiar" e, ao soltar,
+ *    copia o link do cadastro, pra mandar no WhatsApp.
+ *
+ * Por que copia ao SOLTAR e não durante o "segurar": o celular só libera a
+ * área de transferência logo depois de um gesto do usuário (soltar o dedo
+ * conta, mas um timer rodando enquanto o dedo está parado não conta). Antes
+ * a cópia rodava dentro do timer, e por isso falhava no celular.
+ * Se mesmo assim não der pra copiar, abre o "Compartilhar" do celular.
  */
 async function copiarTexto(texto) {
   try {
-    await navigator.clipboard.writeText(texto);
-    return true;
-  } catch {
-    // Plano B para navegadores antigos / app Android (TWA)
-    const campo = document.createElement('textarea');
-    campo.value = texto;
-    campo.setAttribute('readonly', '');
-    campo.style.position = 'fixed';
-    campo.style.opacity = '0';
-    document.body.appendChild(campo);
-    campo.select();
-    let ok = false;
-    try {
-      ok = document.execCommand('copy');
-    } catch {
-      ok = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(texto);
+      return true;
     }
-    campo.remove();
-    return ok;
+  } catch {
+    // cai no plano B
   }
+
+  // Plano B para navegadores antigos / app Android (TWA)
+  const campo = document.createElement('textarea');
+  campo.value = texto;
+  campo.setAttribute('readonly', '');
+  campo.style.position = 'fixed';
+  campo.style.top = '0';
+  campo.style.opacity = '0';
+  document.body.appendChild(campo);
+  campo.select();
+  campo.setSelectionRange(0, texto.length);
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  campo.remove();
+  return ok;
 }
 
 function configurarBotaoCadastreSe(container) {
@@ -133,8 +146,10 @@ function configurarBotaoCadastreSe(container) {
 
   const LINK_CADASTRO = `${window.location.origin}/cadastro-empresa`;
   const TEMPO_SEGURAR = 600; // ms
+  const TEXTO_ORIGINAL = botao.textContent.trim();
   let timer = null;
-  let copiou = false;
+  let prontoParaCopiar = false; // já segurou o tempo suficiente
+  let bloquearClique = false; // evita abrir a página depois de copiar
   let timerAviso = null;
 
   function mostrarAviso(texto) {
@@ -145,38 +160,81 @@ function configurarBotaoCadastreSe(container) {
     timerAviso = setTimeout(() => aviso.classList.remove('aviso-copiado--visivel'), 2500);
   }
 
-  function cancelar() {
+  function voltarAoNormal() {
     clearTimeout(timer);
     timer = null;
-    botao.classList.remove('botao-cadastre-se--segurando');
+    prontoParaCopiar = false;
+    botao.classList.remove('botao-cadastre-se--segurando', 'botao-cadastre-se--pronto');
+    botao.textContent = TEXTO_ORIGINAL;
   }
 
-  botao.addEventListener('pointerdown', () => {
-    copiou = false;
+  async function copiarLink() {
+    voltarAoNormal();
+    const ok = await copiarTexto(LINK_CADASTRO);
+    if (ok) {
+      mostrarAviso('🔗 Link do cadastro copiado! É só colar no WhatsApp.');
+      return;
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Cadastre sua empresa na TRA', url: LINK_CADASTRO });
+        return;
+      } catch {
+        // pessoa fechou o compartilhar ou não suportou — mostra o link
+      }
+    }
+    mostrarAviso(`Copie o link: ${LINK_CADASTRO}`);
+  }
+
+  botao.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    voltarAoNormal();
+    bloquearClique = false;
     botao.classList.add('botao-cadastre-se--segurando');
-    timer = setTimeout(async () => {
-      copiou = true;
-      botao.classList.remove('botao-cadastre-se--segurando');
-      const ok = await copiarTexto(LINK_CADASTRO);
+    timer = setTimeout(() => {
+      timer = null;
+      prontoParaCopiar = true;
+      bloquearClique = true;
+      botao.classList.add('botao-cadastre-se--pronto');
+      botao.textContent = '🔗 Solte para copiar';
       if (navigator.vibrate) navigator.vibrate(40);
-      mostrarAviso(ok ? '🔗 Link do cadastro copiado! É só colar no WhatsApp.' : `Copie o link: ${LINK_CADASTRO}`);
     }, TEMPO_SEGURAR);
   });
 
-  botao.addEventListener('pointerup', cancelar);
-  botao.addEventListener('pointerleave', cancelar);
-  botao.addEventListener('pointercancel', cancelar);
-
-  // Se foi um "segurar", não abre a página
-  botao.addEventListener('click', (e) => {
-    if (copiou) {
-      e.preventDefault();
-      copiou = false;
+  // Soltar o dedo é o gesto que libera a área de transferência no celular.
+  botao.addEventListener('pointerup', () => {
+    if (prontoParaCopiar) {
+      copiarLink();
+    } else {
+      voltarAoNormal();
     }
   });
 
-  // Impede o menu padrão do celular ("abrir em nova aba", etc.) ao segurar
+  // Alguns Android cancelam o toque quando o dedo fica parado muito tempo.
+  // Se já tinha passado do tempo de segurar, tenta copiar mesmo assim.
+  botao.addEventListener('pointercancel', () => {
+    if (prontoParaCopiar) {
+      copiarLink();
+    } else {
+      voltarAoNormal();
+    }
+  });
+
+  botao.addEventListener('pointerleave', () => {
+    if (!prontoParaCopiar) voltarAoNormal();
+  });
+
+  // Se foi um "segurar", não abre a página
+  botao.addEventListener('click', (e) => {
+    if (bloquearClique) {
+      e.preventDefault();
+      bloquearClique = false;
+    }
+  });
+
+  // Impede o menu padrão do celular ("abrir em nova aba", etc.) e o arrastar do link
   botao.addEventListener('contextmenu', (e) => e.preventDefault());
+  botao.addEventListener('dragstart', (e) => e.preventDefault());
 }
 
 export function renderHome(container) {
@@ -220,7 +278,7 @@ export function renderHome(container) {
           <span class="banner-mapa-pill__seta">›</span>
         </a>
 
-        <a href="/cadastro-empresa" class="botao-cadastre-se" id="btn-cadastre-se"
+        <a href="/cadastro-empresa" class="botao-cadastre-se" id="btn-cadastre-se" draggable="false"
            title="Toque para se cadastrar • Segure para copiar o link">
           ➕ Cadastre-se
         </a>

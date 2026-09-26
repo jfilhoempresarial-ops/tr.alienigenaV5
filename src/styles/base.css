@@ -619,6 +619,103 @@ form textarea {
   margin: 0 !important;
 }
 
+/* Horário de atendimento (formulário de cadastro) */
+.cadastro__horario {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 16px;
+  background: #fff;
+}
+
+.cadastro__horario legend {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  padding: 0 6px;
+}
+
+.cadastro__horario-24h,
+.cadastro__dia {
+  position: relative;
+  display: inline-flex !important;
+  margin: 0 !important;
+  cursor: pointer;
+}
+
+.cadastro__horario-24h {
+  margin-bottom: 14px !important;
+}
+
+/* A caixinha fica escondida: quem aparece é o "botão" ao lado */
+.cadastro__horario-24h input,
+.cadastro__dia input {
+  position: absolute;
+  opacity: 0;
+  width: 1px !important;
+  height: 1px;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+}
+
+.cadastro__horario-24h span,
+.cadastro__dia span {
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  background: #fff;
+  color: #555;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.cadastro__horario-24h span {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.cadastro__dia span {
+  min-width: 44px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.cadastro__horario-24h input:checked + span,
+.cadastro__dia input:checked + span {
+  background: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: #fff;
+}
+
+.cadastro__horario-24h input:focus-visible + span,
+.cadastro__dia input:focus-visible + span {
+  outline: 2px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.cadastro__dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cadastro__horas {
+  display: flex;
+  gap: 10px;
+}
+
+.cadastro__horas label {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+#cadastro-horario-detalhes[hidden] {
+  display: none;
+}
+
 button {
   background: var(--cor-primaria);
   color: white;
@@ -3061,6 +3158,13 @@ button {
   color: #ffffff;
   transform: scale(0.95);
   transition: background 0.6s, color 0.6s, transform 0.6s;
+}
+
+/* Segurou o tempo suficiente: "Solte para copiar" */
+.botao-cadastre-se--pronto {
+  background: #1f6b3a;
+  color: #ffffff;
+  transform: scale(1);
 }
 
 .aviso-copiado {
