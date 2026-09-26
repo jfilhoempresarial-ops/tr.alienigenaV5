@@ -1,6 +1,6 @@
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 
-const NUMERO_WHATSAPP = '5588988621481';
+const NUMERO_WHATSAPP = '5588981979432';
 const LINK_WHATSAPP = gerarLinkWhatsapp(
   NUMERO_WHATSAPP,
   'Olá! Vim do site da TRA e quero saber mais sobre o Crédito TRA.'

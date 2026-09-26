@@ -1,6 +1,6 @@
 import { buscarBannersPorCategoria, registrarClique } from '../services/banners.service.js';
 
-const NUMERO_COMERCIAL = '5588988621481'; // mesmo número usado no carrossel de categoria
+const NUMERO_COMERCIAL = '5588981979432'; // mesmo número usado no carrossel de categoria
 
 export async function renderCarrosselVertical(containerId, categoria) {
   const container = document.getElementById(containerId);

@@ -1,7 +1,7 @@
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
-const NUMERO_COMERCIAL = '5588988621481';
+const NUMERO_COMERCIAL = '5588981979432';
 
 function converterParaData(campo) {
   if (!campo) return null;

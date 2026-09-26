@@ -1,6 +1,6 @@
 import { cadastrarNewsletter } from '../services/newsletter.service.js';
 
-const NUMERO_WHATSAPP = '5588988621481';
+const NUMERO_WHATSAPP = '5588981979432';
 const MENSAGEM_WHATSAPP = encodeURIComponent('Olá, eu vim do site da TRA, você pode me ajudar?');
 const LINK_WHATSAPP = `https://wa.me/${NUMERO_WHATSAPP}?text=${MENSAGEM_WHATSAPP}`;
 
@@ -40,7 +40,7 @@ export function renderFooter() {
             rel="noopener"
             class="footer__whatsapp"
           >
-            💬 (88) 98862-1481
+            💬 (88) 98197-9432
           </a>
         </div>
 

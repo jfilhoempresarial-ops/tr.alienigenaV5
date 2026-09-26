@@ -1,7 +1,7 @@
 import { buscarGruposWhatsappAtivos } from '../services/grupos-whatsapp.service.js';
 
 // Número que recebe as mensagens de motoristas querendo incluir um grupo novo na lista.
-const WHATSAPP_INCLUIR_GRUPO = '5588988621481';
+const WHATSAPP_INCLUIR_GRUPO = '5588981979432';
 const MENSAGEM_INCLUIR_GRUPO = 'Opa, tenho um grupo de motoristas e queria incluir ele na TRA!';
 
 export async function renderGruposWhatsapp(container) {
