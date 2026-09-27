@@ -3062,10 +3062,14 @@ button {
     display: none;
     position: absolute;
     top: calc(100% + 14px);
-    left: -16px;
+    /* "Serviços" fica perto do fim da barra: a caixa abre para a esquerda */
+    right: -16px;
     z-index: 1000;
     min-width: 440px;
     grid-template-columns: 1fr 1fr;
+    /* Ordem alfabética descendo pela 1ª coluna e depois pela 2ª */
+    grid-template-rows: repeat(8, auto);
+    grid-auto-flow: column;
     gap: 2px;
     padding: 8px;
     background: var(--cor-branco);

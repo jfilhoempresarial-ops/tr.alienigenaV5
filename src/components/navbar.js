@@ -18,6 +18,29 @@ const LINKS_MENU = [
   { href: 'https://www.youtube.com/@TRAlienígena', label: 'Programa A Voz do Motorista', apenasMenuLateral: true, externo: true },
 ];
 
+// ---------------------------------------------------------------------------
+// Ordem do menu: "Home" sempre primeiro; o resto (incluindo "Serviços") em
+// ordem alfabética. Não importa a ordem em que os itens estão escritos acima.
+// ---------------------------------------------------------------------------
+const ITEM_SERVICOS = { servicos: true, label: 'Serviços' };
+
+function porNome(a, b) {
+  return a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' });
+}
+
+function itensEmOrdem(lista) {
+  const home = lista.filter((item) => item.href === '/');
+  const resto = [...lista.filter((item) => item.href !== '/'), ITEM_SERVICOS].sort(porNome);
+  return [...home, ...resto];
+}
+
+// Serviços em ordem alfabética, com "Outros Serviços" sempre no fim.
+const ID_OUTROS_SERVICOS = 'financiamento';
+const SERVICOS_EM_ORDEM = [
+  ...CATEGORIAS.filter((cat) => cat.id !== ID_OUTROS_SERVICOS).sort(porNome),
+  ...CATEGORIAS.filter((cat) => cat.id === ID_OUTROS_SERVICOS),
+];
+
 export function renderNavbar() {
   const el = document.getElementById('navbar');
   el.innerHTML = `
@@ -29,11 +52,11 @@ export function renderNavbar() {
       </button>
       <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo-tra.png" alt="TRA Soluções pro Motorista" class="navbar__logo-img navbar__logo-img--grande"></a>
       <nav class="navbar__links-desktop">
-        ${LINKS_MENU.filter((link) => !link.apenasMenuLateral)
-          .map((link, i) =>
-            // "Serviços" entra logo depois de "Home"
-            (i === 1 ? renderServicosDesktop() : '') +
-            `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`
+        ${itensEmOrdem(LINKS_MENU.filter((link) => !link.apenasMenuLateral))
+          .map((link) =>
+            link.servicos
+              ? renderServicosDesktop()
+              : `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`
           )
           .join('')}
       </nav>
@@ -49,11 +72,13 @@ export function renderNavbar() {
         <button class="menu-lateral__fechar" id="menu-lateral-fechar" aria-label="Fechar menu">✕</button>
       </div>
       <nav class="menu-lateral__links">
-        ${LINKS_MENU.map(
-          (link, i) =>
-            (i === 1 ? renderServicosLateral() : '') +
-            `<a href="${link.href}" ${link.externo ? 'target="_blank" rel="noopener"' : ''} class="menu-lateral__link">${link.label}</a>`
-        ).join('')}
+        ${itensEmOrdem(LINKS_MENU)
+          .map((link) =>
+            link.servicos
+              ? renderServicosLateral()
+              : `<a href="${link.href}" ${link.externo ? 'target="_blank" rel="noopener"' : ''} class="menu-lateral__link">${link.label}</a>`
+          )
+          .join('')}
       </nav>
     </aside>
   `;
@@ -81,7 +106,7 @@ function renderServicosDesktop() {
         Serviços <span class="navbar__dropdown-seta" aria-hidden="true">▾</span>
       </button>
       <div class="navbar__dropdown-menu" role="menu">
-        ${CATEGORIAS.map(
+        ${SERVICOS_EM_ORDEM.map(
           (cat) => `
           <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="navbar__dropdown-item" role="menuitem">
             ${cat.label}
@@ -97,7 +122,7 @@ function renderServicosLateral() {
     <details class="menu-lateral__grupo">
       <summary class="menu-lateral__grupo-titulo">Serviços</summary>
       <div class="menu-lateral__grupo-itens">
-        ${CATEGORIAS.map(
+        ${SERVICOS_EM_ORDEM.map(
           (cat) => `
           <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="menu-lateral__link menu-lateral__sublink">
             ${cat.label}
