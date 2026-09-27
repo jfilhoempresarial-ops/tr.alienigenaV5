@@ -5,7 +5,7 @@ const LINKS_MENU = [
   { href: '/noticias', label: 'Notícias' },
   { href: '/vagas', label: 'Vagas' },
   { href: '/fretes', label: 'Fretes' },
-  { href: '/eventos', label: 'Eventos' },
+  { href: '/eventos', label: 'Eventos / Calendário' },
   { href: 'https://www.aragaocaminhoes.com.br/', label: 'Vendas de Caminhões' },
   { href: '/empresas-parceiras', label: 'Empresas Parceiras' },
   { href: 'https://digital.sestsenat.org.br/cursos?area=63&page=1', label: 'Cursos' },

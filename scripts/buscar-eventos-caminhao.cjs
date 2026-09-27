@@ -43,9 +43,10 @@ const MAX_NOVOS_POR_RODADA = 8;
 const PALAVRAS_NO_TITULO = [
   'caminh', 'truck', 'carreta', 'rodoviar', 'transportador', 'transporte de carga',
   'frota', 'cegonh', 'bitrem', 'fenatran', 'transposul', 'intermodal', 'motorista profissional',
+  'sao cristovao', 'carreata', 'festa do motorista', 'dia do motorista',
 ];
 // ...ou a descrição precisa falar claramente de caminhão/caminhoneiro.
-const PALAVRAS_NA_DESCRICAO = ['caminhoneir', 'caminhao', 'caminhoes', 'truck', 'transporte rodoviario de cargas'];
+const PALAVRAS_NA_DESCRICAO = ['caminhoneir', 'caminhao', 'caminhoes', 'truck', 'transporte rodoviario de cargas', 'sao cristovao', 'bencao dos veiculos', 'motoristas'];
 
 const HEADERS = {
   'User-Agent':
@@ -130,7 +131,7 @@ function lerJson(caminho, padrao) {
 const MODELO = process.env.MODELO_IA || 'claude-sonnet-4-6';
 
 function montarPedido(hoje, titulosJaCadastrados) {
-  return `Hoje é ${hoje}. Pesquise na internet EVENTOS PRESENCIAIS NO BRASIL ligados ao universo do caminhão e do caminhoneiro que vão acontecer entre hoje e os próximos 12 meses: feiras de caminhões e de transporte rodoviário de cargas, encontros e festas de caminhoneiros, gincanas, corridas de caminhão (ex.: Copa Truck), exposições de caminhões e palestras/ações gratuitas para motoristas (ex.: SEST SENAT, PRF, postos de estrada).
+  return `Hoje é ${hoje}. Pesquise na internet EVENTOS PRESENCIAIS NO BRASIL ligados ao universo do caminhão e do caminhoneiro que vão acontecer entre hoje e os próximos 12 meses: feiras de caminhões e de transporte rodoviário de cargas, encontros e festas de caminhoneiros, festas de São Cristóvão (padroeiro dos motoristas) com missa, carreata e bênção dos veículos, festas do motorista, gincanas, corridas de caminhão (ex.: Copa Truck), exposições de caminhões e palestras/ações gratuitas para motoristas (ex.: SEST SENAT, PRF, postos de estrada).
 
 Regras:
 - Brasil inteiro, sem preferência de região.
