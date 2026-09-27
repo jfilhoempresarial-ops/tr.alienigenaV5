@@ -746,6 +746,26 @@ button {
   margin-top: 28px;
 }
 
+/* ---------------------------------------------------------------------------
+   Celular: separação entre as seções da Home, estilo portal de notícias —
+   uma faixa cinza de ponta a ponta antes de cada seção e um tracinho verde
+   ao lado do título. Assim uma informação não "gruda" na outra.
+   --------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .home-secao {
+    margin: 28px -16px 0; /* -16px = ocupa a largura toda da tela */
+    padding: 22px 16px 0;
+    border-top: 8px solid #e2e5e2;
+  }
+
+  .home-secao__titulo {
+    font-size: 20px;
+    line-height: 1.25;
+    padding-left: 10px;
+    border-left: 4px solid var(--cor-primaria);
+  }
+}
+
 .home-secao__header {
   display: flex;
   justify-content: space-between;
