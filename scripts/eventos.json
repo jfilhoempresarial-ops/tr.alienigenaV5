@@ -54,5 +54,57 @@
     ],
     "link": "",
     "imagemUrl": "/images/gta-fest-truck.jpg"
+  },
+  {
+    "titulo": "Fenatran 2026 – Salão Internacional do Transporte Rodoviário de Cargas",
+    "data": "2026-11-09",
+    "local": "São Paulo/SP",
+    "detalhes": [
+      "De 09/11 a 13/11/2026",
+      "Local: São Paulo Expo, São Paulo/SP",
+      "Maior feira de transporte rodoviário de cargas da América Latina, com mais de 700 marcas e 13 montadoras de caminhões",
+      "Fenatran Experience: test drive de caminhões em pista",
+      "Credenciamento gratuito até 07/11 pelo site oficial"
+    ],
+    "link": "https://www.fenatran.com.br/pt-br/o-evento/sobre-o-evento.html",
+    "imagemUrl": null
+  },
+  {
+    "titulo": "8º Festival do Caminhoneiro de Rio Preto",
+    "data": "2026-10-18",
+    "local": "São José do Rio Preto/SP",
+    "detalhes": [
+      "Data: 18/10/2026",
+      "Local: Recinto de Exposições de Rio Preto",
+      "Mais informações no perfil oficial do festival"
+    ],
+    "link": "https://www.instagram.com/festivaldocaminhoneiro/",
+    "imagemUrl": null
+  },
+  {
+    "titulo": "Copa Truck Petrobras – Etapa Chapecó",
+    "data": "2026-11-01",
+    "local": "Chapecó/SC",
+    "detalhes": [
+      "Data: 01/11/2026",
+      "Local: Autódromo Internacional de Chapecó",
+      "Corrida de caminhões da Copa Truck Petrobras",
+      "Datas sujeitas a alteração pela organização"
+    ],
+    "link": "https://copatruck.com.br/2025/11/14/copa-truck-petrobras-divulga-calendario-de-2026/",
+    "imagemUrl": null
+  },
+  {
+    "titulo": "Copa Truck Petrobras – Grande Final em Brasília",
+    "data": "2026-11-29",
+    "local": "Brasília/DF",
+    "detalhes": [
+      "Data: 29/11/2026",
+      "Local: Autódromo Internacional de Brasília",
+      "Encerramento da temporada 2026 da Copa Truck Petrobras",
+      "Datas sujeitas a alteração pela organização"
+    ],
+    "link": "https://copatruck.com.br/2025/11/14/copa-truck-petrobras-divulga-calendario-de-2026/",
+    "imagemUrl": null
   }
 ]

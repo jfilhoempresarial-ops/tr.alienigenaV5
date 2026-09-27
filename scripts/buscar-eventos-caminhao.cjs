@@ -1,32 +1,34 @@
 /**
  * ROBÔ DE EVENTOS DO UNIVERSO DO CAMINHÃO (roda 1x por semana)
  *
- * Procura em fontes públicas de eventos (Sympla e Eventbrite) feiras,
- * encontros, festas, palestras e gincanas ligadas a caminhão/caminhoneiro
- * no Brasil inteiro, e ACRESCENTA os que achou no scripts/eventos.json —
- * o mesmo arquivo que alimenta a página de Eventos do site.
- * Depois o workflow roda o sincronizar-eventos.cjs, que publica no site.
+ * COMO ACHA OS EVENTOS: pede para o Claude (IA da Anthropic, pela API, com
+ * busca na internet) pesquisar feiras, encontros, festas de caminhoneiros,
+ * gincanas, corridas de caminhão e palestras no Brasil inteiro, nos
+ * próximos 12 meses — do mesmo jeito que foi feito na pesquisa manual.
+ * (Antes o robô lia o Sympla e o Eventbrite direto, mas o Sympla monta a
+ * lista só no navegador e o Eventbrite bloqueia robôs — erro 405.)
+ *
+ * Depois o robô confere cada evento, tenta pegar a imagem na página
+ * oficial e ACRESCENTA no scripts/eventos.json. O workflow então roda o
+ * sincronizar-eventos.cjs, que publica no site.
+ *
+ * PRECISA: segredo ANTHROPIC_API_KEY no GitHub (Settings → Secrets and
+ * variables → Actions). Sem ele, o robô só avisa no log e não mexe em nada.
  *
  * REGRAS DE SEGURANÇA:
  *   - Nunca mexe nos eventos que VOCÊ cadastrou no eventos.json. Os eventos
  *     do robô ficam marcados com "origem": "robo-eventos".
- *   - Só entra evento com data de hoje em diante, presencial, e com
- *     caminhão/caminhoneiro/truck/transporte no nome ou na descrição.
+ *   - Só entra evento presencial, com data de hoje até 12 meses, cidade,
+ *     link de fonte e ligado a caminhão/caminhoneiro/transporte.
  *   - Não repete evento que já está no arquivo (mesmo nome e data).
- *   - No máximo MAX_NOVOS_POR_RODADA eventos novos por semana, para não
- *     encher a página de uma vez.
- *   - Eventos do robô que já passaram há mais de 30 dias são tirados do
- *     arquivo (o site já esconde evento passado no dia seguinte).
+ *   - No máximo MAX_NOVOS_POR_RODADA eventos novos por semana.
+ *   - Eventos do robô que já passaram há mais de 30 dias saem do arquivo.
  *
- * NÃO QUER UM EVENTO QUE O ROBÔ COLOCOU? Abra scripts/eventos.json no
- * GitHub, apague o bloco dele e acrescente o link dele na lista
- * "ignorar" do arquivo scripts/fontes-eventos.json — assim ele não volta.
+ * NÃO QUER UM EVENTO QUE O ROBÔ COLOCOU? Apague o bloco dele no
+ * scripts/eventos.json e cole o link dele em "ignorar" no
+ * scripts/fontes-eventos.json — assim ele não volta.
  *
- * QUER ACRESCENTAR UMA FONTE? Coloque o link da página do evento (ou de uma
- * página que liste eventos) em "paginasExtras" no scripts/fontes-eventos.json.
- *
- * Teste local (não precisa de chave, só lê a internet e mexe no JSON):
- *   node scripts/buscar-eventos-caminhao.cjs
+ * Teste local: ANTHROPIC_API_KEY=... node scripts/buscar-eventos-caminhao.cjs
  */
 
 const fs = require('fs');
@@ -36,18 +38,6 @@ const CAMINHO_EVENTOS = path.join(__dirname, 'eventos.json');
 const CAMINHO_FONTES = path.join(__dirname, 'fontes-eventos.json');
 const ORIGEM = 'robo-eventos';
 const MAX_NOVOS_POR_RODADA = 8;
-const MAX_PAGINAS_DE_EVENTO = 60; // limite de páginas de evento abertas por rodada
-
-const TERMOS_BUSCA = [
-  'caminhoneiro',
-  'caminhoneiros',
-  'caminhao',
-  'caminhoes',
-  'truck',
-  'feira do caminhao',
-  'transporte rodoviario',
-  'transporte de cargas',
-];
 
 // Pelo menos um destes precisa aparecer no NOME do evento...
 const PALAVRAS_NO_TITULO = [
@@ -135,149 +125,131 @@ function lerJson(caminho, padrao) {
 }
 
 // ---------------------------------------------------------------------------
-// 1) Descobrir links de páginas de evento
+// 1) Pedir ao Claude (API + busca na web) a lista de eventos
 // ---------------------------------------------------------------------------
-function linksSympla(html) {
-  const achados = html.match(/https?:\/\/(?:www\.)?sympla\.com\.br\/evento\/[a-z0-9-]+\/\d+/gi) || [];
-  const relativos = (html.match(/["'](\/evento\/[a-z0-9-]+\/\d+)/gi) || []).map(
-    (m) => `https://www.sympla.com.br${m.slice(1)}`
-  );
-  return [...achados, ...relativos];
+const MODELO = process.env.MODELO_IA || 'claude-sonnet-4-6';
+
+function montarPedido(hoje, titulosJaCadastrados) {
+  return `Hoje é ${hoje}. Pesquise na internet EVENTOS PRESENCIAIS NO BRASIL ligados ao universo do caminhão e do caminhoneiro que vão acontecer entre hoje e os próximos 12 meses: feiras de caminhões e de transporte rodoviário de cargas, encontros e festas de caminhoneiros, gincanas, corridas de caminhão (ex.: Copa Truck), exposições de caminhões e palestras/ações gratuitas para motoristas (ex.: SEST SENAT, PRF, postos de estrada).
+
+Regras:
+- Brasil inteiro, sem preferência de região.
+- Só eventos com DATA CONFIRMADA (dia, mês e ano) e CIDADE conhecida.
+- Não inclua eventos que já aconteceram nem eventos online.
+- Não invente nada: cada evento precisa ter vindo de um resultado da sua busca, com o link da fonte (de preferência o site ou perfil oficial do evento).
+- Não repita estes eventos, que já estão cadastrados: ${titulosJaCadastrados.join(' | ') || 'nenhum'}.
+- Até 15 eventos, os mais próximos primeiro.
+
+Responda SOMENTE com um JSON (sem texto antes ou depois, sem crases), no formato:
+[{"titulo":"...","data_inicio":"AAAA-MM-DD","data_fim":"AAAA-MM-DD ou vazio","cidade":"...","uf":"SP","local":"nome do lugar ou vazio","descricao":"uma frase sobre o evento","gratuito":true/false/null,"link":"https://..."}]
+Se não achar nada, responda [].`;
 }
 
-function linksEventbrite(html) {
-  return (html.match(/https?:\/\/www\.eventbrite\.com(?:\.br)?\/e\/[a-z0-9-]+-\d+/gi) || []).map((u) =>
-    u.replace(/^http:/, 'https:')
-  );
+async function perguntarAoClaude(pedido) {
+  const chaveApi = process.env.ANTHROPIC_API_KEY;
+  const mensagens = [{ role: 'user', content: pedido }];
+  let textoFinal = '';
+
+  // Com busca na web a resposta pode vir "pausada" (pause_turn): aí é só continuar.
+  for (let rodada = 0; rodada < 4; rodada++) {
+    const resposta = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': chaveApi,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MODELO,
+        max_tokens: 4000,
+        messages: mensagens,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
+      }),
+      signal: AbortSignal.timeout(240000),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) {
+      throw new Error(`API da Anthropic respondeu ${resposta.status}: ${dados?.error?.message || JSON.stringify(dados)}`);
+    }
+    textoFinal += (dados.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+    if (dados.stop_reason !== 'pause_turn') break;
+    mensagens.push({ role: 'assistant', content: dados.content });
+  }
+  return textoFinal;
 }
 
-async function descobrirPaginas(fontes) {
-  const paginas = new Set();
-
-  for (const termo of TERMOS_BUSCA) {
-    const tentativas = [
-      ['Sympla', `https://www.sympla.com.br/eventos?s=${encodeURIComponent(termo)}`, linksSympla],
-      ['Eventbrite', `https://www.eventbrite.com.br/d/brazil/${encodeURIComponent(termo.replace(/ /g, '-'))}/`, linksEventbrite],
-    ];
-    for (const [nome, url, extrair] of tentativas) {
-      try {
-        const links = extrair(await baixar(url));
-        links.forEach((l) => paginas.add(l.split('?')[0]));
-        console.log(`   • ${nome} "${termo}": ${links.length} links`);
-      } catch (erro) {
-        console.warn(`   • ${nome} "${termo}": falhou (${erro.message})`);
-      }
-    }
+function extrairLista(texto) {
+  const limpo = String(texto || '').replace(/```json|```/g, '');
+  const inicio = limpo.indexOf('[');
+  const fim = limpo.lastIndexOf(']');
+  if (inicio < 0 || fim <= inicio) return [];
+  try {
+    const lista = JSON.parse(limpo.slice(inicio, fim + 1));
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return [];
   }
-
-  // Páginas extras que você cadastrou no fontes-eventos.json
-  for (const url of fontes.paginasExtras || []) {
-    paginas.add(url);
-    try {
-      const html = await baixar(url);
-      [...linksSympla(html), ...linksEventbrite(html)].forEach((l) => paginas.add(l.split('?')[0]));
-    } catch {
-      // a própria página ainda vai ser lida na etapa 2
-    }
-  }
-
-  const ignorar = new Set((fontes.ignorar || []).map((u) => u.split('?')[0]));
-  return [...paginas].filter((u) => !ignorar.has(u)).slice(0, MAX_PAGINAS_DE_EVENTO);
 }
 
 // ---------------------------------------------------------------------------
-// 2) Ler os dados de cada evento (padrão schema.org "Event" que esses sites usam)
+// 2) Imagem do evento: tenta pegar a "og:image" da página oficial
 // ---------------------------------------------------------------------------
-function blocosJsonLd(html) {
-  const blocos = [];
-  const regex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let m;
-  while ((m = regex.exec(html))) {
-    try {
-      blocos.push(JSON.parse(m[1].trim()));
-    } catch {
-      // bloco com erro: ignora
-    }
-  }
-  const todos = [];
-  (function achatar(no) {
-    if (!no || typeof no !== 'object') return;
-    if (Array.isArray(no)) return no.forEach(achatar);
-    todos.push(no);
-    if (no['@graph']) achatar(no['@graph']);
-    if (no.itemListElement) achatar(no.itemListElement);
-    if (no.item) achatar(no.item);
-  })(blocos);
-  return todos;
-}
-
-function ehEvento(obj) {
-  const tipo = [].concat(obj['@type'] || []).join(' ');
-  return /Event|Festival/i.test(tipo);
-}
-
 function meta(html, prop) {
   const r = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']*)["']`, 'i');
   const r2 = new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${prop}["']`, 'i');
   return (html.match(r) || html.match(r2) || [])[1] || '';
 }
 
-function imagemDe(img) {
-  if (!img) return '';
-  if (typeof img === 'string') return img;
-  if (Array.isArray(img)) return imagemDe(img[0]);
-  return img.url || img.contentUrl || '';
+async function imagemDaPagina(url) {
+  try {
+    const html = await baixar(url);
+    const img = meta(html, 'og:image') || meta(html, 'twitter:image');
+    return /^https:\/\//.test(img) ? img.replace(/&amp;/g, '&') : '';
+  } catch {
+    return ''; // Instagram/Facebook costumam bloquear: fica sem imagem
+  }
 }
 
-function lerEvento(html, url) {
-  const ld = blocosJsonLd(html).find(ehEvento);
-  let titulo, inicio, fim, lugar, cidade, uf, imagem, descricao, gratuito, online;
+/** Confere e padroniza um evento vindo da IA. Devolve null se não servir. */
+function validarEvento(bruto, hoje, limiteFuturo) {
+  if (!bruto || typeof bruto !== 'object') return null;
+  const inicio = String(bruto.data_inicio || '').slice(0, 10);
+  let fim = String(bruto.data_fim || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(inicio)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fim) || fim <= inicio) fim = '';
+  if ((fim || inicio) < hoje || inicio > limiteFuturo) return null;
 
-  if (ld) {
-    titulo = ld.name;
-    inicio = String(ld.startDate || '').slice(0, 10);
-    fim = String(ld.endDate || '').slice(0, 10);
-    const loc = [].concat(ld.location || [])[0] || {};
-    online = /Online/i.test(String(ld.eventAttendanceMode || '')) || loc['@type'] === 'VirtualLocation';
-    const end = loc.address || {};
-    lugar = loc.name || '';
-    cidade = typeof end === 'string' ? '' : end.addressLocality || '';
-    uf = typeof end === 'string' ? '' : ufDe(end.addressRegion);
-    imagem = imagemDe(ld.image);
-    descricao = ld.description || '';
-    const ofertas = [].concat(ld.offers || []);
-    gratuito = ld.isAccessibleForFree === true || (ofertas.length > 0 && ofertas.every((o) => Number(o.price || o.lowPrice || 0) === 0));
-  }
+  const link = String(bruto.link || '').trim();
+  if (!/^https:\/\/[^\s]+$/.test(link)) return null;
 
-  // Plano B: dados das "etiquetas" da página (og:) e datas no código da página
-  titulo = titulo || meta(html, 'og:title');
-  imagem = imagem || meta(html, 'og:image');
-  descricao = descricao || meta(html, 'og:description') || meta(html, 'description');
-  if (!inicio) {
-    const d = html.match(/"(?:startDate|start_date|startsAt)"\s*:\s*"(\d{4}-\d{2}-\d{2})/);
-    inicio = d ? d[1] : '';
-  }
-  if (!fim) {
-    const d = html.match(/"(?:endDate|end_date|endsAt)"\s*:\s*"(\d{4}-\d{2}-\d{2})/);
-    fim = d ? d[1] : '';
-  }
-
-  if (!titulo || !/^\d{4}-\d{2}-\d{2}$/.test(inicio || '')) return null;
+  const cidade = limparTexto(bruto.cidade, 60);
+  if (!cidade) return null;
 
   return {
-    titulo: limparTexto(titulo, 120),
+    titulo: limparTexto(bruto.titulo, 120),
     inicio,
-    fim: /^\d{4}-\d{2}-\d{2}$/.test(fim || '') && fim > inicio ? fim : '',
-    lugar: limparTexto(lugar, 90),
-    cidade: limparTexto(cidade, 60),
-    uf,
-    imagem: /^https:\/\//.test(imagem || '') ? imagem : '',
-    descricao: limparTexto(descricao, 400),
-    gratuito: Boolean(gratuito),
-    online: Boolean(online),
-    fonte: /sympla/i.test(url) ? 'Sympla' : /eventbrite/i.test(url) ? 'Eventbrite' : 'site do evento',
-    link: url,
+    fim,
+    lugar: limparTexto(bruto.local, 90),
+    cidade,
+    uf: ufDe(bruto.uf),
+    imagem: '',
+    descricao: limparTexto(bruto.descricao, 400),
+    gratuito: bruto.gratuito === true,
+    fonte: fonteDoLink(link),
+    link,
   };
+}
+
+function fonteDoLink(link) {
+  try {
+    const host = new URL(link).hostname.replace(/^www\./, '');
+    if (host.includes('instagram')) return 'Instagram oficial';
+    if (host.includes('facebook')) return 'Facebook oficial';
+    if (host.includes('sympla')) return 'Sympla';
+    return host;
+  } catch {
+    return 'site do evento';
+  }
 }
 
 function ehDoUniversoDoCaminhao(evento) {
@@ -315,7 +287,13 @@ function chave(titulo, data) {
 
 // ---------------------------------------------------------------------------
 async function main() {
-  const fontes = lerJson(CAMINHO_FONTES, { paginasExtras: [], ignorar: [] });
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn('⚠️  Falta o segredo ANTHROPIC_API_KEY no GitHub (Settings → Secrets and variables → Actions).');
+    console.warn('   Sem ele o robô não consegue pesquisar. Nada foi alterado.');
+    return;
+  }
+
+  const fontes = lerJson(CAMINHO_FONTES, { ignorar: [] });
   const atuais = lerJson(CAMINHO_EVENTOS, null);
   if (!Array.isArray(atuais)) {
     console.error('❌ scripts/eventos.json não existe ou está com erro de sintaxe. Nada foi alterado.');
@@ -323,6 +301,7 @@ async function main() {
   }
 
   const hoje = hojeISO();
+  const limiteFuturo = somarDias(hoje, 365);
   const limiteLimpeza = somarDias(hoje, -30);
 
   // Limpa só eventos DO ROBÔ que já passaram há mais de 30 dias
@@ -331,32 +310,46 @@ async function main() {
 
   const jaExistem = new Set(mantidos.map((e) => chave(e.titulo, e.data)));
   const linksExistentes = new Set(mantidos.map((e) => e.link).filter(Boolean));
+  const ignorar = new Set((fontes.ignorar || []).map((u) => String(u).split('?')[0]));
+  const titulosFuturos = mantidos.filter((e) => String(e.data) >= hoje).map((e) => e.titulo);
 
-  console.log('🔎 Procurando eventos...');
-  const paginas = (await descobrirPaginas(fontes)).filter((u) => !linksExistentes.has(u));
-  console.log(`📄 ${paginas.length} páginas de evento para conferir.`);
+  console.log(`🔎 Pedindo ao Claude (${MODELO}) para pesquisar eventos na internet...`);
+  const texto = await perguntarAoClaude(montarPedido(hoje, titulosFuturos));
+  const lista = extrairLista(texto);
+  console.log(`📄 A pesquisa trouxe ${lista.length} evento(s). Conferindo...`);
 
-  const encontrados = [];
-  for (const url of paginas) {
-    try {
-      const evento = lerEvento(await baixar(url), url);
-      if (!evento) continue;
-      if (evento.online) continue;
-      if ((evento.fim || evento.inicio) < hoje) continue;
-      if (!ehDoUniversoDoCaminhao(evento)) continue;
-      if (jaExistem.has(chave(evento.titulo, evento.inicio))) continue;
-      jaExistem.add(chave(evento.titulo, evento.inicio));
-      encontrados.push(evento);
-      console.log(`   ✔ ${evento.titulo} — ${dataBR(evento.inicio)} — ${evento.cidade}/${evento.uf}`);
-    } catch (erro) {
-      console.warn(`   • ${url}: falhou (${erro.message})`);
+  const aceitos = [];
+  for (const bruto of lista) {
+    const evento = validarEvento(bruto, hoje, limiteFuturo);
+    const nome = limparTexto(bruto?.titulo, 80) || '(sem nome)';
+    if (!evento) {
+      console.log(`   ✗ ${nome}: sem data válida, cidade ou link — ignorado`);
+      continue;
     }
+    if (ignorar.has(evento.link.split('?')[0]) || linksExistentes.has(evento.link)) {
+      console.log(`   ✗ ${nome}: já cadastrado ou na lista "ignorar"`);
+      continue;
+    }
+    if (!ehDoUniversoDoCaminhao(evento)) {
+      console.log(`   ✗ ${nome}: não parece ser do universo do caminhão`);
+      continue;
+    }
+    if (jaExistem.has(chave(evento.titulo, evento.inicio))) {
+      console.log(`   ✗ ${nome}: já está no site`);
+      continue;
+    }
+    jaExistem.add(chave(evento.titulo, evento.inicio));
+    aceitos.push(evento);
   }
 
-  const novos = encontrados
-    .sort((a, b) => a.inicio.localeCompare(b.inicio))
-    .slice(0, MAX_NOVOS_POR_RODADA)
-    .map(paraEventosJson);
+  const escolhidos = aceitos.sort((a, b) => a.inicio.localeCompare(b.inicio)).slice(0, MAX_NOVOS_POR_RODADA);
+  for (const evento of escolhidos) {
+    evento.imagem = await imagemDaPagina(evento.link);
+    console.log(
+      `   ✔ ${evento.titulo} — ${dataBR(evento.inicio)} — ${evento.cidade}/${evento.uf}${evento.imagem ? ' (com imagem)' : ' (sem imagem)'}`
+    );
+  }
+  const novos = escolhidos.map(paraEventosJson);
 
   if (novos.length === 0 && removidos === 0) {
     console.log('✅ Nenhum evento novo esta semana. Nada foi alterado.');

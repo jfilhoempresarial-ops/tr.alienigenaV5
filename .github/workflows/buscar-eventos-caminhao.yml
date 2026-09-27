@@ -1,8 +1,9 @@
 name: Buscar eventos do universo do caminhão (semanal)
 
-# Toda segunda-feira procura feiras, encontros, festas e palestras ligadas a
-# caminhão/caminhoneiro no Brasil (Sympla e Eventbrite), acrescenta no
-# scripts/eventos.json e já publica na página de Eventos do site.
+# Toda segunda-feira pede ao Claude (API da Anthropic, com busca na internet)
+# feiras, encontros, festas, corridas e palestras ligadas a caminhão/caminhoneiro
+# no Brasil, acrescenta no scripts/eventos.json e já publica na página de Eventos.
+# Precisa do segredo ANTHROPIC_API_KEY (Settings → Secrets and variables → Actions).
 on:
   schedule:
     - cron: '0 11 * * 1'  # segunda-feira 08:00 no horário de Brasília (UTC-3)
@@ -27,6 +28,8 @@ jobs:
         run: npm ci
 
       - name: Procurar eventos
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/buscar-eventos-caminhao.cjs
 
       - name: Salvar eventos.json no repositório (se mudou)

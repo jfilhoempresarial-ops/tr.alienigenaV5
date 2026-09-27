@@ -1,5 +1,4 @@
 {
-  "_comoUsar": "paginasExtras: links de páginas de eventos (ou de sites que listam eventos) para o robô conferir toda semana. ignorar: links de eventos que o robô NÃO deve colocar no site.",
-  "paginasExtras": [],
+  "_comoUsar": "ignorar: links de eventos que o robô NÃO deve colocar no site (cole o link do evento aqui depois de apagá-lo do eventos.json).",
   "ignorar": []
 }
