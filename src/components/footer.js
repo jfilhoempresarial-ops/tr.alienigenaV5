@@ -1,4 +1,4 @@
-import { cadastrarNewsletter } from '../services/newsletter.service.js';
+import { cadastrarNewsletter, avisarNovaInscricao } from '../services/newsletter.service.js';
 
 const NUMERO_WHATSAPP = '5588981979432';
 const MENSAGEM_WHATSAPP = encodeURIComponent('Olá, eu vim do site da TRA, você pode me ajudar?');
@@ -107,6 +107,9 @@ function configurarNewsletter(el) {
 
     try {
       await cadastrarNewsletter(nome, email);
+      // Aviso por e-mail pro Júlio. Roda "por fora": se falhar, a inscrição
+      // continua valendo e a pessoa vê a mensagem de sucesso normalmente.
+      avisarNovaInscricao(nome, email).catch((erro) => console.error(erro));
       form.reset();
       mensagem.textContent = '✅ Inscrição feita com sucesso!';
       mensagem.className = 'footer__newsletter-mensagem footer__newsletter-mensagem--sucesso';
