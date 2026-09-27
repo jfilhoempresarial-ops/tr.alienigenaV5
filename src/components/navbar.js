@@ -84,7 +84,7 @@ function renderServicosDesktop() {
         ${CATEGORIAS.map(
           (cat) => `
           <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="navbar__dropdown-item" role="menuitem">
-            <span class="navbar__dropdown-icone" aria-hidden="true">${cat.icone}</span>${cat.label}
+            ${cat.label}
           </a>`
         ).join('')}
       </div>
@@ -100,7 +100,7 @@ function renderServicosLateral() {
         ${CATEGORIAS.map(
           (cat) => `
           <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="menu-lateral__link menu-lateral__sublink">
-            <span aria-hidden="true">${cat.icone}</span> ${cat.label}
+            ${cat.label}
           </a>`
         ).join('')}
       </div>

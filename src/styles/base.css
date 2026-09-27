@@ -2617,6 +2617,7 @@ button {
   z-index: 201;
   display: flex;
   flex-direction: column;
+  height: 100dvh;
 }
 
 .menu-lateral--aberto {
@@ -2624,6 +2625,7 @@ button {
 }
 
 .menu-lateral__header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2649,6 +2651,14 @@ button {
   display: flex;
   flex-direction: column;
   padding: 8px 0;
+  /* Rolagem própria: com "Serviços" aberto a lista passa da tela e
+     precisa dar para descer/subir no celular */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .menu-lateral__link {
@@ -2703,6 +2713,20 @@ button {
   padding: 11px 20px 11px 32px;
   font-size: 14px;
   border-bottom: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Bolinha no lugar dos emojis */
+.menu-lateral__sublink::before,
+.navbar__dropdown-item::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6fcf8f;
+  flex-shrink: 0;
 }
 
 .mini-card__avaliacao {
@@ -3103,16 +3127,16 @@ button {
     }
   }
 
+  .navbar__dropdown-item::before {
+    background: var(--cor-primaria);
+  }
+
   .navbar__dropdown-item:hover,
   .navbar__dropdown-item:focus-visible {
     background: #eef7ee;
     color: var(--cor-primaria);
   }
 
-  .navbar__dropdown-icone {
-    width: 22px;
-    text-align: center;
-  }
 
   .navbar__acoes {
     margin-left: auto;
