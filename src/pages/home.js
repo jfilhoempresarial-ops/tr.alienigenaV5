@@ -290,7 +290,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-vagas-destaque">💼 Vagas em destaque</h2>
+          <h2 class="home-secao__titulo" id="titulo-vagas-destaque">Vagas em destaque</h2>
           <a href="/vagas" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-vagas">
@@ -302,7 +302,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-fretes-resumo">📦 Fretes disponíveis</h2>
+          <h2 class="home-secao__titulo" id="titulo-fretes-resumo">Fretes disponíveis</h2>
           <a href="/fretes" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div class="home-secao__lista" id="lista-fretes">
@@ -314,14 +314,14 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎙️ Programa A Voz do Motorista</h2>
+          <h2 class="home-secao__titulo">Programa A Voz do Motorista</h2>
         </div>
         <div id="voz-motorista"></div>
       </div>
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">📰 Fique por dentro</h2>
+          <h2 class="home-secao__titulo">Fique por dentro</h2>
           <a href="/noticias" class="home-secao__ver-todas">Ver todas</a>
         </div>
         <div id="manchetes-home" class="manchetes-home">
@@ -347,7 +347,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo" id="titulo-eventos-resumo">🎪 Eventos para caminhoneiro</h2>
+          <h2 class="home-secao__titulo" id="titulo-eventos-resumo">Eventos para caminhoneiro</h2>
         </div>
         <div id="eventos-resumo">
           <p class="home-secao__vazio">Carregando...</p>
@@ -360,7 +360,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">🎶 Playlist do Motorista</h2>
+          <h2 class="home-secao__titulo">Playlist do Motorista</h2>
         </div>
         <div id="playlist-motorista">
           <p class="home-secao__vazio">Carregando...</p>
@@ -369,7 +369,7 @@ export function renderHome(container) {
 
       <div class="home-secao">
         <div class="home-secao__header">
-          <h2 class="home-secao__titulo">💬 Últimas avaliações</h2>
+          <h2 class="home-secao__titulo">Últimas avaliações</h2>
         </div>
         <div class="home-secao__lista" id="lista-ultimas-avaliacoes">
           <p class="home-secao__vazio">Carregando...</p>
@@ -520,7 +520,7 @@ async function carregarManchetes(container) {
         <div class="manchete-card__conteudo">
           <span class="manchete-card__tag">#${TAG_CATEGORIA[n.categoria] || 'Geral'}</span>
           <p class="manchete-card__titulo">${n.titulo}</p>
-          <p class="manchete-card__data">📅 ${formatarDataBR(n.data)}${n.autor ? ` · Por ${n.autor}` : ''}</p>
+          <p class="manchete-card__data">${formatarDataBR(n.data)}${n.autor ? ` · Por ${n.autor}` : ''}</p>
         </div>
       </a>
     `;
@@ -593,7 +593,7 @@ async function carregarAniversariantes(container) {
     alvo.innerHTML = `
       <div class="aniversario-card">
         <div class="aniversario-card__header-linha">
-          <h3 class="aniversario-card__titulo">📅 Motoristas da TRA aniversariantes</h3>
+          <h3 class="aniversario-card__titulo">Motoristas da TRA aniversariantes</h3>
           <span class="aniversario-card__contador">${semana.length}</span>
         </div>
         <div class="aniversario-card__lista">
@@ -633,12 +633,12 @@ async function carregarEventosResumo(container) {
 
     // Sem evento cadastrado: mantém o espaço publicitário (fallback de sempre).
     if (eventos.length === 0) {
-      titulo.innerHTML = '🎪 Eventos para caminhoneiro';
+      titulo.innerHTML = 'Eventos para caminhoneiro';
       renderCarrosselBanners('eventos-resumo', 'eventos');
       return;
     }
 
-    titulo.innerHTML = `🎪 <span class="resultados__contador">${eventos.length} evento${eventos.length !== 1 ? 's' : ''} próximo${eventos.length !== 1 ? 's' : ''}</span>`;
+    titulo.innerHTML = `<span class="resultados__contador">${eventos.length} evento${eventos.length !== 1 ? 's' : ''} próximo${eventos.length !== 1 ? 's' : ''}</span>`;
 
     // Uma cidade só aparece uma vez, mesmo com mais de um evento nela.
     const cidades = [...new Set(eventos.map((e) => e.local).filter(Boolean))];
@@ -649,7 +649,7 @@ async function carregarEventosResumo(container) {
           .map(
             (cidade) => `
           <a href="/eventos" class="frete-estado-card">
-            <p class="frete-estado-card__titulo">📍 ${cidade}</p>
+            <p class="frete-estado-card__titulo">${cidade}</p>
           </a>
         `
           )
@@ -781,7 +781,7 @@ function renderCardNovaEmpresa(empresa, data) {
       <span class="nova-empresa-card__icone">${principal ? principal.icone : '🏪'}</span>
       <strong class="nova-empresa-card__nome">${escaparHtml(empresa.nome)}</strong>
       ${rotulos ? `<span class="nova-empresa-card__categoria">${escaparHtml(rotulos)}</span>` : ''}
-      ${local ? `<span class="nova-empresa-card__local">📍 ${escaparHtml(local)}</span>` : ''}
+      ${local ? `<span class="nova-empresa-card__local">${escaparHtml(local)}</span>` : ''}
       <span class="nova-empresa-card__data">${textoQuandoCadastrou(data)}</span>
     </a>
   `;
@@ -841,8 +841,8 @@ async function carregarVagasDestaque(container) {
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
     titulo.innerHTML = todosItens.length
-      ? `💼 <span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje</span>`
-      : '💼 Vagas em destaque';
+      ? `<span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje</span>`
+      : 'Vagas em destaque';
 
     const itens = [...todosItens]
       .sort((a, b) => (b.quantidade || 1) - (a.quantidade || 1))
@@ -863,7 +863,7 @@ function renderMiniCardVaga(vaga) {
   return `
     <div class="mini-card">
       <p class="mini-card__titulo">${vaga.cargo}</p>
-      <p class="mini-card__sub">📍 ${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</p>
+      <p class="mini-card__sub">${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</p>
       <a href="/vagas" class="mini-card__acao">Ver detalhes</a>
     </div>
   `;
@@ -980,7 +980,7 @@ async function carregarPlaylist(container) {
           <span></span><span></span><span></span><span></span>
         </span>
         <span class="playlist-cta-pendrive__texto">
-          <strong>🎵 Pendrive Atualizado</strong>
+          <strong>Pendrive Atualizado</strong>
           Leve 5 mil músicas com você na estrada
         </span>
         <span class="playlist-cta-pendrive__seta">›</span>
@@ -1020,8 +1020,8 @@ async function carregarFretesResumo(container) {
     const fretes = await comTimeout(buscarTodosFretes());
 
     titulo.innerHTML = fretes.length
-      ? `📦 <span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</span>`
-      : '📦 Fretes disponíveis';
+      ? `<span class="resultados__contador">${fretes.length} frete${fretes.length !== 1 ? 's' : ''} disponíve${fretes.length !== 1 ? 'is' : 'l'}</span>`
+      : 'Fretes disponíveis';
 
     if (fretes.length === 0) {
       alvo.innerHTML = `<p class="home-secao__vazio">Nenhum frete disponível no momento.</p>`;
@@ -1046,7 +1046,7 @@ async function carregarFretesResumo(container) {
         const nomeEstado = NOME_ESTADO[uf] || uf;
         return `
           <a href="/fretes?estado=${uf}" class="frete-estado-card">
-            <p class="frete-estado-card__titulo">🚛 Saindo de ${nomeEstado}</p>
+            <p class="frete-estado-card__titulo">Saindo de ${nomeEstado}</p>
             <p class="frete-estado-card__sub">${qtd} frete${qtd !== 1 ? 's' : ''}</p>
           </a>
         `;
