@@ -607,7 +607,7 @@ async function carregarAniversariantes(container) {
                     ${grupo.pessoas
                       .map((p) => {
                         const ehHoje = p.dia === diaHoje && p.mes === mesHoje;
-                        return `<li class="${ehHoje ? 'aniversario-card__item--hoje' : ''}">${ehHoje ? '🎉 ' : ''}${nomeCurto(p.nome)}</li>`;
+                        return `<li class="${ehHoje ? 'aniversario-card__item--hoje' : ''}">${ehHoje ? '<span class="aniversario-card__emoji" aria-hidden="true">🎂</span>' : ''}${nomeCurto(p.nome)}</li>`;
                       })
                       .join('')}
                   </ul>

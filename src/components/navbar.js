@@ -19,8 +19,8 @@ const LINKS_MENU = [
 ];
 
 // ---------------------------------------------------------------------------
-// Ordem do menu: "Home" sempre primeiro; o resto (incluindo "Serviços") em
-// ordem alfabética. Não importa a ordem em que os itens estão escritos acima.
+// Ordem do menu: "Home", depois "Serviços", e o resto em ordem alfabética.
+// Não importa a ordem em que os itens estão escritos acima.
 // ---------------------------------------------------------------------------
 const ITEM_SERVICOS = { servicos: true, label: 'Serviços' };
 
@@ -30,8 +30,8 @@ function porNome(a, b) {
 
 function itensEmOrdem(lista) {
   const home = lista.filter((item) => item.href === '/');
-  const resto = [...lista.filter((item) => item.href !== '/'), ITEM_SERVICOS].sort(porNome);
-  return [...home, ...resto];
+  const resto = lista.filter((item) => item.href !== '/').sort(porNome);
+  return [...home, ITEM_SERVICOS, ...resto];
 }
 
 // Serviços em ordem alfabética, com "Outros Serviços" sempre no fim.

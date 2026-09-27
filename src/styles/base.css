@@ -2558,7 +2558,18 @@ button {
   background: #fff0c2;
   padding: 6px 8px;
   border-radius: 6px;
-  margin: 2px -8px;
+  /* Sem margem negativa: antes o item saía 8px pra fora da lista
+     (que tem rolagem) e o emoji ficava cortado no celular */
+  margin: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aniversario-card__emoji {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .footer__coluna--newsletter {
@@ -3062,8 +3073,8 @@ button {
     display: none;
     position: absolute;
     top: calc(100% + 14px);
-    /* "Serviços" fica perto do fim da barra: a caixa abre para a esquerda */
-    right: -16px;
+    /* "Serviços" fica logo depois de "Home": a caixa abre para a direita */
+    left: -16px;
     z-index: 1000;
     min-width: 440px;
     grid-template-columns: 1fr 1fr;
