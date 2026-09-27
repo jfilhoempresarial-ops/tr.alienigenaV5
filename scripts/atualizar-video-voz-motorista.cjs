@@ -9,7 +9,11 @@
  *  1. Descobre o ID do canal a partir de um vídeo que já sabemos que é do
  *     canal (VIDEO_REFERENCIA). O ID fica guardado no Firestore depois da
  *     primeira vez, então essa etapa só roda uma vez.
- *  2. Lê o "feed" público do canal (lista dos 15 vídeos mais recentes).
+ *  2. Pega a lista dos vídeos mais recentes do canal. Tenta, nesta ordem:
+ *       a) o "feed" público do canal;
+ *       b) o feed da playlist de uploads do canal;
+ *       c) a própria página de vídeos (e de transmissões) do canal.
+ *     O feed do YouTube às vezes sai do ar (erro 404) — por isso os planos B e C.
  *  3. Fica só com os vídeos do programa (título com "Voz do Motorista"),
  *     dando preferência aos "Programa Completo" — assim Shorts e cortes não
  *     tomam o lugar do programa.
@@ -104,6 +108,74 @@ function lerFeed(xml) {
   return videos.sort((a, b) => String(b.publicado).localeCompare(String(a.publicado)));
 }
 
+/**
+ * Plano C: lê a página "Vídeos" (ou "Ao vivo") do canal e tira a lista do
+ * JSON que o YouTube coloca dentro dela (ytInitialData). A página já vem com
+ * o mais novo primeiro.
+ */
+function lerPaginaDoCanal(html) {
+  const achado = html.match(/ytInitialData\s*=\s*(\{[\s\S]*?\});\s*<\/script>/);
+  if (!achado) return [];
+  let dados;
+  try {
+    dados = JSON.parse(achado[1]);
+  } catch {
+    return [];
+  }
+
+  const textoDoTitulo = (t) =>
+    !t ? '' : t.simpleText || t.content || (Array.isArray(t.runs) ? t.runs.map((r) => r.text).join('') : '');
+
+  const videos = [];
+  const vistos = new Set();
+  (function andar(no) {
+    if (!no || typeof no !== 'object') return;
+    if (Array.isArray(no)) return no.forEach(andar);
+
+    // Formato antigo: videoRenderer { videoId, title }
+    if (typeof no.videoId === 'string' && no.title && !vistos.has(no.videoId)) {
+      const titulo = textoDoTitulo(no.title);
+      if (titulo) {
+        vistos.add(no.videoId);
+        videos.push({ videoId: no.videoId, titulo, publicado: '' });
+      }
+    }
+    // Formato novo: lockupViewModel { contentId, metadata.lockupMetadataViewModel.title }
+    if (typeof no.contentId === 'string' && no.metadata && !vistos.has(no.contentId)) {
+      const titulo = textoDoTitulo(no.metadata.lockupMetadataViewModel?.title);
+      if (titulo && /^[\w-]{11}$/.test(no.contentId)) {
+        vistos.add(no.contentId);
+        videos.push({ videoId: no.contentId, titulo, publicado: '' });
+      }
+    }
+    Object.values(no).forEach(andar);
+  })(dados);
+  return videos;
+}
+
+async function buscarVideosDoCanal(canalId) {
+  const tentativas = [
+    ['feed do canal', `https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`, lerFeed],
+    ['feed da playlist de uploads', `https://www.youtube.com/feeds/videos.xml?playlist_id=UU${canalId.slice(2)}`, lerFeed],
+    ['página de vídeos do canal', `https://www.youtube.com/channel/${canalId}/videos`, lerPaginaDoCanal],
+    ['página de transmissões do canal', `https://www.youtube.com/channel/${canalId}/streams`, lerPaginaDoCanal],
+  ];
+
+  const encontrados = [];
+  for (const [nome, url, ler] of tentativas) {
+    try {
+      const videos = ler(await baixarTexto(url));
+      console.log(`   • ${nome}: ${videos.length} vídeos`);
+      encontrados.push(...videos);
+      // Achou vídeo do programa? Não precisa tentar os outros caminhos.
+      if (filtrarPrograma(videos).length) return videos;
+    } catch (erro) {
+      console.warn(`   • ${nome}: falhou (${erro.message})`);
+    }
+  }
+  return encontrados;
+}
+
 /** Fica só com os vídeos do programa. Prefere "Programa Completo". */
 function filtrarPrograma(videos) {
   const doPrograma = videos.filter((v) => normalizar(v.titulo).includes('voz do motorista'));
@@ -118,18 +190,17 @@ async function main() {
   const docSnap = await ref.get();
 
   const canalId = await descobrirCanal(docSnap);
+  // Guarda o ID do canal logo de cara, para não precisar descobrir de novo
+  await ref.set({ canalId }, { merge: true });
 
   console.log('🌐 Lendo os vídeos mais recentes do canal...');
-  const xml = await baixarTexto(`https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`);
-  const todos = lerFeed(xml);
-  console.log(`📦 ${todos.length} vídeos recentes no canal.`);
+  const todos = await buscarVideosDoCanal(canalId);
+  console.log(`📦 ${todos.length} vídeos recentes encontrados.`);
 
   const programa = filtrarPrograma(todos).slice(0, QTD_VIDEOS);
   if (!programa.length) {
-    console.warn('⚠️  Nenhum vídeo do programa encontrado. Nada foi alterado no site.');
-    // Guarda o ID do canal mesmo assim, para não precisar descobrir de novo
-    await ref.set({ canalId }, { merge: true });
-    return;
+    // Deixa o workflow vermelho para você perceber, mas NÃO mexe no site
+    throw new Error('Nenhum vídeo do programa encontrado. Nada foi alterado no site.');
   }
 
   const anterior = docSnap.exists ? (docSnap.data().videos || [])[0]?.videoId : '';
