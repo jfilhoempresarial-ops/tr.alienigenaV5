@@ -1,0 +1,50 @@
+name: Buscar eventos do universo do caminhão (semanal)
+
+# Toda segunda-feira procura feiras, encontros, festas e palestras ligadas a
+# caminhão/caminhoneiro no Brasil (Sympla e Eventbrite), acrescenta no
+# scripts/eventos.json e já publica na página de Eventos do site.
+on:
+  schedule:
+    - cron: '0 11 * * 1'  # segunda-feira 08:00 no horário de Brasília (UTC-3)
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions"
+
+permissions:
+  contents: write   # necessário para o robô salvar o eventos.json no repositório
+
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Procurar eventos
+        run: node scripts/buscar-eventos-caminhao.cjs
+
+      - name: Salvar eventos.json no repositório (se mudou)
+        run: |
+          if git diff --quiet -- scripts/eventos.json; then
+            echo "Nenhuma mudança no eventos.json."
+          else
+            git config user.name "robo-eventos-tra"
+            git config user.email "robo-eventos-tra@users.noreply.github.com"
+            git add scripts/eventos.json
+            git commit -m "Robô de eventos: atualiza eventos do universo do caminhão"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      # O push feito pelo robô não dispara o workflow "Atualizar eventos"
+      # (regra do GitHub), então a publicação no site é feita aqui mesmo.
+      - name: Publicar eventos no site
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/sincronizar-eventos.cjs
