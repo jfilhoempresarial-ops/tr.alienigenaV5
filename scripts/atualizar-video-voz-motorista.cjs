@@ -104,11 +104,138 @@ function lerFeed(xml) {
   return videos.sort((a, b) => String(b.publicado).localeCompare(String(a.publicado)));
 }
 
+/** Lê o ytInitialData da página do canal e devolve [{ videoId, titulo }], na ordem da página. */
+function lerPaginaDoCanal(html) {
+  const marcadores = ['var ytInitialData =', 'window["ytInitialData"] =', 'ytInitialData ='];
+  let inicioJson = -1;
+
+  for (const marcador of marcadores) {
+    const pos = html.indexOf(marcador);
+    if (pos === -1) continue;
+    inicioJson = html.indexOf('{', pos + marcador.length);
+    if (inicioJson !== -1) break;
+  }
+
+  if (inicioJson === -1) throw new Error('ytInitialData não encontrado na página do canal.');
+
+  let nivel = 0;
+  let emString = false;
+  let escapado = false;
+  let fimJson = -1;
+
+  for (let i = inicioJson; i < html.length; i += 1) {
+    const char = html[i];
+
+    if (emString) {
+      if (escapado) {
+        escapado = false;
+      } else if (char === '\\') {
+        escapado = true;
+      } else if (char === '"') {
+        emString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      emString = true;
+    } else if (char === '{') {
+      nivel += 1;
+    } else if (char === '}') {
+      nivel -= 1;
+      if (nivel === 0) {
+        fimJson = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (fimJson === -1) throw new Error('ytInitialData incompleto na página do canal.');
+
+  const dados = JSON.parse(html.slice(inicioJson, fimJson));
+  const videos = [];
+  const vistos = new Set();
+
+  function adicionar(videoId, titulo) {
+    if (!videoId || !titulo || vistos.has(videoId)) return;
+    vistos.add(videoId);
+    videos.push({ videoId, titulo: String(titulo).trim(), publicado: '' });
+  }
+
+  function percorrer(valor) {
+    if (!valor || typeof valor !== 'object') return;
+
+    if (valor.videoRenderer) {
+      const video = valor.videoRenderer;
+      const tituloRuns = Array.isArray(video.title?.runs)
+        ? video.title.runs.map((item) => item.text || '').join('')
+        : '';
+      adicionar(video.videoId, tituloRuns || video.title?.simpleText || '');
+    }
+
+    if (valor.lockupViewModel) {
+      const video = valor.lockupViewModel;
+      const videoId = /^[\w-]{11}$/.test(video.contentId || '') ? video.contentId : '';
+      const titulo = video.metadata?.lockupMetadataViewModel?.title?.content || '';
+      adicionar(videoId, titulo);
+    }
+
+    if (Array.isArray(valor)) {
+      for (const item of valor) percorrer(item);
+      return;
+    }
+
+    for (const item of Object.values(valor)) percorrer(item);
+  }
+
+  percorrer(dados);
+  return videos;
+}
+
 /** Fica só com os vídeos do programa. Prefere "Programa Completo". */
 function filtrarPrograma(videos) {
   const doPrograma = videos.filter((v) => normalizar(v.titulo).includes('voz do motorista'));
   const completos = doPrograma.filter((v) => normalizar(v.titulo).includes('programa completo'));
   return completos.length ? completos : doPrograma.filter((v) => normalizar(v.titulo).includes('programa'));
+}
+
+async function buscarVideosDoCanal(canalId) {
+  const playlistUploads = `UU${canalId.replace(/^UC/, '')}`;
+  const caminhos = [
+    {
+      nome: 'feed do canal',
+      buscar: async () =>
+        lerFeed(await baixarTexto(`https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`)),
+    },
+    {
+      nome: 'feed da playlist de uploads',
+      buscar: async () =>
+        lerFeed(await baixarTexto(`https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistUploads}`)),
+    },
+    {
+      nome: 'página de vídeos',
+      buscar: async () =>
+        lerPaginaDoCanal(await baixarTexto(`https://www.youtube.com/channel/${canalId}/videos`)),
+    },
+    {
+      nome: 'página de transmissões',
+      buscar: async () =>
+        lerPaginaDoCanal(await baixarTexto(`https://www.youtube.com/channel/${canalId}/streams`)),
+    },
+  ];
+
+  for (const caminho of caminhos) {
+    try {
+      const videos = await caminho.buscar();
+      const programa = filtrarPrograma(videos);
+      console.log(`📦 ${caminho.nome}: ${videos.length} vídeos encontrados; ${programa.length} do programa.`);
+      if (programa.length) return videos;
+    } catch (erro) {
+      console.warn(`⚠️  ${caminho.nome} falhou: ${erro.message}`);
+    }
+  }
+
+  throw new Error('Nenhum caminho encontrou vídeo do programa A Voz do Motorista.');
 }
 
 async function main() {
@@ -118,18 +245,13 @@ async function main() {
   const docSnap = await ref.get();
 
   const canalId = await descobrirCanal(docSnap);
+  await ref.set({ canalId }, { merge: true });
 
   console.log('🌐 Lendo os vídeos mais recentes do canal...');
-  const xml = await baixarTexto(`https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`);
-  const todos = lerFeed(xml);
-  console.log(`📦 ${todos.length} vídeos recentes no canal.`);
-
+  const todos = await buscarVideosDoCanal(canalId);
   const programa = filtrarPrograma(todos).slice(0, QTD_VIDEOS);
   if (!programa.length) {
-    console.warn('⚠️  Nenhum vídeo do programa encontrado. Nada foi alterado no site.');
-    // Guarda o ID do canal mesmo assim, para não precisar descobrir de novo
-    await ref.set({ canalId }, { merge: true });
-    return;
+    throw new Error('Nenhum vídeo do programa encontrado. A lista salva foi mantida.');
   }
 
   const anterior = docSnap.exists ? (docSnap.data().videos || [])[0]?.videoId : '';
