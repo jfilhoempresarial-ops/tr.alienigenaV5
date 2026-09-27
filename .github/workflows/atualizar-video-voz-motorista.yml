@@ -1,0 +1,22 @@
+name: Atualizar vídeo do programa A Voz do Motorista
+on:
+  schedule:
+    - cron: '0 1 * * 0'   # sábado 22:00 no horário de Brasília (= domingo 01:00 UTC)
+    - cron: '0 15 * * 0'  # domingo 12:00 no horário de Brasília (UTC-3)
+  workflow_dispatch: {}   # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependências
+        run: npm ci
+      - name: Buscar vídeo mais recente no YouTube
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/atualizar-video-voz-motorista.cjs

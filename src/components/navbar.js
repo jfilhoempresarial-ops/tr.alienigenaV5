@@ -1,3 +1,5 @@
+import { CATEGORIAS } from '../pages/home.js';
+
 const LINKS_MENU = [
   { href: '/', label: 'Home' },
   { href: '/noticias', label: 'Notícias' },
@@ -28,7 +30,11 @@ export function renderNavbar() {
       <a href="/" class="navbar__logo navbar__logo--centro"><img src="/images/logo-tra.png" alt="TRA Soluções pro Motorista" class="navbar__logo-img navbar__logo-img--grande"></a>
       <nav class="navbar__links-desktop">
         ${LINKS_MENU.filter((link) => !link.apenasMenuLateral)
-          .map((link) => `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`)
+          .map((link, i) =>
+            // "Serviços" entra logo depois de "Home"
+            (i === 1 ? renderServicosDesktop() : '') +
+            `<a href="${link.href}" class="navbar__link-desktop">${link.label}</a>`
+          )
           .join('')}
       </nav>
       <div class="navbar__acoes">
@@ -44,7 +50,8 @@ export function renderNavbar() {
       </div>
       <nav class="menu-lateral__links">
         ${LINKS_MENU.map(
-          (link) =>
+          (link, i) =>
+            (i === 1 ? renderServicosLateral() : '') +
             `<a href="${link.href}" ${link.externo ? 'target="_blank" rel="noopener"' : ''} class="menu-lateral__link">${link.label}</a>`
         ).join('')}
       </nav>
@@ -52,6 +59,78 @@ export function renderNavbar() {
   `;
 
   configurarMenuLateral(el);
+  configurarServicosDesktop(el);
+}
+
+// ---------------------------------------------------------------------------
+// Menu "Serviços": as mesmas categorias dos botões da Home (lista CATEGORIAS
+// do home.js). Categoria nova nos botões aparece aqui sozinha.
+// ---------------------------------------------------------------------------
+function linkDaCategoria(cat) {
+  return cat.externo ?? cat.rotaInterna ?? `/${cat.id}`;
+}
+
+function atributosExterno(cat) {
+  return cat.externo ? 'target="_blank" rel="noopener"' : '';
+}
+
+function renderServicosDesktop() {
+  return `
+    <div class="navbar__dropdown" id="navbar-servicos">
+      <button type="button" class="navbar__link-desktop navbar__dropdown-botao" aria-expanded="false" aria-haspopup="true">
+        Serviços <span class="navbar__dropdown-seta" aria-hidden="true">▾</span>
+      </button>
+      <div class="navbar__dropdown-menu" role="menu">
+        ${CATEGORIAS.map(
+          (cat) => `
+          <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="navbar__dropdown-item" role="menuitem">
+            <span class="navbar__dropdown-icone" aria-hidden="true">${cat.icone}</span>${cat.label}
+          </a>`
+        ).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderServicosLateral() {
+  return `
+    <details class="menu-lateral__grupo">
+      <summary class="menu-lateral__grupo-titulo">Serviços</summary>
+      <div class="menu-lateral__grupo-itens">
+        ${CATEGORIAS.map(
+          (cat) => `
+          <a href="${linkDaCategoria(cat)}" ${atributosExterno(cat)} class="menu-lateral__link menu-lateral__sublink">
+            <span aria-hidden="true">${cat.icone}</span> ${cat.label}
+          </a>`
+        ).join('')}
+      </div>
+    </details>
+  `;
+}
+
+function configurarServicosDesktop(el) {
+  const dropdown = el.querySelector('#navbar-servicos');
+  if (!dropdown) return;
+  const botao = dropdown.querySelector('.navbar__dropdown-botao');
+
+  function abrir(aberto) {
+    dropdown.classList.toggle('navbar__dropdown--aberto', aberto);
+    botao.setAttribute('aria-expanded', String(aberto));
+  }
+
+  botao.addEventListener('click', (e) => {
+    e.stopPropagation();
+    abrir(!dropdown.classList.contains('navbar__dropdown--aberto'));
+  });
+  dropdown.querySelectorAll('.navbar__dropdown-item').forEach((item) =>
+    item.addEventListener('click', () => abrir(false))
+  );
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target)) abrir(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') abrir(false);
+  });
 }
 
 function configurarMenuLateral(el) {

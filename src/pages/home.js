@@ -6,6 +6,7 @@ import { buscarManchetesHome } from '../services/noticias.service.js';
 import { buscarPlaylist } from '../services/playlist.service.js';
 import { buscarEventosAtivos } from '../services/eventos.service.js';
 import { VIDEOS_VOZ_MOTORISTA } from '../data/videos-voz-motorista.js';
+import { buscarVideosVozMotorista } from '../services/voz-motorista.service.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
 import { buscarUltimasAvaliacoes } from '../services/avaliacoes.service.js';
 import { renderCardAvaliacao } from '../components/card-empresa.js';
@@ -13,7 +14,9 @@ import { buscarTodasEmpresas } from '../services/empresas.service.js';
 
 const MENSAGEM_PADRAO_WHATSAPP = 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.';
 
-const CATEGORIAS = [
+// Exportada: o menu "Serviços" (navbar.js) usa esta mesma lista, então
+// categoria nova aqui aparece automaticamente nos botões E no menu.
+export const CATEGORIAS = [
   { id: 'mecanico', label: 'Mecânicos', icone: '🔧' },
   { id: 'posto', label: 'Posto/Conveniência', icone: '⛽' },
   { id: 'borracharia', label: 'Borracharia', icone: '🛞' },
@@ -659,14 +662,40 @@ async function carregarEventosResumo(container) {
   }
 }
 
-function renderVozMotorista(container) {
+/**
+ * Programa A Voz do Motorista:
+ * mostra na hora a lista fixa (src/data/videos-voz-motorista.js) e, em
+ * seguida, troca pelo vídeo mais recente que o robô achou no YouTube
+ * (atualizado sábado 22h e domingo 12h). Se o robô ainda não rodou ou der
+ * erro, fica a lista fixa — a seção nunca some.
+ */
+async function renderVozMotorista(container) {
   const alvo = container.querySelector('#voz-motorista');
-  if (VIDEOS_VOZ_MOTORISTA.length === 0) {
+  if (!alvo) return;
+  desenharVozMotorista(alvo, VIDEOS_VOZ_MOTORISTA);
+
+  try {
+    const automaticos = await buscarVideosVozMotorista();
+    if (automaticos.length && automaticos[0].videoId !== VIDEOS_VOZ_MOTORISTA[0]?.videoId) {
+      desenharVozMotorista(alvo, automaticos);
+    } else if (automaticos.length > 1) {
+      desenharVozMotorista(alvo, automaticos); // mesmo destaque, mas com miniaturas
+    }
+  } catch (erro) {
+    console.error('Vídeo automático do programa indisponível, usando a lista fixa.', erro);
+  }
+}
+
+function desenharVozMotorista(alvo, videos) {
+  if (!videos || videos.length === 0) {
     alvo.innerHTML = `<p class="home-secao__vazio">Nenhum programa disponível no momento.</p>`;
     return;
   }
 
-  const [destaque, ...outros] = VIDEOS_VOZ_MOTORISTA;
+  const [destaque, ...outros] = videos.map((v) => ({
+    videoId: encodeURIComponent(v.videoId),
+    titulo: escaparHtml(v.titulo || 'Programa A Voz do Motorista'),
+  }));
 
   alvo.innerHTML = `
     <div class="playlist-embed">

@@ -33,7 +33,6 @@ const PALAVRAS_TRANSPORTE = [
   'ajudante de motorista', 'ajudante de carga', 'ajudante de descarga',
   'carregador e descarregador',
   'operador de retro', 'retroescavadeira', 'retro-escavadeira',
-  'operador de máquina', 'operador de maquina', 'operador de máquinas de construção',
   'operador de trator', 'motofretista', 'motoboy',
   'fiscal de transporte', 'controlador de tráfego', 'controlador de trafego',
   'manobrador', 'manobrista', 'ônibus', 'onibus', 'condutor',
@@ -41,6 +40,45 @@ const PALAVRAS_TRANSPORTE = [
 ];
 
 const EXCLUIR_TRANSPORTE = ['estoquista', 'almoxarife'];
+
+// "Operador de máquina(s)" é muito genérico: tem vaga de fábrica de doces,
+// de corte de pedra (fio diamantado), de costura... Só entra se for máquina
+// PESADA / de obra / de estrada / de mineração.
+const OPERADOR_MAQUINA_PESADA = [
+  'construcao', 'terraplenagem', 'pesad', 'rodoviari', 'mineracao',
+  'escavadeira', 'retro', 'motoniveladora', 'carregadeira', 'rolo compactador',
+  'trator', 'guindaste', 'munck', 'munk', 'pavimentacao',
+];
+
+/** Decide se o cargo é da área de transporte (tudo comparado sem acento). */
+function ehVagaDeTransporte(cargo) {
+  const c = normalizar(cargo);
+  if (EXCLUIR_TRANSPORTE.some((p) => c.includes(normalizar(p)))) return false;
+  if (c.includes('operador de maquina')) {
+    return OPERADOR_MAQUINA_PESADA.some((p) => c.includes(p));
+  }
+  return PALAVRAS_TRANSPORTE.some((p) => c.includes(normalizar(p)));
+}
+
+/**
+ * O IDT lista cada oferta separada: se duas empresas de Maracanaú pedem
+ * "Motorista de caminhão", vinham dois cards iguais. Aqui juntamos num card
+ * só (mesma cidade + mesmo cargo + mesmo tipo de vaga), SOMANDO as vagas.
+ * Vaga "Exclusiva PcD" continua separada da regular, porque muda quem pode se candidatar.
+ */
+function juntarRepetidas(itens) {
+  const porChave = new Map();
+  for (const item of itens) {
+    const chave = [normalizar(item.cidade), normalizar(item.cargo), item.tipo].join('|');
+    const existente = porChave.get(chave);
+    if (existente) {
+      existente.quantidade += item.quantidade;
+    } else {
+      porChave.set(chave, { ...item });
+    }
+  }
+  return [...porChave.values()].sort((a, b) => b.quantidade - a.quantidade);
+}
 
 function chaveServiceAccount() {
   // No GitHub Actions, a chave vem de um "secret" em base64 (mais seguro).
@@ -247,18 +285,21 @@ function extrairLista(json) {
 
 function montarItens(lista) {
   const itens = [];
+  const idsVistos = new Set(); // se a API mandar a MESMA oferta duas vezes, conta uma só
 
   for (const v of lista) {
     const cargoOriginal = String(campo(v, 'ocupacao', 'cargo')).trim();
-    const cargo = cargoOriginal.toLowerCase();
     const qtd = parseInt(campo(v, 'qtde_vagas', 'quantidade', 'qtd'), 10) || 0;
     const municipio = String(campo(v, 'municipio', 'cidade')).trim();
-    if (!cargo || !qtd || !municipio) continue;
+    if (!cargoOriginal || !qtd || !municipio) continue;
 
-    const relevante =
-      PALAVRAS_TRANSPORTE.some((p) => cargo.includes(p)) &&
-      !EXCLUIR_TRANSPORTE.some((p) => cargo.includes(p));
-    if (!relevante) continue;
+    if (!ehVagaDeTransporte(cargoOriginal)) continue;
+
+    const idOferta = String(campo(v, 'id', 'id_vaga', 'codigo', 'cod_vaga')).trim();
+    if (idOferta) {
+      if (idsVistos.has(idOferta)) continue;
+      idsVistos.add(idOferta);
+    }
 
     const unidade = String(campo(v, 'unidade')).trim();
     const nomeMunicipio = nomeProprio(municipio);
@@ -290,7 +331,7 @@ function montarItens(lista) {
     });
   }
 
-  return itens;
+  return juntarRepetidas(itens);
 }
 
 async function main() {
@@ -319,7 +360,7 @@ async function main() {
 
   const totalPostos = itens.reduce((s, v) => s + v.quantidade, 0);
   const cidades = new Set(itens.map((v) => v.cidadeBase)).size;
-  console.log(`✅ ${itens.length} tipos de vaga salvos (${totalPostos} postos em ${cidades} cidades).`);
+  console.log(`✅ ${itens.length} cards de vaga salvos (repetidas já juntadas) (${totalPostos} postos em ${cidades} cidades).`);
 }
 
 main().catch((erro) => {
