@@ -25,6 +25,7 @@ import { renderContato } from './pages/contato.js';
 import { renderCreditoTRA } from './pages/credito-tra.js';
 import { renderRankingEmpresas } from './pages/ranking-empresas.js';
 import { renderTickerCotacoes } from './components/ticker-cotacoes.js';
+import { iniciarAnalytics, registrarPagina } from './services/analytics.js';
 
 const app = document.getElementById('app');
 
@@ -70,6 +71,8 @@ function router() {
   } else {
     renderResultados(app, rota);
   }
+
+  registrarPagina(); // Google Analytics: conta a página aberta
 }
 
 document.addEventListener('click', (e) => {
@@ -90,6 +93,7 @@ document.addEventListener('click', (e) => {
 
 window.addEventListener('popstate', router);
 
+iniciarAnalytics();
 renderNavbar();
 renderFooter();
 renderWhatsappFloat();

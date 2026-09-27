@@ -1,3 +1,4 @@
+import { registrarEvento } from '../services/analytics.js';
 import { buscarNoSite, LABEL_CATEGORIA } from '../services/busca.service.js';
 import { renderCardEmpresa, resolverRotaCategoria } from '../components/card-empresa.js';
 import { configurarAvaliacoes } from './resultados.js';
@@ -43,6 +44,8 @@ export function renderBusca(container, termoInicial = '') {
     }
 
     alvo.innerHTML = `<p class="loading">Buscando por "${termo}"...</p>`;
+
+    registrarEvento('search', { search_term: termo.slice(0, 100) }); // Google Analytics
 
     let resultado;
     try {

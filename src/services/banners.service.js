@@ -1,4 +1,5 @@
 import { collection, getDocs, query, where, doc, updateDoc, increment, addDoc, serverTimestamp } from 'firebase/firestore';
+import { registrarEvento } from './analytics.js';
 import { db } from '../firebase/config.js';
 
 const COLLECTION = 'banners';
@@ -72,6 +73,8 @@ export async function buscarEmpresasParceiras() {
  * "Fire and forget" — não trava a navegação do usuário pro WhatsApp/site.
  */
 export function registrarClique(bannerId, empresaNome) {
+  registrarEvento('clique_banner', { empresa: String(empresaNome || '').slice(0, 100), banner_id: bannerId });
+
   const bannerRef = doc(db, COLLECTION, bannerId);
   updateDoc(bannerRef, { cliques: increment(1) }).catch((erro) => console.error('Erro ao contar clique:', erro));
 
