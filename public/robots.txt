@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-relatorios
+
+Sitemap: https://www.tralienigena.com.br/sitemap.xml
