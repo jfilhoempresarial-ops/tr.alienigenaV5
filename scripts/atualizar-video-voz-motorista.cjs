@@ -231,7 +231,7 @@ async function buscarVideosDoCanal(canalId) {
       console.log(`📦 ${caminho.nome}: ${videos.length} vídeos encontrados; ${programa.length} do programa.`);
       if (programa.length) return videos;
     } catch (erro) {
-      console.warn(`⚠️  ${caminho.nome} falhou: ${erro.message}`);
+      console.warn(`⚠️  ${caminho.nome}: 0 vídeos encontrados; falhou: ${erro.message}`);
     }
   }
 
