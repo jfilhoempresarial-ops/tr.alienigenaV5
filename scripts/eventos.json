@@ -106,5 +106,79 @@
     ],
     "link": "https://copatruck.com.br/2025/11/14/copa-truck-petrobras-divulga-calendario-de-2026/",
     "imagemUrl": null
+  },
+  {
+    "titulo": "Gincana do Caminhoneiro 2026 – 5ª Etapa Jundiaí",
+    "data": "2026-10-09",
+    "local": "Jundiaí/SP",
+    "detalhes": [
+      "De 09/10/2026 a 11/10/2026",
+      "Local: Posto Graal 56 – km 56 da Rodovia dos Bandeirantes, Jundiaí/SP",
+      "Entrada gratuita",
+      "Fonte: nacaotruck.com.br"
+    ],
+    "link": "https://www.nacaotruck.com.br/noticia/gincana-do-caminhoneiro-chega-a-jundiai-para-a-quinta-etapa-da-temporada-2026",
+    "imagemUrl": "https://www.nacaotruck.com.br/uploads/images/2026/09/gincana-do-caminhoneiro-chega-a-jundiai-para-a-quinta-etapa-da-temporada-2026.jpg",
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-09-28"
+  },
+  {
+    "titulo": "Copa Truck Petrobras – Etapa Cascavel",
+    "data": "2026-11-01",
+    "local": "Cascavel/PR",
+    "detalhes": [
+      "Data: 01/11/2026",
+      "Local: Autódromo Internacional de Cascavel, Cascavel/PR",
+      "Mais informações e ingressos no link",
+      "Fonte: copatruck.com.br"
+    ],
+    "link": "https://copatruck.com.br/calendario-2026/",
+    "imagemUrl": null,
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-09-28"
+  },
+  {
+    "titulo": "Gincana do Caminhoneiro 2026 – Grande Final",
+    "data": "2026-11-01",
+    "local": "Campo Largo/PR",
+    "detalhes": [
+      "Data: 01/11/2026",
+      "Entrada gratuita",
+      "Fonte: nacaotruck.com.br"
+    ],
+    "link": "https://www.nacaotruck.com.br/noticia/gincana-do-caminhoneiro-chega-a-jundiai-para-a-quinta-etapa-da-temporada-2026",
+    "imagemUrl": "https://www.nacaotruck.com.br/uploads/images/2026/09/gincana-do-caminhoneiro-chega-a-jundiai-para-a-quinta-etapa-da-temporada-2026.jpg",
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-09-28"
+  },
+  {
+    "titulo": "Fenatran 2026 – 25º Salão Internacional do Transporte Rodoviário de Cargas",
+    "data": "2026-11-09",
+    "local": "São Paulo/SP",
+    "detalhes": [
+      "De 09/11/2026 a 13/11/2026",
+      "Local: São Paulo Expo – Rodovia dos Imigrantes, km 1,5, São Paulo/SP",
+      "Mais informações e ingressos no link",
+      "Fonte: fenatran.com.br"
+    ],
+    "link": "https://www.fenatran.com.br/pt-br/visitar.html",
+    "imagemUrl": null,
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-09-28"
+  },
+  {
+    "titulo": "Intermodal South America 2027",
+    "data": "2027-04-13",
+    "local": "São Paulo/SP",
+    "detalhes": [
+      "De 13/04/2027 a 15/04/2027",
+      "Local: Distrito Anhembi, São Paulo/SP",
+      "Mais informações e ingressos no link",
+      "Fonte: intermodal.com.br"
+    ],
+    "link": "https://www.intermodal.com.br/",
+    "imagemUrl": "https://knect365.imgix.net/uploads/logo-topo-site-91fe0cf98c7fa40f1a095d6e8d8d87c8.png?auto=format&fit=max",
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-09-28"
   }
 ]
