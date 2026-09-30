@@ -48,9 +48,12 @@ initializeApp({
 });
 const db = getFirestore();
 
+// Se a célula tiver mais de um número (ex.: "(88) 99243-8785 / (88) 3614-3111"),
+// usa só o PRIMEIRO. Antes os dois eram grudados num número só e o WhatsApp quebrava.
 function normalizarTelefone(telefone) {
   if (!telefone) return '';
-  return telefone.toString().replace(/\D/g, '');
+  const primeiro = telefone.toString().split(/[\/|;,]| e | ou /i)[0];
+  return primeiro.replace(/\D/g, '');
 }
 
 function limparInstagram(valor) {

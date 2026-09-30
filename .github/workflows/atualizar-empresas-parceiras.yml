@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - 'scripts/empresasparceiras.xlsx'  # dispara automaticamente sempre que essa planilha mudar
+      - 'scripts/importar-empresas-parceiras.cjs'  # e quando o importador for alterado
   workflow_dispatch: {}                    # permite rodar manualmente pela aba "Actions" do GitHub
 jobs:
   atualizar:

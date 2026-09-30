@@ -1,5 +1,21 @@
 import { buscarEmpresasParceiras } from '../services/banners.service.js';
 import { gerarLinkWhatsapp } from '../services/whatsapp.service.js';
+import { apenasDigitos } from '../utils/formatters.js';
+import { ativarSegurarParaCopiar } from '../utils/segurar-para-copiar.js';
+
+const MENSAGEM_WHATSAPP = 'Olá, eu vim do site da TR Alienígena e queria saber mais informações.';
+
+/**
+ * Deixa só UM número de telefone. Se na planilha vieram dois números juntos
+ * (ex.: "(88) 99243-8785 / (88) 3614-3111"), o importador antigo grudava os
+ * dois num número enorme e o link do WhatsApp quebrava. Aqui fica só o primeiro.
+ */
+function numeroUnico(numero) {
+  let digitos = apenasDigitos(numero || '');
+  if (digitos.startsWith('55') && digitos.length > 11) digitos = digitos.slice(2);
+  if (digitos.length > 11) digitos = digitos.slice(0, 11);
+  return digitos;
+}
 
 export async function renderEmpresasParceiras(container) {
   container.innerHTML = `
@@ -11,10 +27,21 @@ export async function renderEmpresasParceiras(container) {
       <div class="parceiras-lista" id="parceiras-lista">
         <p class="loading">Carregando...</p>
       </div>
+      <div class="aviso-copiado" id="aviso-whats-copiado" role="status" aria-live="polite"></div>
     </section>
   `;
 
   const alvo = container.querySelector('#parceiras-lista');
+  const aviso = container.querySelector('#aviso-whats-copiado');
+  let timerAviso = null;
+
+  function avisar(texto) {
+    if (!aviso) return;
+    aviso.textContent = texto;
+    aviso.classList.add('aviso-copiado--visivel');
+    clearTimeout(timerAviso);
+    timerAviso = setTimeout(() => aviso.classList.remove('aviso-copiado--visivel'), 2500);
+  }
 
   try {
     const parceiras = await buscarEmpresasParceiras();
@@ -36,6 +63,16 @@ export async function renderEmpresasParceiras(container) {
         botao.textContent = estaAberto ? 'Saiba mais' : 'Fechar';
       });
     });
+
+    // WhatsApp: toque abre a conversa; toque e segure copia o link (com a mensagem).
+    alvo.querySelectorAll('[data-whats-copiar]').forEach((link) => {
+      ativarSegurarParaCopiar(link, {
+        obterTexto: () => link.getAttribute('href'),
+        avisar,
+        mensagemCopiado: '🔗 Link do WhatsApp copiado! É só colar.',
+        tituloCompartilhar: 'WhatsApp do parceiro',
+      });
+    });
   } catch (erro) {
     alvo.innerHTML = `<p class="erro">Não foi possível carregar as empresas parceiras agora.</p>`;
     console.error(erro);
@@ -43,9 +80,8 @@ export async function renderEmpresasParceiras(container) {
 }
 
 function renderCardParceira(empresa, indice) {
-  const linkWhats = empresa.whatsapp
-    ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu número no anúncio da TRA e quero saber mais.')
-    : null;
+  const numero = numeroUnico(empresa.whatsapp);
+  const linkWhats = numero.length >= 10 ? gerarLinkWhatsapp(numero, MENSAGEM_WHATSAPP) : null;
   // Se não tiver o campo "instagram" (handle) preenchido, mas o "link" antigo
   // apontar pro instagram.com, aproveita ele como Instagram em vez de perder
   // a informação — vários banners antigos guardavam o perfil ali dentro.
@@ -66,8 +102,13 @@ function renderCardParceira(empresa, indice) {
           ? `
         <button class="parceira-card__saiba-mais-btn" data-toggle-contato="${indice}">Saiba mais</button>
         <div class="parceira-card__contatos" id="parceira-contatos-${indice}" hidden>
-          ${linkWhats ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--whatsapp">💬 WhatsApp</a>` : ''}
+          ${
+            linkWhats
+              ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--whatsapp" data-whats-copiar title="Toque para abrir • Segure para copiar o link">💬 WhatsApp</a>`
+              : ''
+          }
           ${linkInstagram ? `<a href="${linkInstagram}" target="_blank" rel="noopener" class="parceira-card__contato parceira-card__contato--instagram">📸 Instagram</a>` : ''}
+          ${linkWhats ? `<p class="parceira-card__dica">Segure o botão do WhatsApp para copiar o link.</p>` : ''}
         </div>
       `
           : ''

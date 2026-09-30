@@ -3596,3 +3596,31 @@ button {
   color: #666;
   margin: 0;
 }
+
+/* ---------------------------------------------------------------------------
+   "Toque e segure para copiar" (utils/segurar-para-copiar.js)
+   --------------------------------------------------------------------------- */
+.segurar-copiar--segurando {
+  transform: scale(0.95);
+  filter: brightness(0.85);
+  transition: transform 0.6s, filter 0.6s;
+}
+
+.segurar-copiar--pronto {
+  transform: scale(1);
+  filter: brightness(0.8);
+}
+
+[data-whats-copiar] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.parceira-card__dica {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #777;
+  margin: 2px 0 0 0;
+}
