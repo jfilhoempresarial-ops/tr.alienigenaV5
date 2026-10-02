@@ -1,4 +1,4 @@
-const NUMERO_WHATSAPP = '5588981979432';
+const NUMERO_WHATSAPP = '5588988621481';
 
 export function renderContato(container) {
   container.innerHTML = `
@@ -12,7 +12,7 @@ export function renderContato(container) {
         rel="noopener"
         class="institucional-pagina__whatsapp"
       >
-        💬 WhatsApp: (88) 98197-9432
+        💬 WhatsApp: (88) 98862-1481
       </a>
 
       <p class="institucional-pagina__endereco">

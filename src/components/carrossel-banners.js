@@ -14,7 +14,7 @@ const VARIACAO_MAXIMA_MS = 1800;
 // outro, deixando o comportamento de troca de slide imprevisível.
 const timersPorContainer = new Map();
 
-const NUMERO_COMERCIAL = '5588981979432';
+const NUMERO_COMERCIAL = '5588988621481';
 
 /**
  * Gera o link do banner: se o documento tiver o campo "whatsapp" (só o número,
