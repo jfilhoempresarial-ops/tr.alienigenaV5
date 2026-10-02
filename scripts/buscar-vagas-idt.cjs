@@ -33,13 +33,19 @@ const PALAVRAS_TRANSPORTE = [
   'ajudante de motorista', 'ajudante de carga', 'ajudante de descarga',
   'carregador e descarregador',
   'operador de retro', 'retroescavadeira', 'retro-escavadeira',
-  'operador de trator', 'motofretista', 'motoboy',
+  'operador de trator',
   'fiscal de transporte', 'controlador de tráfego', 'controlador de trafego',
   'manobrador', 'manobrista', 'ônibus', 'onibus', 'condutor',
   'operador de balanças rodoviárias', 'operador de balancas rodoviarias',
 ];
 
-const EXCLUIR_TRANSPORTE = ['estoquista', 'almoxarife'];
+// Cargos que NUNCA entram, mesmo tendo uma palavra da lista acima.
+// Moto (motofretista, motoboy, mototaxista) não tem a ver com o público do site.
+const EXCLUIR_TRANSPORTE = [
+  'estoquista', 'almoxarife',
+  'motofret', 'moto-fret', 'moto fret', 'motoboy', 'moto boy', 'mototaxi', 'moto-taxi', 'moto taxi',
+  'motocicl', 'motoqueiro', 'motoentreg',
+];
 
 // "Operador de máquina(s)" é muito genérico: tem vaga de fábrica de doces,
 // de corte de pedra (fio diamantado), de costura... Só entra se for máquina
