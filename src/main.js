@@ -24,6 +24,7 @@ import { renderOndeEstamos } from './pages/onde-estamos.js';
 import { renderContato } from './pages/contato.js';
 import { renderCreditoTRA } from './pages/credito-tra.js';
 import { renderRankingEmpresas } from './pages/ranking-empresas.js';
+import { renderStatus } from './pages/status.js';
 import { renderTickerCotacoes } from './components/ticker-cotacoes.js';
 import { iniciarAnalytics, registrarPagina } from './services/analytics.js';
 
@@ -49,6 +50,7 @@ const ROTAS_FIXAS = {
   'credito-tra': renderCreditoTRA,
   ranking: renderRankingEmpresas,
   mapa: renderMapa,
+  status: renderStatus, // painel dos robôs e do site (não aparece no menu)
 };
 
 function router() {
