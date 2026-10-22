@@ -14,13 +14,15 @@ function normalizar(txt) {
 // importa: a primeira que bater decide. Para mudar, é só mexer nos termos.
 // "id" é o que vai no link: tralienigena.com.br/vagas?area=motoristas
 // ---------------------------------------------------------------------------
+// A ordem aqui é a ordem dos botões na tela (2 por linha no celular):
+// Manutenção | Motoristas · Carga e Estoque | Logística e Frota · Máquinas | Outras
 const AREAS = [
+  { id: 'manutencao', rotulo: '🔧 Manutenção de Pesados' },
   { id: 'motoristas', rotulo: '🚛 Motoristas' },
   { id: 'carga-estoque', rotulo: '📦 Carga e Estoque' },
   { id: 'logistica', rotulo: '📊 Logística e Frota' },
   { id: 'maquinas', rotulo: '🏗️ Máquinas Pesadas' },
-  { id: 'manutencao', rotulo: '🔧 Manutenção de Pesados' },
-  { id: 'outras', rotulo: 'Outras' },
+  { id: 'outras', rotulo: '➕ Outras' },
 ];
 
 const REGRAS_AREA = [
@@ -203,7 +205,7 @@ export async function renderVagas(container) {
       .filter((a) => a.total > 0 || a.id === filtroArea)
       .map(
         (a) =>
-          `<button data-area="${a.id}" class="chip chip--area ${filtroArea === a.id ? 'chip--ativo' : ''}">${a.rotulo} <span class="chip__num">${a.total}</span></button>`
+          `<button data-area="${a.id}" class="chip chip--area ${filtroArea === a.id ? 'chip--ativo' : ''}"><span class="chip__rotulo">${a.rotulo}</span> <span class="chip__num">${a.total}</span></button>`
       )
       .join('');
 
@@ -256,7 +258,7 @@ export async function renderVagas(container) {
 
         <p class="vagas__filtro-titulo">Área de atuação</p>
         <div class="vagas__areas">
-          <button data-area="" class="chip chip--area ${!filtroArea ? 'chip--ativo' : ''}">Todas as áreas <span class="chip__num">${somaVagas(daCidade)}</span></button>
+          <button data-area="" class="chip chip--area chip--area-todas ${!filtroArea ? 'chip--ativo' : ''}"><span class="chip__rotulo">🌐 Todas as áreas</span> <span class="chip__num">${somaVagas(daCidade)}</span></button>
           ${botoesArea}
         </div>
 
