@@ -87,9 +87,16 @@ export function resolverRotaCategoria(empresa) {
 
 /** Recebe um objeto empresa (já com distanciaKm calculada) e retorna o HTML do card. */
 export function renderCardEmpresa(empresa) {
-  const linkWhats = empresa.whatsapp
+  const telefoneLimpo = String(empresa.whatsapp || '').replace(/\D/g, '');
+  const numeroSemPais = telefoneLimpo.startsWith('55') ? telefoneLimpo.slice(2) : telefoneLimpo;
+  const numeroLocal = numeroSemPais.length >= 10 ? numeroSemPais.slice(2) : '';
+  const ehCelular = /^9\d{8}$/.test(numeroLocal);
+  const ehFixo = /^\d{8}$/.test(numeroLocal);
+
+  const linkWhats = ehCelular || ehFixo
     ? gerarLinkWhatsapp(empresa.whatsapp, 'Olá! Vi seu anúncio no site da TRA da Estrada e queria mais informações.')
     : null;
+  const linkTelefone = ehFixo ? `tel:+55${numeroSemPais}` : null;
   const linkMapa = gerarLinkMapa(empresa);
 
   const totalAvaliacoes = empresa.totalAvaliacoes || 0;
@@ -134,9 +141,16 @@ export function renderCardEmpresa(empresa) {
 
       <div class="card-empresa__acoes">
         ${
-          empresa.whatsapp
+          linkWhats
             ? `<a href="${linkWhats}" target="_blank" rel="noopener" class="card-empresa__botao card-empresa__botao--whatsapp">
           💬 WhatsApp
+        </a>`
+            : ''
+        }
+        ${
+          linkTelefone
+            ? `<a href="${linkTelefone}" class="card-empresa__botao card-empresa__botao--whatsapp">
+          📞 Ligar
         </a>`
             : ''
         }
