@@ -8,6 +8,81 @@ function normalizar(txt) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+// ---------------------------------------------------------------------------
+// ÁREAS DE ATUAÇÃO (botões acima das cidades)
+// A área é descoberta pelo nome do cargo, sem acento. A ordem das regras
+// importa: a primeira que bater decide. Para mudar, é só mexer nos termos.
+// "id" é o que vai no link: tralienigena.com.br/vagas?area=motoristas
+// ---------------------------------------------------------------------------
+const AREAS = [
+  { id: 'motoristas', rotulo: '🚛 Motoristas' },
+  { id: 'carga-estoque', rotulo: '📦 Carga e Estoque' },
+  { id: 'logistica', rotulo: '📊 Logística e Frota' },
+  { id: 'maquinas', rotulo: '🏗️ Máquinas Pesadas' },
+  { id: 'manutencao', rotulo: '🔧 Manutenção de Pesados' },
+  { id: 'outras', rotulo: 'Outras' },
+];
+
+const REGRAS_AREA = [
+  // mecânico, eletricista e borracheiro (o robô só traz os de veículo pesado)
+  { area: 'manutencao', termos: ['mecanico', 'eletricista', 'borracheiro', 'borracharia'] },
+  // empilhadeira fica em Carga e Estoque, por isso não está aqui
+  {
+    area: 'maquinas',
+    termos: ['operador de maquina', 'escavadeira', 'retro', 'carregadeira', 'motoniveladora',
+      'rolo compactador', 'trator', 'munck', 'munk', 'guindaste', 'guindauto'],
+  },
+  // "Ajudante de motorista" é carga e descarga, não motorista
+  { area: 'carga-estoque', termos: ['ajudante', 'carregador'] },
+  {
+    area: 'motoristas',
+    termos: ['motorista', 'caminhao', 'caminhoneiro', 'carreta', 'carreteiro', 'cacambeiro',
+      'bitrem', 'basculante', 'guincho', 'onibus', 'condutor', 'manobr'],
+  },
+  {
+    area: 'logistica',
+    termos: ['logistica', 'transporte', 'roteiriz', 'programador', 'trafego', 'frota'],
+  },
+  {
+    area: 'carga-estoque',
+    termos: ['carga', 'descarga', 'estoque', 'estoquista', 'almoxarif', 'conferente', 'separador',
+      'expedi', 'empilhadeira', 'balanca'],
+  },
+];
+
+function areaDoCargo(cargo) {
+  const c = normalizar(cargo);
+  const regra = REGRAS_AREA.find((r) => r.termos.some((t) => c.includes(t)));
+  return regra ? regra.area : 'outras';
+}
+
+function somaVagas(lista) {
+  return lista.reduce((s, v) => s + (v.quantidade || 1), 0);
+}
+
+/** Lê ?area= e ?cidade= do link, pra dar pra divulgar "só vagas de motorista". */
+function lerFiltrosDoLink(cidades) {
+  const params = new URLSearchParams(window.location.search);
+  const area = params.get('area') || '';
+  const cidade = normalizar(params.get('cidade') || '').toUpperCase();
+  return {
+    area: AREAS.some((a) => a.id === area) ? area : '',
+    cidade: cidades.find((c) => normalizar(c).toUpperCase() === cidade) || '',
+  };
+}
+
+/** Atualiza o endereço da página (sem recarregar), pra o link copiado já vir filtrado. */
+function gravarFiltrosNoLink(area, cidade) {
+  const params = new URLSearchParams();
+  if (area) params.set('area', area);
+  if (cidade) params.set('cidade', cidade.toLowerCase());
+  const busca = params.toString();
+  const novo = `${window.location.pathname}${busca ? `?${busca}` : ''}`;
+  if (novo !== window.location.pathname + window.location.search) {
+    window.history.replaceState({}, '', novo);
+  }
+}
+
 function formatarDataHora(iso) {
   if (!iso) return 'ainda não atualizado';
   const data = new Date(iso);
@@ -89,19 +164,22 @@ export async function renderVagas(container) {
     return;
   }
 
-  const itens = dados.itens || [];
+  const itens = (dados.itens || []).map((v) => ({ ...v, area: areaDoCargo(v.cargo) }));
   const cidades = [...new Set(itens.map((v) => v.cidadeBase).filter(Boolean))].sort();
 
-  let filtroCidade = '';
+  const doLink = lerFiltrosDoLink(cidades);
+  let filtroArea = doLink.area;
+  let filtroCidade = doLink.cidade;
   let filtroTexto = '';
 
   function aplicarFiltros() {
     const qn = normalizar(filtroTexto);
     return itens
       .filter((v) => {
+        const bateArea = !filtroArea || v.area === filtroArea;
         const bateCidade = !filtroCidade || v.cidadeBase === filtroCidade;
         const bateTexto = !qn || normalizar(v.cidade).includes(qn) || normalizar(v.cargo).includes(qn);
-        return bateCidade && bateTexto;
+        return bateArea && bateCidade && bateTexto;
       })
       .sort((a, b) => (b.quantidade || 1) - (a.quantidade || 1));
   }
@@ -111,12 +189,27 @@ export async function renderVagas(container) {
     const total = itens.reduce((s, v) => s + (v.quantidade || 1), 0);
     const infoUnidade = filtroCidade && filtradas.length ? renderCardUnidadeSine(filtradas[0]) : '';
 
-    // Total de vagas na cidade selecionada (ignora o filtro de texto, considera só a cidade)
-    const totalCidade = filtroCidade
-      ? itens
-          .filter((v) => v.cidadeBase === filtroCidade)
-          .reduce((s, v) => s + (v.quantidade || 1), 0)
-      : 0;
+    gravarFiltrosNoLink(filtroArea, filtroCidade);
+
+    // Vagas da área escolhida (ou todas), usadas pra contar cidades e o total da cidade
+    const daArea = filtroArea ? itens.filter((v) => v.area === filtroArea) : itens;
+    const daCidade = filtroCidade ? itens.filter((v) => v.cidadeBase === filtroCidade) : itens;
+
+    // Total de vagas na cidade selecionada (ignora o filtro de texto; respeita a área)
+    const totalCidade = filtroCidade ? somaVagas(daArea.filter((v) => v.cidadeBase === filtroCidade)) : 0;
+
+    // Botões de área: só as áreas que têm vaga (na cidade escolhida, se tiver), com o número de vagas
+    const botoesArea = AREAS.map((a) => ({ ...a, total: somaVagas(daCidade.filter((v) => v.area === a.id)) }))
+      .filter((a) => a.total > 0 || a.id === filtroArea)
+      .map(
+        (a) =>
+          `<button data-area="${a.id}" class="chip chip--area ${filtroArea === a.id ? 'chip--ativo' : ''}">${a.rotulo} <span class="chip__num">${a.total}</span></button>`
+      )
+      .join('');
+
+    // Botões de cidade: só as cidades que têm vaga na área escolhida
+    const cidadesDaArea = cidades.filter((c) => c === filtroCidade || daArea.some((v) => v.cidadeBase === c));
+    const nomeAreaAtiva = filtroArea ? AREAS.find((a) => a.id === filtroArea).rotulo.replace(/^\S+\s/, '') : '';
 
     const nomeCidadeExibicao = filtroCidade
       ? filtroCidade.charAt(0) + filtroCidade.slice(1).toLowerCase()
@@ -161,9 +254,16 @@ export async function renderVagas(container) {
           value="${filtroTexto}"
         />
 
+        <p class="vagas__filtro-titulo">Área de atuação</p>
+        <div class="vagas__areas">
+          <button data-area="" class="chip chip--area ${!filtroArea ? 'chip--ativo' : ''}">Todas as áreas <span class="chip__num">${somaVagas(daCidade)}</span></button>
+          ${botoesArea}
+        </div>
+
+        <p class="vagas__filtro-titulo">Cidade</p>
         <div class="vagas__cidades">
           <button data-cidade="" class="chip ${!filtroCidade ? 'chip--ativo' : ''}">🌐 Todas</button>
-          ${cidades
+          ${cidadesDaArea
             .map(
               (c) =>
                 `<button data-cidade="${c}" class="chip ${filtroCidade === c ? 'chip--ativo' : ''}">${c.charAt(0) + c.slice(1).toLowerCase()}</button>`
@@ -173,7 +273,7 @@ export async function renderVagas(container) {
 
         ${
           filtroCidade
-            ? `<p class="vagas__total-cidade">📊 Total em ${nomeCidadeExibicao}: <strong>${totalCidade}</strong> vaga${totalCidade !== 1 ? 's' : ''}</p>`
+            ? `<p class="vagas__total-cidade">📊 Total em ${nomeCidadeExibicao}${nomeAreaAtiva ? ` (${nomeAreaAtiva})` : ''}: <strong>${totalCidade}</strong> vaga${totalCidade !== 1 ? 's' : ''}</p>`
             : ''
         }
 
@@ -196,7 +296,14 @@ export async function renderVagas(container) {
       alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
     });
 
-    container.querySelectorAll('.chip').forEach((btn) => {
+    container.querySelectorAll('.vagas__areas .chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filtroArea = btn.dataset.area;
+        render();
+      });
+    });
+
+    container.querySelectorAll('.vagas__cidades .chip').forEach((btn) => {
       btn.addEventListener('click', () => {
         filtroCidade = btn.dataset.cidade;
         render();

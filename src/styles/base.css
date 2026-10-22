@@ -973,6 +973,53 @@ button {
   margin-bottom: 20px;
 }
 
+/* Filtro por área de atuação (acima das cidades) */
+.vagas__filtro-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #667;
+  margin: 4px 0 8px;
+}
+
+.vagas__areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.chip--area {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border: 1px solid #d5ddd6;
+  background: #fff;
+}
+
+.chip--area.chip--ativo {
+  border-color: var(--cor-primaria);
+}
+
+.chip__num {
+  display: inline-block;
+  min-width: 20px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #eef1ee;
+  color: #333;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.chip--ativo .chip__num {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
 .chip {
   border: none;
   background: #eef1ee;
