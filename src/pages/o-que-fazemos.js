@@ -8,7 +8,7 @@ export function renderOQueFazemos(container) {
       </p>
       <ul class="institucional-pagina__lista">
         <li>🔧 Prestadores de serviço por categoria (mecânica, elétrica, borracharia, guincho e mais)</li>
-        <li>💼 Vagas de emprego atualizadas para motoristas</li>
+        <li>💼 Vagas de emprego atualizadas de transporte e logística</li>
         <li>📦 Fretes disponíveis por estado</li>
         <li>📰 Notícias relevantes para quem está na estrada</li>
         <li>🎓 Cursos gratuitos de capacitação profissional</li>

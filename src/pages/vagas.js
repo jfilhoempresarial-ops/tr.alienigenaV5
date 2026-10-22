@@ -140,8 +140,8 @@ export async function renderVagas(container) {
         <div id="carrossel-vagas" class="carrossel-categoria"></div>
 
         <div class="vagas__header">
-          <h1>Vagas para Motoristas do SINE</h1>
-          <p>Vagas para motoristas e ajudantes de transporte, próximas a você</p>
+          <h1>Vagas de Transporte e Logística do SINE</h1>
+          <p>Motoristas, ajudantes, estoque, expedição, logística, máquinas pesadas e manutenção de pesados, perto de você</p>
         </div>
 
         <div class="vagas__total-destaque">
