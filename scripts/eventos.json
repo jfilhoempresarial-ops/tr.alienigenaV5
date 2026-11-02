@@ -180,5 +180,20 @@
     "imagemUrl": "https://knect365.imgix.net/uploads/logo-topo-site-91fe0cf98c7fa40f1a095d6e8d8d87c8.png?auto=format&fit=max",
     "origem": "robo-eventos",
     "encontradoEm": "2026-09-28"
+  },
+  {
+    "titulo": "Transportar – Feira de Transporte Intermodal e Logística 2027",
+    "data": "2027-04-13",
+    "local": "São Paulo/SP",
+    "detalhes": [
+      "De 13/04/2027 a 15/04/2027",
+      "Local: Anhembi, São Paulo/SP",
+      "Mais informações e ingressos no link",
+      "Fonte: neventum.com"
+    ],
+    "link": "https://www.neventum.com/tradeshows/trucks/brazil",
+    "imagemUrl": null,
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-11-02"
   }
 ]
