@@ -209,5 +209,19 @@
     "imagemUrl": null,
     "origem": "robo-eventos",
     "encontradoEm": "2026-11-09"
+  },
+  {
+    "titulo": "Copa Truck Petrobras – 9ª Etapa (Brasília)",
+    "data": "2026-11-27",
+    "local": "Brasília/DF",
+    "detalhes": [
+      "De 27/11/2026 a 29/11/2026",
+      "Mais informações e ingressos no link",
+      "Fonte: copatruck.com.br"
+    ],
+    "link": "https://copatruck.com.br",
+    "imagemUrl": null,
+    "origem": "robo-eventos",
+    "encontradoEm": "2026-11-16"
   }
 ]
