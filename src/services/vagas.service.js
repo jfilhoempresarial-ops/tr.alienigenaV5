@@ -14,3 +14,14 @@ export async function buscarVagas() {
   }
   return snap.data();
 }
+
+/**
+ * SÓ ADMIN: empresas que oferecem as vagas do SINE.
+ * Fica em vagas_admin/atual, que a regra do Firestore libera só para o
+ * e-mail do admin. Para qualquer outra pessoa, o Firestore recusa a leitura.
+ */
+export async function buscarEmpresasDasVagas() {
+  const snap = await getDoc(doc(db, 'vagas_admin', 'atual'));
+  if (!snap.exists()) return { empresas: [], atualizado: null };
+  return snap.data();
+}
