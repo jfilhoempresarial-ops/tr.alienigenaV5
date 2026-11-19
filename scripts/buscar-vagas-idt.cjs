@@ -9,7 +9,12 @@
  * pela tabela.
  *
  * PRIVACIDADE: a API também traz nome da empresa, nomes e celulares pessoais
- * de funcionários do IDT. NADA disso é salvo — só o telefone da unidade.
+ * de funcionários do IDT. No documento PÚBLICO (vagas/atual) só vai o
+ * telefone da unidade. O NOME DA EMPRESA vai para um documento separado
+ * (vagas_admin/atual), que só o admin consegue ler — e só é gravado quando a
+ * variável SALVAR_EMPRESAS_VAGAS = sim estiver criada no GitHub (depois de
+ * a regra de segurança do Firestore estar no lugar). Nomes e celulares de
+ * funcionários do IDT nunca são salvos.
  *
  * COMO TESTAR LOCALMENTE:
  *   npm install firebase-admin
@@ -123,21 +128,37 @@ function ehVagaDeTransporte(cargo) {
 /**
  * O IDT lista cada oferta separada: se duas empresas de Maracanaú pedem
  * "Motorista de caminhão", vinham dois cards iguais. Aqui juntamos num card
- * só (mesma cidade + mesmo cargo + mesmo tipo de vaga), SOMANDO as vagas.
- * Vaga "Exclusiva PcD" continua separada da regular, porque muda quem pode se candidatar.
+ * só (mesma cidade + mesmo cargo), SOMANDO as vagas. As exclusivas PcD entram
+ * na soma e ficam contadas em "qtdPcd", pro site avisar ("2 vagas, 1 exclusiva PcD").
  */
 function juntarRepetidas(itens) {
   const porChave = new Map();
   for (const item of itens) {
-    const chave = [normalizar(item.cidade), normalizar(item.cargo), item.tipo].join('|');
+    const chave = [normalizar(item.cidade), normalizar(item.cargo).replace(/\s+/g, ' ').trim()].join('|');
+    const pcd = item.tipo === 'Exclusiva PcD' ? item.quantidade : 0;
     const existente = porChave.get(chave);
     if (existente) {
       existente.quantidade += item.quantidade;
+      existente.qtdPcd += pcd;
     } else {
-      porChave.set(chave, { ...item });
+      porChave.set(chave, { ...item, qtdPcd: pcd });
     }
   }
   return [...porChave.values()].sort((a, b) => b.quantidade - a.quantidade);
+}
+
+/** Nome da empresa que oferece a vaga (só para o painel do admin). */
+function nomeDaEmpresa(v) {
+  const chave = Object.keys(v).find((k) => {
+    const n = normalizar(k);
+    return /empresa|razao|fantasia|empregador|contratante/.test(n) && !/email|fone|telefone|celular|cnpj|cpf|id_/.test(n);
+  });
+  if (!chave) return '';
+  const valor = v[chave];
+  if (valor && typeof valor === 'object') {
+    return String(valor.nome_fantasia || valor.razao_social || valor.nome || '').trim();
+  }
+  return String(valor || '').trim();
 }
 
 function chaveServiceAccount() {
@@ -345,6 +366,7 @@ function extrairLista(json) {
 
 function montarItens(lista) {
   const itens = [];
+  const empresas = []; // só para o admin (vagas_admin/atual)
   const idsVistos = new Set(); // se a API mandar a MESMA oferta duas vezes, conta uma só
 
   for (const v of lista) {
@@ -389,9 +411,18 @@ function montarItens(lista) {
       email: String(campo(v, 'email_unidade')).trim(),
       ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : {}),
     });
+
+    empresas.push({
+      cidade,
+      cidadeBase: municipio.toUpperCase(),
+      cargo: capitalizar(cargoOriginal),
+      quantidade: qtd,
+      tipo: tipoDaVaga(v.pcd),
+      empresa: nomeDaEmpresa(v) || 'Não informado pelo IDT',
+    });
   }
 
-  return juntarRepetidas(itens);
+  return { itens: juntarRepetidas(itens), empresas };
 }
 
 async function main() {
@@ -407,7 +438,7 @@ async function main() {
     throw new Error('A API do IDT não retornou o formato esperado (campo "ocupacao"). Nada foi salvo.');
   }
 
-  const itens = montarItens(lista);
+  const { itens, empresas } = montarItens(lista);
   if (!itens.length) {
     throw new Error('Nenhuma vaga de transporte encontrada. Nada foi salvo.');
   }
@@ -417,6 +448,21 @@ async function main() {
     atualizado: new Date().toISOString(),
     fonte: 'IDT/SINE',
   });
+
+  // Empresas das vagas: documento separado, que só o admin lê.
+  // Só grava com SALVAR_EMPRESAS_VAGAS=sim (variável do GitHub), pra garantir
+  // que a regra de segurança do Firestore foi colocada antes.
+  if (process.env.SALVAR_EMPRESAS_VAGAS === 'sim') {
+    await db.collection('vagas_admin').doc('atual').set({
+      empresas,
+      atualizado: new Date().toISOString(),
+    });
+    const comNome = empresas.filter((e) => e.empresa !== 'Não informado pelo IDT').length;
+    // O registro do GitHub é público: aqui só aparece a contagem, nunca os nomes.
+    console.log(`🔒 Empresas das vagas salvas para o admin: ${empresas.length} ofertas (${comNome} com nome da empresa).`);
+  } else {
+    console.log('ℹ️  Empresas das vagas NÃO salvas (variável SALVAR_EMPRESAS_VAGAS não está como "sim").');
+  }
 
   const totalPostos = itens.reduce((s, v) => s + v.quantidade, 0);
   const cidades = new Set(itens.map((v) => v.cidadeBase)).size;
