@@ -1076,10 +1076,53 @@ button {
 }
 
 .vagas-lista {
+  margin-top: 16px;
+}
+
+/* Cards de vaga dentro de cada área */
+.vagas__grade {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
-  margin-top: 16px;
+}
+
+/* Cidade (título) → área (subtítulo) → vagas */
+.vagas__bloco-cidade {
+  background: #fff;
+  border: 1px solid #e6ebe6;
+  border-radius: var(--radius);
+  padding: 14px 14px 4px;
+  margin-bottom: 18px;
+}
+
+.vagas__cidade-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.vagas__cidade-titulo span {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-primaria);
+}
+
+.vagas__bloco-cidade .vaga-card {
+  background: #f7f9f7;
+  box-shadow: none;
+}
+
+.vagas__aviso-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0 0 12px;
 }
 
 .vaga-card {
