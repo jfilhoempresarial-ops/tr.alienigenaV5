@@ -196,30 +196,48 @@ function renderPorArea(lista) {
     return `
       <div class="vagas__grupo-area">
         <h3 class="vagas__area-titulo">${area.rotulo} <span>${total} vaga${total !== 1 ? 's' : ''}</span></h3>
-        ${daArea.map(renderCardVaga).join('')}
+        <div class="vagas__grade">
+          ${daArea.map(renderCardVaga).join('')}
+        </div>
       </div>
     `;
   }).join('');
 }
 
-function agruparPorPosto(lista) {
-  const grupos = new Map();
-  lista.forEach((v) => {
-    const posto = v.cidade || 'Não informado';
-    if (!grupos.has(posto)) grupos.set(posto, []);
-    grupos.get(posto).push(v);
-  });
-  return [...grupos.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+const MINUSCULAS = ['de', 'da', 'do', 'das', 'dos', 'e'];
+
+/** "JUAZEIRO DO NORTE" → "Juazeiro do Norte" */
+function nomeCidade(cidadeBase) {
+  return String(cidadeBase || '')
+    .toLowerCase()
+    .split(' ')
+    .map((p, i) => (i > 0 && MINUSCULAS.includes(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(' ');
 }
 
-function renderGrupoPosto(posto, vagasPosto) {
-  const totalPosto = vagasPosto.reduce((s, v) => s + (v.quantidade || 1), 0);
-  return `
-    <div class="vagas__grupo-posto">
-      <h3 class="vagas__posto-titulo">📍 ${posto} — ${totalPosto} vaga${totalPosto !== 1 ? 's' : ''}</h3>
-      ${renderPorArea(vagasPosto)}
-    </div>
-  `;
+/**
+ * Lista final: CIDADE (título) → ÁREA (subtítulo, Motoristas primeiro) → vagas.
+ * Em Fortaleza, que tem vários postos, o posto aparece em cada card.
+ */
+function renderPorCidade(lista) {
+  const porCidade = new Map();
+  lista.forEach((v) => {
+    const c = v.cidadeBase || 'NÃO INFORMADO';
+    if (!porCidade.has(c)) porCidade.set(c, []);
+    porCidade.get(c).push(v);
+  });
+  return [...porCidade.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'))
+    .map(([cidade, vagasCidade]) => {
+      const total = somaVagas(vagasCidade);
+      return `
+        <section class="vagas__bloco-cidade">
+          <h2 class="vagas__cidade-titulo">📍 ${nomeCidade(cidade)} <span>${total} vaga${total !== 1 ? 's' : ''}</span></h2>
+          ${renderPorArea(vagasCidade)}
+        </section>
+      `;
+    })
+    .join('');
 }
 
 export async function renderVagas(container) {
@@ -263,43 +281,19 @@ export async function renderVagas(container) {
 
     // Vagas da área escolhida (ou todas), usadas pra contar cidades e o total da cidade
     const daArea = filtroArea ? itens.filter((v) => v.area === filtroArea) : itens;
-    const daCidade = filtroCidade ? itens.filter((v) => v.cidadeBase === filtroCidade) : itens;
 
     // Total de vagas na cidade selecionada (ignora o filtro de texto; respeita a área)
     const totalCidade = filtroCidade ? somaVagas(daArea.filter((v) => v.cidadeBase === filtroCidade)) : 0;
 
-    // Botões de área: só as áreas que têm vaga (na cidade escolhida, se tiver), com o número de vagas
-    const botoesArea = AREAS.map((a) => ({ ...a, total: somaVagas(daCidade.filter((v) => v.area === a.id)) }))
-      .filter((a) => a.total > 0 || a.id === filtroArea)
-      .map(
-        (a) =>
-          `<button data-area="${a.id}" class="chip chip--area ${filtroArea === a.id ? 'chip--ativo' : ''}"><span class="chip__rotulo">${a.rotulo}</span> <span class="chip__num">${a.total}</span></button>`
-      )
-      .join('');
-
-    // Botões de cidade: só as cidades que têm vaga na área escolhida
+    // Botões de cidade: só as cidades que têm vaga na área do link (se veio ?area=)
     const cidadesDaArea = cidades.filter((c) => c === filtroCidade || daArea.some((v) => v.cidadeBase === c));
     const nomeAreaAtiva = filtroArea ? AREAS.find((a) => a.id === filtroArea).rotulo.replace(/^\S+\s/, '') : '';
 
-    const nomeCidadeExibicao = filtroCidade
-      ? filtroCidade.charAt(0) + filtroCidade.slice(1).toLowerCase()
-      : '';
+    const nomeCidadeExibicao = filtroCidade ? nomeCidade(filtroCidade) : '';
 
-    const ehFortaleza = filtroCidade.toUpperCase() === 'FORTALEZA';
-
-    let conteudoLista;
-    if (!filtradas.length) {
-      conteudoLista = '<p class="vazio">Nenhuma vaga encontrada com esse filtro.</p>';
-    } else if (ehFortaleza) {
-      conteudoLista = agruparPorPosto(filtradas)
-        .map(([posto, vagasPosto]) => renderGrupoPosto(posto, vagasPosto))
-        .join('');
-    } else if (filtroCidade) {
-      // Dentro da cidade: separado por área (Motoristas primeiro)
-      conteudoLista = renderPorArea(filtradas);
-    } else {
-      conteudoLista = filtradas.map(renderCardVaga).join('');
-    }
+    const conteudoLista = filtradas.length
+      ? renderPorCidade(filtradas)
+      : '<p class="vazio">Nenhuma vaga encontrada com esse filtro.</p>';
 
     container.innerHTML = `
       <section class="vagas">
@@ -327,11 +321,11 @@ export async function renderVagas(container) {
           value="${filtroTexto}"
         />
 
-        <p class="vagas__filtro-titulo">Área de atuação</p>
-        <div class="vagas__areas">
-          <button data-area="" class="chip chip--area chip--area-todas ${!filtroArea ? 'chip--ativo' : ''}"><span class="chip__rotulo">🌐 Todas as áreas</span> <span class="chip__num">${somaVagas(daCidade)}</span></button>
-          ${botoesArea}
-        </div>
+        ${
+          filtroArea
+            ? `<p class="vagas__aviso-area">Mostrando só: <strong>${nomeAreaAtiva}</strong> <button id="vagas-todas-areas" class="chip">Ver todas as áreas</button></p>`
+            : ''
+        }
 
         <p class="vagas__filtro-titulo">Cidade</p>
         <div class="vagas__cidades">
@@ -339,7 +333,7 @@ export async function renderVagas(container) {
           ${cidadesDaArea
             .map(
               (c) =>
-                `<button data-cidade="${c}" class="chip ${filtroCidade === c ? 'chip--ativo' : ''}">${c.charAt(0) + c.slice(1).toLowerCase()}</button>`
+                `<button data-cidade="${c}" class="chip ${filtroCidade === c ? 'chip--ativo' : ''}">${nomeCidade(c)}</button>`
             )
             .join('')}
         </div>
@@ -369,12 +363,13 @@ export async function renderVagas(container) {
       alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
     });
 
-    container.querySelectorAll('.vagas__areas .chip').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        filtroArea = btn.dataset.area;
+    const botaoTodasAreas = container.querySelector('#vagas-todas-areas');
+    if (botaoTodasAreas) {
+      botaoTodasAreas.addEventListener('click', () => {
+        filtroArea = '';
         render();
       });
-    });
+    }
 
     container.querySelectorAll('.vagas__cidades .chip').forEach((btn) => {
       btn.addEventListener('click', () => {
