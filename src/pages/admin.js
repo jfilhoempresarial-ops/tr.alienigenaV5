@@ -1,442 +1,3778 @@
-import { fazerLogin, fazerLogout, observarAutenticacao } from '../services/auth.service.js';
-import { criarEvento } from '../services/eventos.service.js';
-import {
-  buscarEmpresasPendentes,
-  aprovarEmpresa,
-  recusarEmpresa,
-  buscarTodasEmpresas,
-  criarEmpresaAdmin,
-} from '../services/empresas.service.js';
-import { otimizarFotoCloudinary } from '../utils/cloudinary.js';
-import { obterLocalizacaoAtual } from '../services/geo.service.js';
-import { CATEGORIAS_CADASTRO, geocodificarEndereco, enviarFotos } from './cadastro-empresa.js';
-
-const MAX_FOTOS_EDICAO = 5;
-
-export function renderAdmin(container) {
-  observarAutenticacao((usuario) => {
-    if (usuario) {
-      renderPainel(container, usuario);
-    } else {
-      renderLogin(container);
-    }
-  });
+* {
+  box-sizing: border-box;
 }
 
-function renderLogin(container) {
-  container.innerHTML = `
-    <section class="admin-login">
-      <h2>Área do Admin</h2>
-      <form id="form-login">
-        <label>E-mail <input type="email" name="email" required /></label>
-        <label>Senha <input type="password" name="senha" required /></label>
-        <button type="submit">Entrar</button>
-      </form>
-      <p id="login-status"></p>
-    </section>
-  `;
-
-  document.getElementById('form-login').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const status = document.getElementById('login-status');
-    status.textContent = 'Entrando...';
-
-    const formData = new FormData(event.target);
-    try {
-      await fazerLogin(formData.get('email'), formData.get('senha'));
-    } catch (erro) {
-      status.textContent = 'E-mail ou senha incorretos.';
-      console.error(erro);
-    }
-  });
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
 }
 
-function renderPainel(container, usuario) {
-  container.innerHTML = `
-    <section class="admin-painel">
-      <div class="admin-painel__header">
-        <span>Logado como ${usuario.email}</span>
-        <button id="btn-logout" class="btn-secundario">Sair</button>
-      </div>
-
-      <h2>Cadastrar evento (Truck Fest)</h2>
-      <form id="form-evento">
-        <label>Título <input name="titulo" required /></label>
-        <label>Data <input type="date" name="data" required /></label>
-        <label>Local <input name="local" /></label>
-        <label>Descrição <textarea name="descricao" rows="3"></textarea></label>
-        <label>URL da imagem (Cloudinary) <input name="imagemUrl" /></label>
-        <label>Link (mais informações) <input name="link" /></label>
-        <button type="submit">Salvar evento</button>
-      </form>
-      <p id="evento-status"></p>
-
-      <h2 class="admin-painel__titulo-cobertura">📋 Cadastros pendentes de aprovação</h2>
-      <p class="admin-painel__subtitulo-cobertura">
-        Empresas que vieram pelo formulário "Cadastrar minha empresa" no site. Aprovar já coloca a
-        empresa no ar na hora; recusar apaga o cadastro (spam, dado incompleto, duplicado etc).
-      </p>
-      <div id="pendentes-lista">
-        <p class="loading">Carregando pendentes...</p>
-      </div>
-
-      <h2 class="admin-painel__titulo-cobertura">✏️ Editar prestador</h2>
-      <p class="admin-painel__subtitulo-cobertura">
-        Busca um prestador já cadastrado (venha da planilha ou do site) e edita os dados dele na hora —
-        útil pra quando você está de frente com o prestador e ele pede pra ajustar algo, ou pra adicionar foto
-        e localização por GPS. <strong>Isso cria um cadastro novo</strong>; se o prestador tiver vindo da
-        planilha de prestadores, lembre de apagar a linha antiga de lá depois, senão ele fica duplicado até a
-        próxima sincronização remover o antigo sozinha.
-      </p>
-      <input
-        type="text"
-        id="editar-prestador-busca"
-        placeholder="Digite o nome do prestador..."
-        class="cadastro__input"
-        style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px;"
-      />
-      <div id="editar-prestador-resultados"></div>
-      <div id="editar-prestador-form-wrap"></div>
-    </section>
-  `;
-
-  document.getElementById('btn-logout').addEventListener('click', fazerLogout);
-
-  document.getElementById('form-evento').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const status = document.getElementById('evento-status');
-    status.textContent = 'Salvando...';
-
-    const formData = new FormData(event.target);
-    try {
-      await criarEvento({
-        titulo: formData.get('titulo'),
-        data: formData.get('data'),
-        local: formData.get('local'),
-        descricao: formData.get('descricao'),
-        imagemUrl: formData.get('imagemUrl'),
-        link: formData.get('link'),
-      });
-      status.textContent = 'Evento salvo com sucesso!';
-      event.target.reset();
-    } catch (erro) {
-      status.textContent = 'Erro ao salvar. Tente novamente.';
-      console.error(erro);
-    }
-  });
-
-  carregarPendentes(container);
-  configurarEdicaoPrestadores(container);
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--cor-branco);
+  border-bottom: 1px solid #e0e0e0;
+  position: relative;
 }
 
-async function carregarPendentes(container) {
-  const alvo = container.querySelector('#pendentes-lista');
+.navbar__logo {
+  font-weight: bold;
+  color: var(--cor-primaria-escura);
+  text-decoration: none;
+}
 
-  try {
-    const pendentes = await buscarEmpresasPendentes();
+.navbar__acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-    if (pendentes.length === 0) {
-      alvo.innerHTML = `<p class="vazio">Nenhum cadastro pendente no momento. 🎉</p>`;
-      return;
-    }
+.navbar__admin {
+  text-decoration: none;
+  font-size: 18px;
+  opacity: 0.6;
+}
 
-    alvo.innerHTML = pendentes.map((empresa) => renderCardPendente(empresa)).join('');
+main {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
 
-    alvo.querySelectorAll('[data-aprovar]').forEach((botao) => {
-      botao.addEventListener('click', () => processarPendente(botao, alvo, aprovarEmpresa, 'Aprovando...'));
-    });
-    alvo.querySelectorAll('[data-recusar]').forEach((botao) => {
-      botao.addEventListener('click', () => {
-        if (!confirm('Recusar e apagar esse cadastro? Não tem como desfazer.')) return;
-        processarPendente(botao, alvo, recusarEmpresa, 'Recusando...');
-      });
-    });
-  } catch (erro) {
-    alvo.innerHTML = `<p class="erro">Não foi possível carregar os pendentes agora.</p>`;
-    console.error(erro);
+.carrossel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.4 / 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: #e0e0e0;
+}
+
+.carrossel__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.carrossel__slide--ativo {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.carrossel__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carrossel__dots {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carrossel__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.carrossel__dot--ativo {
+  background: #fff;
+}
+
+.categorias-carrossel {
+  position: relative;
+  margin-top: 20px;
+}
+
+.categorias-carrossel__trilho {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.categorias-carrossel__trilho::-webkit-scrollbar {
+  display: none;
+}
+
+.categoria-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 96px;
+  scroll-snap-align: start;
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 16px 6px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--cor-texto);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.categoria-card__contagem {
+  /* Número de cadastrados — discreto, no cantinho de baixo à direita do botão */
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #eef1ef;
+  color: #6b736e;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.categoria-card__contagem:empty {
+  display: none;
+}
+
+.categoria-card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 60%;
+  height: 3px;
+  border-radius: 2px;
+  background: #7ed321;
+  transform: translateX(-50%) scaleX(0);
+  transition: transform 0.15s ease;
+}
+
+.categoria-card:active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.categoria-card__icone {
+  display: block;
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.categoria-card__label {
+  font-size: 12px;
+  line-height: 1.2;
+  display: block;
+}
+
+.categorias-carrossel__seta {
+  position: absolute;
+  top: 42%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--cor-branco);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--cor-primaria-escura);
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+}
+
+.categorias-carrossel__seta--esquerda {
+  left: -6px;
+}
+
+.categorias-carrossel__seta--direita {
+  right: -6px;
+}
+
+.categorias-carrossel__seta:active {
+  background: var(--cor-fundo);
+}
+
+.admin-login,
+.admin-painel {
+  max-width: 480px;
+}
+
+.admin-painel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.btn-secundario {
+  background: transparent;
+  color: var(--cor-primaria);
+  border: 1px solid var(--cor-primaria);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.admin-painel__titulo-cobertura {
+  margin-top: 32px;
+}
+
+.admin-painel__subtitulo-cobertura {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.cobertura-tabela-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.cobertura-tabela {
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cobertura-tabela th,
+.cobertura-tabela td {
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.cobertura-tabela th {
+  background: var(--cor-fundo);
+  font-weight: 600;
+}
+
+.cobertura-tabela__cidade {
+  text-align: left;
+  font-weight: 600;
+  background: #fafafa;
+}
+
+.cobertura-tabela__vazio {
+  background: #fdecea;
+  color: #c0392b;
+  font-weight: 700;
+}
+
+.card-noticia {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+}
+
+.card-noticia__imagem {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.card-noticia__conteudo {
+  padding: 0;
+  min-width: 0;
+}
+
+.card-noticia__conteudo h3 {
+  font-size: 14px;
+  line-height: 1.3;
+  margin: 2px 0 4px;
+}
+
+.card-noticia__data {
+  font-size: 11px;
+  color: #888;
+  margin: 0 0 4px 0;
+}
+
+.card-noticia__resumo {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-noticia__link {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--cor-primaria);
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.caminhoes__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-caminhao {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-caminhao__foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.card-caminhao__conteudo {
+  padding: 14px;
+}
+
+.card-caminhao__preco {
+  color: var(--cor-primaria);
+  font-weight: bold;
+  font-size: 18px;
+  margin: 4px 0;
+}
+
+.card-caminhao__local {
+  font-size: 13px;
+  color: #666;
+}
+
+.card-evento {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-evento__imagem {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.card-evento__conteudo {
+  padding: 14px;
+}
+
+.card-evento__data {
+  color: var(--cor-primaria);
+  font-weight: bold;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.card-evento__local {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.card-evento__link {
+  display: inline-block;
+  margin-top: 8px;
+  background: var(--cor-primaria);
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.relatorio__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.relatorio__tabela th,
+.relatorio__tabela td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.relatorio__tabela th {
+  background: var(--cor-fundo);
+  font-weight: bold;
+}
+
+.card-empresa {
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-empresa__topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.card-empresa__nome {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.card-empresa__distancia {
+  font-size: 12px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-empresa__endereco {
+  font-size: 12px;
+  color: #777;
+  margin: 2px 0 8px;
+  line-height: 1.3;
+}
+
+.card-empresa__descricao {
+  font-size: 13px;
+  color: #555;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.card-empresa__linha {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tag--pequena {
+  font-size: 11px;
+  padding: 1px 7px;
+}
+
+.card-empresa__acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.card-empresa__botao {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.card-empresa__botao--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.card-empresa__botao--mapa {
+  background: #eef1ee;
+  color: #333;
+}
+
+.tag {
+  display: inline-block;
+  background: #eef7ee;
+  color: var(--cor-primaria);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-right: 6px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+}
+
+.cadastro__ajuda-endereco {
+  font-size: 12px;
+  color: #888;
+  margin: -8px 0 14px;
+}
+
+.cadastro__botao-localizacao {
+  display: block;
+  width: 100%;
+  background: #eef1ee;
+  color: var(--cor-primaria-escura);
+  border: 1px dashed var(--cor-primaria);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: -4px;
+  margin-bottom: 6px;
+}
+
+.cadastro__localizacao-status {
+  font-size: 12px;
+  color: var(--cor-primaria);
+  margin: -4px 0 14px;
+  min-height: 14px;
+}
+
+.cadastro__categoria-travada {
+  background: #eef1ee;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin: 4px 0 16px;
+}
+
+.cadastro__label-extra {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin: 0 0 8px;
+}
+
+.cadastro__categorias-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cadastro__categoria-extra-item {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+}
+
+.cadastro__categoria-extra-item input {
+  width: auto !important;
+  margin: 0 !important;
+}
+
+/* Horário de atendimento (formulário de cadastro) */
+.cadastro__horario {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 16px;
+  background: #fff;
+}
+
+.cadastro__horario legend {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  padding: 0 6px;
+}
+
+.cadastro__horario-24h,
+.cadastro__dia {
+  position: relative;
+  display: inline-flex !important;
+  margin: 0 !important;
+  cursor: pointer;
+}
+
+.cadastro__horario-24h {
+  margin-bottom: 14px !important;
+}
+
+/* A caixinha fica escondida: quem aparece é o "botão" ao lado */
+.cadastro__horario-24h input,
+.cadastro__dia input {
+  position: absolute;
+  opacity: 0;
+  width: 1px !important;
+  height: 1px;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+}
+
+.cadastro__horario-24h span,
+.cadastro__dia span {
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  background: #fff;
+  color: #555;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.cadastro__horario-24h span {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.cadastro__dia span {
+  min-width: 44px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.cadastro__horario-24h input:checked + span,
+.cadastro__dia input:checked + span {
+  background: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: #fff;
+}
+
+.cadastro__horario-24h input:focus-visible + span,
+.cadastro__dia input:focus-visible + span {
+  outline: 2px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.cadastro__dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cadastro__horas {
+  display: flex;
+  gap: 10px;
+}
+
+.cadastro__horas label {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+#cadastro-horario-detalhes[hidden] {
+  display: none;
+}
+
+button {
+  background: var(--cor-primaria);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+
+.vagas__total-destaque {
+  background: #0f2d1a;
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin: 12px 0 16px;
+  line-height: 1.4;
+}
+
+.vagas__total-destaque strong {
+  font-size: 26px;
+  color: #7ed321;
+}
+
+.home-secao {
+  margin-top: 28px;
+}
+
+/* ---------------------------------------------------------------------------
+   Celular: separação entre as seções da Home, estilo portal de notícias —
+   uma faixa cinza de ponta a ponta antes de cada seção e um tracinho verde
+   ao lado do título. Assim uma informação não "gruda" na outra.
+   --------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .home-secao {
+    margin: 28px -16px 0; /* -16px = ocupa a largura toda da tela */
+    padding: 22px 16px 0;
+    border-top: 8px solid #e2e5e2;
+  }
+
+  .home-secao__titulo {
+    font-size: 20px;
+    line-height: 1.25;
+    padding-left: 10px;
+    border-left: 4px solid var(--cor-primaria);
   }
 }
 
-function renderCardPendente(empresa) {
-  const id = empresa.id;
-  const categorias = (empresa.categorias || []).join(', ') || '-';
-  return `
-    <div class="admin-pendente-card" id="pendente-${id}">
-      <p class="admin-pendente-card__nome">${empresa.nome || '(sem nome)'}</p>
-      <p class="admin-pendente-card__linha">📍 ${empresa.endereco || '-'}</p>
-      <p class="admin-pendente-card__linha">🏷️ ${categorias}</p>
-      <p class="admin-pendente-card__linha">💬 ${empresa.whatsapp || '-'} ${empresa.telefone ? `| ☎️ ${empresa.telefone}` : ''}</p>
-      ${empresa.instagram ? `<p class="admin-pendente-card__linha">📸 @${empresa.instagram}</p>` : ''}
-      ${empresa.especialidades ? `<p class="admin-pendente-card__linha">✏️ ${empresa.especialidades}</p>` : ''}
-      ${
-        (empresa.fotos || []).length > 0
-          ? `<div class="admin-pendente-card__fotos">
-              ${empresa.fotos
-                .map(
-                  (url) =>
-                    `<img src="${otimizarFotoCloudinary(url, { largura: 300, altura: 220 })}" alt="" class="admin-pendente-card__foto" style="width:150px;height:110px;object-fit:cover;border-radius:8px;" />`
-                )
-                .join('')}
-            </div>`
-          : ''
-      }
-      <div class="admin-pendente-card__acoes">
-        <button class="btn-primario" data-aprovar="${id}">✅ Aprovar</button>
-        <button class="btn-secundario" data-recusar="${id}">🗑️ Recusar</button>
-      </div>
-    </div>
-  `;
+.home-secao__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
 }
 
-async function processarPendente(botao, alvo, acao, textoCarregando) {
-  const id = botao.dataset.aprovar || botao.dataset.recusar;
-  const card = alvo.querySelector(`#pendente-${id}`);
-  const botoes = card.querySelectorAll('button');
-  botoes.forEach((b) => (b.disabled = true));
-  botao.textContent = textoCarregando;
+.home-secao__titulo {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
 
-  try {
-    await acao(id);
-    card.remove();
-    if (!alvo.querySelector('.admin-pendente-card')) {
-      alvo.innerHTML = `<p class="vazio">Nenhum cadastro pendente no momento. 🎉</p>`;
-    }
-  } catch (erro) {
-    botoes.forEach((b) => (b.disabled = false));
-    alert('Não foi possível concluir. Tente novamente.');
-    console.error(erro);
+.home-secao__ver-todas {
+  font-size: 13px;
+  color: var(--cor-primaria);
+  text-decoration: none;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.home-secao__ver-todas--em-breve {
+  color: #999;
+  font-weight: normal;
+}
+
+.home-secao__lista {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.home-secao__lista::-webkit-scrollbar {
+  display: none;
+}
+
+.home-secao__vazio {
+  font-size: 13px;
+  color: #888;
+  padding: 8px 0;
+}
+
+.home-secao__erro {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.home-secao__retry-btn {
+  margin-top: 6px;
+}
+
+.mini-card {
+  flex: 0 0 auto;
+  width: 210px;
+  scroll-snap-align: start;
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.mini-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.mini-card__sub {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.mini-card__acao {
+  display: inline-block;
+  font-size: 12px;
+  background: var(--cor-primaria);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.mini-card--exemplo {
+  border: 1px dashed #ccc;
+}
+
+.mini-card__tag-exemplo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #f5a623;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.vitrine-card {
+  flex: 0 0 auto;
+  width: 130px;
+  height: 88px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  display: block;
+  text-decoration: none;
+  scroll-snap-align: start;
+  background-color: #ccc;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.vitrine-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 65%);
+}
+
+.vitrine-card__nome {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.navbar__logo-img {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+
+.navbar__logo--centro {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.navbar__logo-img--grande {
+  height: 84px;
+}
+
+.vagas__header h1 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.vagas__header p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 0;
+}
+
+.vagas__resumo {
+  margin: 16px 0;
+}
+
+.vagas__resumo p {
+  font-size: 13px;
+  color: #555;
+  margin: 6px 0;
+}
+
+.vagas__aviso {
+  background: #fff8e6;
+  border-left: 3px solid #f5a623;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #7a5c00 !important;
+}
+
+.vagas__busca {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.vagas__busca:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.vagas__cidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* Filtro por área de atuação (acima das cidades) */
+.vagas__filtro-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #667;
+  margin: 4px 0 8px;
+}
+
+.vagas__areas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* celular: 2 por linha, todos do mesmo tamanho */
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .vagas__areas {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* computador: 3 por linha */
   }
 }
 
-function normalizarTexto(txt) {
-  return (txt || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+/* .vagas__areas na frente pra vencer o estilo geral do .chip, que vem depois */
+.vagas__areas .chip--area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid #d5ddd6;
+  border-radius: 12px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
 }
 
-/** Configura a busca + edição de prestadores. Carrega todas as empresas uma
- * vez (a mesma lista usada na busca geral do site) e filtra na hora, sem
- * precisar ficar consultando o Firestore a cada letra digitada. */
-async function configurarEdicaoPrestadores(container) {
-  const inputBusca = container.querySelector('#editar-prestador-busca');
-  const resultadosDiv = container.querySelector('#editar-prestador-resultados');
-  const formWrapDiv = container.querySelector('#editar-prestador-form-wrap');
+.vagas__areas .chip--area:hover {
+  background: #f3f6f3;
+}
 
-  let todasEmpresas = [];
-  try {
-    todasEmpresas = await buscarTodasEmpresas();
-  } catch (erro) {
-    resultadosDiv.innerHTML = `<p class="erro">Não foi possível carregar a lista de prestadores agora.</p>`;
-    console.error(erro);
-    return;
+.vagas__areas .chip--area.chip--ativo {
+  background: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: #fff;
+}
+
+/* "Todas as áreas" ocupa a linha inteira, em cima */
+.vagas__areas .chip--area-todas {
+  grid-column: 1 / -1;
+  min-height: 42px;
+}
+
+.chip__rotulo {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chip__num {
+  display: inline-block;
+  flex-shrink: 0;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eef1ee;
+  color: #333;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.chip--ativo .chip__num {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.chip {
+  border: none;
+  background: #eef1ee;
+  color: #333;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.chip:hover {
+  background: #dde3dd;
+}
+
+.chip--ativo {
+  background: var(--cor-primaria);
+  color: #fff;
+  font-weight: 600;
+}
+
+.vagas-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.vaga-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+}
+
+.vaga-card__cargo {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.vaga-card__local {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.vaga-card__acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-ligar,
+.btn-whatsapp,
+.btn-localizacao,
+.btn-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-ligar {
+  background: #eef1ee;
+  color: #333;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.btn-email {
+  background: #eef1ee;
+  color: #333;
+}
+
+/* Vagas: botão que abre o SINE no Google Maps (no lugar do WhatsApp) */
+.btn-localizacao {
+  background: var(--cor-primaria);
+  color: #fff;
+}
+
+/* Vagas dentro da cidade: título da área e as vagas embaixo */
+.vagas__grupo-area {
+  margin-bottom: 18px;
+}
+
+.vagas__area-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 16px;
+  margin: 6px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--cor-primaria);
+}
+
+.vagas__area-titulo span {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667;
+}
+
+/* Admin: empresas das vagas */
+.admin-vagas__busca {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d5ddd6;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.admin-vagas__cidade {
+  margin: 14px 0 6px;
+  font-size: 15px;
+}
+
+.admin-vagas__tabela-wrap {
+  overflow-x: auto;
+}
+
+.admin-vagas__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--cor-branco);
+}
+
+.admin-vagas__tabela th,
+.admin-vagas__tabela td {
+  text-align: left;
+  padding: 7px 8px;
+  border-bottom: 1px solid #eef0ee;
+  vertical-align: top;
+}
+
+.admin-vagas__tabela td:last-child,
+.admin-vagas__tabela th:last-child {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sine-unidade {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sine-unidade__titulo {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.sine-unidade__linha {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.sine-unidade__acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vazio {
+  color: #888;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.erro-carregamento {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.erro-carregamento .btn-secundario {
+  margin-top: 12px;
+}
+
+.carrossel-categoria {
+  margin-bottom: 20px;
+}
+
+.carrossel-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  aspect-ratio: 2.4 / 1;
+  padding: 16px;
+  text-decoration: none;
+  border: 2px dashed #7ed321;
+  margin-bottom: 16px;
+}
+
+.carrossel-placeholder__tag {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #7ed321;
+  margin-bottom: 4px;
+}
+
+.carrossel-placeholder__titulo {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.carrossel-placeholder__sub {
+  font-size: 12px;
+  color: #ccc;
+}
+
+.resultados__busca {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin: 12px 0 16px;
+}
+
+.resultados__busca:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.resultados__localizacao-btn {
+  display: block;
+  width: 100%;
+  background: #eef1ee;
+  color: var(--cor-primaria-escura);
+  border: 1px dashed var(--cor-primaria);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 0 16px;
+}
+
+.resultados__localizacao-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.mini-card--aniversario {
+  background: linear-gradient(135deg, #fff8e6, #ffffff);
+  border: 1px solid #f5d98e;
+}
+
+.carrossel-vertical {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin: 4px 0 20px;
+  scrollbar-width: none;
+}
+
+.carrossel-vertical::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-vertical {
+  flex: 0 0 90%;
+  width: 90%;
+  aspect-ratio: 2.4 / 1;
+  height: auto;
+  border-radius: var(--radius);
+  background-color: #ccc;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
+  text-decoration: none;
+  display: block;
+}
+
+.banner-vertical__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 50%);
+}
+
+.banner-vertical--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  border: 2px dashed #7ed321;
+  color: #fff;
+  padding: 16px;
+}
+
+.banner-vertical__tag {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #7ed321;
+}
+
+.banner-vertical__titulo {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.busca-home {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 20px;
+}
+
+.busca-home__input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+
+.busca-home__input:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.busca-home__botao {
+  background: var(--cor-primaria);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0 20px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.busca {
+  padding: 16px 0;
+}
+
+.busca__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.busca__input:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.busca__grupo {
+  margin-bottom: 24px;
+}
+
+.busca__grupo-titulo {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+
+.busca__grupo-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.banner-grupos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  margin: 4px 0 20px;
+}
+
+.banner-mapa-pill {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #eef1ee;
+  border: 1px solid #d8ded8;
+  border-radius: 999px;
+  padding: 10px 16px;
+  text-decoration: none;
+  margin: 4px 0 20px;
+  width: fit-content;
+}
+
+.banner-mapa-pill__icone {
+  font-size: 18px;
+}
+
+.banner-mapa-pill__texto {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f2d1a;
+}
+
+.banner-mapa-pill__seta {
+  color: #7ed321;
+  font-size: 16px;
+}
+
+.banner-mapa-pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.4), transparent);
+  animation: brilho-pill 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes brilho-pill {
+  0% {
+    left: -60%;
+  }
+  45% {
+    left: 130%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+.mapa-pagina__header {
+  margin-bottom: 12px;
+}
+
+.mapa-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.mapa-leaflet {
+  width: 100%;
+  height: 65vh;
+  min-height: 400px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.mapa-pagina__status {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  margin-top: 10px;
+}
+
+.mapa-pino-usuario {
+  width: 18px;
+  height: 18px;
+  background: #1a73e8;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.35), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mapa-popup-cluster {
+  font-size: 13px;
+}
+
+.mapa-popup-cluster__total {
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #111;
+}
+
+.mapa-popup-cluster__lista {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.mapa-popup-cluster__lista li {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.mapa-popup-cluster__lista li:last-child {
+  border-bottom: none;
+}
+
+.mapa-popup-cluster__zoom {
+  width: 100%;
+  background: var(--cor-primaria);
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mapa-cluster-icone {
+  background: transparent;
+  border: none;
+}
+
+.mapa-cluster-pino {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--cor-primaria);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  margin: 3px;
+}
+
+.mapa-cluster-pino__emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.mapa-cluster-pino__numero {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #7ed321;
+  color: #0f2d1a;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.mapa-cluster-pino--ppd {
+  border-color: #d9412f;
+}
+
+.mapa-cluster-pino__numero--ppd {
+  background: #d9412f;
+  color: #fff;
+}
+
+.banner-grupos__icone {
+  font-size: 28px;
+}
+
+.banner-grupos__texto {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #eee;
+}
+
+.banner-grupos__texto strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+  color: #fff;
+}
+
+.banner-grupos__seta {
+  font-size: 22px;
+  color: #7ed321;
+}
+
+.banner-grupos-imagem {
+  display: block;
+  margin: 4px 0 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.banner-grupos-imagem img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.banner-parceiros-gif {
+  display: block;
+  margin: 4px 0 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.banner-parceiros-gif img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.banner-lions-mutual {
+  display: block;
+  margin: 4px 0 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.banner-lions-mutual img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grupos-whatsapp__header {
+  margin-bottom: 16px;
+}
+
+.grupos-whatsapp__header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.grupos-whatsapp__incluir {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #25D366;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.grupos-whatsapp__grupo {
+  margin-bottom: 24px;
+}
+
+.grupos-whatsapp__grupo-titulo {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.grupos-whatsapp__lista {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.grupo-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.grupo-card--exemplo {
+  border: 1px dashed #ccc;
+}
+
+.grupo-card__nome {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.grupo-card__local,
+.grupo-card__admin {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 4px;
+}
+
+.grupo-card__acao {
+  display: inline-block;
+  margin-top: 8px;
+  background: #25d366;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.fretes-pagina__header {
+  margin-bottom: 16px;
+}
+
+.fretes-pagina__header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.fretes-pagina__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.frete-card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.frete-card--exemplo {
+  border: 1px dashed #ccc;
+}
+
+.frete-card__resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.frete-card__rota {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.frete-card__basico {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.frete-card__seta {
+  color: #999;
+  font-size: 14px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.frete-card--aberto .frete-card__seta {
+  transform: rotate(180deg);
+}
+
+.frete-card__detalhe {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #444;
+}
+
+.frete-card--aberto .frete-card__detalhe {
+  display: block;
+  padding-top: 12px;
+}
+
+.frete-card__detalhe p {
+  margin: 0 0 6px;
+}
+
+.frete-card__whatsapp {
+  display: inline-block;
+  margin-top: 8px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+#aniversariantes-resumo {
+  display: block;
+}
+
+#aniversariantes-resumo::-webkit-scrollbar {
+  display: none;
+}
+
+.aniversario-card {
+  width: 100%;
+  background: linear-gradient(135deg, #fff8e6, #ffffff);
+  border: 1px solid #f5d98e;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.aniversario-card__titulo {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.aniversario-card__lista {
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.aniversario-card__grupo {
+  margin-bottom: 10px;
+}
+
+.aniversario-card__grupo:last-child {
+  margin-bottom: 0;
+}
+
+.aniversario-card__grupo-data {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6d00;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0 0 4px;
+}
+
+.aniversario-card__grupo-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aniversario-card__grupo-lista li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+}
+
+.aniversario-card__grupo-lista li:last-child {
+  border-bottom: none;
+}
+
+#aniversario-banner-publicidade {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 20px;
+}
+
+.aniversario-publicidade {
+  flex: 0 0 auto;
+  width: 260px;
+  height: 300px;
+  scroll-snap-align: start;
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.aniversario-publicidade img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.aniversario-card__vazio {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+.fretes-pagina__grupo {
+  margin-bottom: 24px;
+}
+
+.fretes-pagina__grupo-titulo {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.frete-estado-card {
+  flex: 0 0 auto;
+  width: 190px;
+  scroll-snap-align: start;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  display: block;
+}
+
+.frete-estado-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+  color: #111;
+}
+
+.frete-estado-card__sub {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.fretes-pagina__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.frete-card--oculto {
+  display: none;
+}
+
+#secao-aniversariantes .home-secao__titulo {
+  font-size: 17px;
+}
+
+.aniversario-card__header-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.aniversario-card__contador {
+  background: var(--cor-primaria);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.aniversario-card__botao-mes {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  background: #0f2d1a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.aniversariantes-mes__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.aniversariantes-mes__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aniversariantes-mes__lista li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.aniversariantes-mes__data {
+  color: #888;
+}
+
+.noticias__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.noticias__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.noticias__carregar-mais {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: #eef1ee;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+}
+
+.manchetes-home {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 20px;
+}
+
+.manchete-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+}
+
+.manchete-card__imagem {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--cor-fundo);
+}
+
+.manchete-card__imagem--vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.manchete-card__conteudo {
+  flex: 1;
+  min-width: 0;
+}
+
+.manchete-card__tag {
+  font-size: 11px;
+  font-weight: bold;
+  color: #d9412f;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.manchete-card__titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  margin: 4px 0 6px;
+  line-height: 1.3;
+}
+
+.manchete-card__data {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.playlist-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+
+.playlist-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.playlist-lista {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin-top: 12px;
+  scrollbar-width: none;
+}
+
+.playlist-lista::-webkit-scrollbar {
+  display: none;
+}
+
+.playlist-item {
+  flex: 0 0 auto;
+  width: 140px;
+  scroll-snap-align: start;
+  background: var(--cor-branco);
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  cursor: pointer;
+  display: block;
+}
+
+.playlist-item__miniatura {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.playlist-item__miniatura-wrap {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.playlist-item__miniatura-wrap .playlist-item__miniatura {
+  margin-bottom: 0;
+}
+
+.playlist-item__equalizador {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 13px;
+  padding: 3px 4px;
+  background: rgba(15, 45, 26, 0.75);
+  border-radius: 4px;
+}
+
+.playlist-item__equalizador span {
+  display: block;
+  width: 2px;
+  background: #7ed321;
+  border-radius: 1px;
+  animation: equalizar 1s ease-in-out infinite;
+}
+
+.playlist-item__equalizador span:nth-child(1) {
+  height: 40%;
+  animation-delay: -0.2s;
+}
+
+.playlist-item__equalizador span:nth-child(2) {
+  height: 100%;
+  animation-delay: -0.6s;
+}
+
+.playlist-item__equalizador span:nth-child(3) {
+  height: 65%;
+  animation-delay: -0.1s;
+}
+
+.playlist-item__equalizador span:nth-child(4) {
+  height: 80%;
+  animation-delay: -0.8s;
+}
+
+.playlist-item__titulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: #222;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.playlist-item--ativo {
+  outline: 2px solid var(--cor-primaria);
+}
+
+.playlist-cta-pendrive {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  margin-top: 16px;
+}
+
+.playlist-cta-pendrive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.35), transparent);
+  animation: brilho-pill 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.playlist-cta-pendrive__equalizador {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.playlist-cta-pendrive__equalizador span {
+  display: block;
+  width: 4px;
+  background: #7ed321;
+  border-radius: 2px;
+  animation: equalizar 1s ease-in-out infinite;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(1) {
+  height: 40%;
+  animation-delay: -0.2s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(2) {
+  height: 100%;
+  animation-delay: -0.6s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(3) {
+  height: 65%;
+  animation-delay: -0.1s;
+}
+
+.playlist-cta-pendrive__equalizador span:nth-child(4) {
+  height: 80%;
+  animation-delay: -0.8s;
+}
+
+@keyframes equalizar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.playlist-cta-pendrive__texto {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #eee;
+}
+
+.playlist-cta-pendrive__texto strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+  color: #fff;
+}
+
+.playlist-cta-pendrive__seta {
+  font-size: 22px;
+  color: #7ed321;
+}
+
+.noticia-completa {
+  padding: 8px 0 24px;
+}
+
+.noticia-completa__voltar {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.noticia-completa__imagem {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.noticia-completa__tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #d9412f;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.noticia-completa__titulo {
+  font-size: 22px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+
+.noticia-completa__meta {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 20px;
+}
+
+.noticia-completa__texto {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #222;
+}
+
+.noticia-completa__texto p {
+  margin: 0 0 16px;
+}
+
+.noticia-externa {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.noticia-externa__barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0f2d1a;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.noticia-externa__logo {
+  height: 28px;
+  width: auto;
+}
+
+.noticia-externa__texto-barra {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.noticia-externa__fechar {
+  color: #fff;
+  text-decoration: none;
+  font-size: 18px;
+  padding: 4px 8px;
+  opacity: 0.8;
+}
+
+.noticia-externa__fechar:hover {
+  opacity: 1;
+}
+
+.noticia-externa__aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #fff8e6;
+  border-bottom: 1px solid #f5d98e;
+  flex-shrink: 0;
+}
+
+.noticia-externa__aviso span {
+  font-size: 12px;
+  color: #7a5c00;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noticia-externa__abrir-original {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f2d1a;
+  background: #7ed321;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.noticia-externa__iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+}
+
+.footer {
+  background: #0f2d1a;
+  color: #ddd;
+  padding: 32px 20px 20px;
+  margin-top: 40px;
+}
+
+.footer__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.footer__colunas-duplas {
+  display: flex;
+  gap: 20px;
+}
+
+.footer__colunas-duplas .footer__coluna {
+  flex: 1;
+  min-width: 0;
+}
+
+.footer__coluna--logo .footer__logo {
+  height: 44px;
+  width: auto;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.footer__titulo {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.footer__texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #bbb;
+  margin: 0 0 12px;
+}
+
+.footer__link {
+  display: block;
+  color: #ccc;
+  font-size: 13px;
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer__link:last-child {
+  border-bottom: none;
+}
+
+.footer__whatsapp {
+  display: inline-block;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.footer__newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.footer__newsletter-input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 14px;
+}
+
+.footer__newsletter-input::placeholder {
+  color: #999;
+}
+
+.footer__newsletter-input:focus {
+  outline: none;
+  border-color: #7ed321;
+}
+
+.footer__newsletter-botao {
+  background: #7ed321;
+  color: #0f2d1a;
+  font-weight: 700;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.footer__newsletter-botao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footer__newsletter-mensagem {
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.footer__newsletter-mensagem--sucesso {
+  color: #7ed321;
+}
+
+.footer__newsletter-mensagem--erro {
+  color: #ff6b6b;
+}
+
+.footer__base {
+  max-width: 480px;
+  margin: 24px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.footer__base p {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+}
+
+.footer__admin-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.35;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.footer__admin-link:hover {
+  opacity: 0.7;
+}
+
+.institucional-pagina h1 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.institucional-pagina p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.institucional-pagina__lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.institucional-pagina__lista li {
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.institucional-pagina__whatsapp {
+  display: inline-block;
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  margin: 8px 0 16px;
+}
+
+.institucional-pagina__endereco {
+  color: #666;
+}
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: #25d366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.banner-lions-mutual {
+  position: relative;
+  overflow: hidden;
+  animation: lions-glow 2.4s ease-in-out infinite;
+}
+
+.banner-lions-mutual::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: brilho-pill 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes lions-glow {
+  0%,
+  100% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgba(245, 130, 32, 0.55);
+  }
+}
+
+.aniversario-card__item--hoje {
+  font-weight: 700;
+  color: #0f2d1a;
+  background: #fff0c2;
+  padding: 6px 8px;
+  border-radius: 6px;
+  /* Sem margem negativa: antes o item saía 8px pra fora da lista
+     (que tem rolagem) e o emoji ficava cortado no celular */
+  margin: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aniversario-card__emoji {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.footer__coluna--newsletter {
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.navbar {
+  gap: 12px;
+}
+
+.navbar__hamburguer {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.navbar__hamburguer span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--cor-primaria-escura);
+  border-radius: 2px;
+}
+
+.menu-lateral__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 200;
+}
+
+.menu-lateral__overlay--visivel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: #0f2d1a;
+  color: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.menu-lateral--aberto {
+  transform: translateX(0);
+}
+
+.menu-lateral__header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-lateral__logo {
+  height: 40px;
+  width: auto;
+}
+
+.menu-lateral__fechar {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.menu-lateral__links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  /* Rolagem própria: com "Serviços" aberto a lista passa da tela e
+     precisa dar para descer/subir no celular */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.menu-lateral__link {
+  padding: 14px 20px;
+  color: #eee;
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.menu-lateral__link:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Menu lateral: grupo "Serviços" que abre e fecha */
+.menu-lateral__grupo {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.menu-lateral__grupo-titulo {
+  padding: 14px 20px;
+  color: #eee;
+  font-size: 15px;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.menu-lateral__grupo-titulo::-webkit-details-marker {
+  display: none;
+}
+
+.menu-lateral__grupo-titulo::after {
+  content: '▾';
+  font-size: 13px;
+  transition: transform 0.2s;
+}
+
+.menu-lateral__grupo[open] .menu-lateral__grupo-titulo::after {
+  transform: rotate(180deg);
+}
+
+.menu-lateral__grupo-itens {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.menu-lateral__sublink {
+  padding: 11px 20px 11px 32px;
+  font-size: 14px;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Bolinha no lugar dos emojis */
+.menu-lateral__sublink::before,
+.navbar__dropdown-item::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6fcf8f;
+  flex-shrink: 0;
+}
+
+.mini-card__avaliacao {
+  font-size: 13px;
+  margin: 6px 0 0;
+  color: #333;
+}
+
+.mini-card__avaliacao-total {
+  font-size: 11px;
+  color: #999;
+}
+
+.card-empresa__nota {
+  font-size: 12px;
+  margin: 0;
+  margin-left: auto;
+}
+
+.card-empresa__nota-total {
+  font-size: 12px;
+  color: #888;
+}
+
+.card-empresa__avaliar-btn {
+  background: #eef1ee;
+  color: #333;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.card-empresa__avaliar-notas {
+  margin-top: 10px;
+}
+
+.card-empresa__avaliar-instrucao {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.card-empresa__avaliar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nota-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nota-btn:active {
+  background: var(--cor-primaria);
+  color: #fff;
+}
+
+.card-empresa__avaliar-obrigado {
+  font-size: 13px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+
+.cursos-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.cursos-pagina__destaque {
+  background: linear-gradient(135deg, #0f2d1a, #1a4d2e);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.cursos-pagina__destaque-titulo {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.cursos-pagina__destaque-texto {
+  font-size: 13px;
+  color: #ddd;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.cursos-pagina__destaque-link {
+  color: #7ed321;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.cursos-pagina__secao-titulo {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.cursos-pagina__secao-sub {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 16px;
+}
+
+.cursos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.curso-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.curso-card__titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.curso-card__descricao {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cursos-pagina__botao-todos {
+  display: block;
+  text-align: center;
+  background: var(--cor-primaria);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.parceiras-pagina__header p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.parceiras-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.parceira-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.parceira-card__nome {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.parceira-card__descricao {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+.parceira-card__saiba-mais-btn {
+  background: #eef1ee;
+  color: #333;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.parceira-card__contatos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.parceira-card__contato {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.parceira-card__contato--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.parceira-card__contato--instagram {
+  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af);
+  color: #fff;
+}
+
+.parceira-card__contato--site {
+  background: #eef1ee;
+  color: #333;
+}
+
+.parceira-card__link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-primaria);
+  text-decoration: none;
+}
+
+@media (min-width: 700px) {
+  main {
+    max-width: 680px;
   }
 
-  inputBusca.addEventListener('input', () => {
-    const termo = normalizarTexto(inputBusca.value.trim());
-    formWrapDiv.innerHTML = ''; // fecha o formulário aberto se a pessoa voltar a digitar
-
-    if (termo.length < 2) {
-      resultadosDiv.innerHTML = '';
-      return;
-    }
-
-    const encontradas = todasEmpresas
-      .filter((e) => normalizarTexto(e.nome).includes(termo))
-      .slice(0, 15); // não precisa listar centenas de resultados de uma vez
-
-    if (encontradas.length === 0) {
-      resultadosDiv.innerHTML = `<p class="vazio">Nenhum prestador encontrado com esse nome.</p>`;
-      return;
-    }
-
-    resultadosDiv.innerHTML = encontradas
-      .map(
-        (e) => `
-        <button
-          type="button"
-          class="admin-pendente-card__acoes btn-secundario"
-          data-editar-empresa="${e.id}"
-          style="display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px;border-radius:8px;"
-        >
-          ${e.nome} ${e.cidade ? `— 📍 ${e.cidade}${e.estado ? '/' + e.estado : ''}` : ''}
-        </button>
-      `
-      )
-      .join('');
-
-    resultadosDiv.querySelectorAll('[data-editar-empresa]').forEach((botao) => {
-      botao.addEventListener('click', () => {
-        const empresa = todasEmpresas.find((e) => e.id === botao.dataset.editarEmpresa);
-        if (empresa) renderFormularioEdicao(formWrapDiv, empresa);
-        formWrapDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-  });
+  .footer__grid,
+  .footer__coluna--newsletter,
+  .footer__base {
+    max-width: 680px;
+  }
 }
 
-/** Renderiza o formulário de edição já preenchido com os dados atuais da
- * empresa selecionada — mesmos campos do cadastro público (cadastro-empresa.js),
- * mais Cidade/Estado (que o formulário público não tem, mas os prestadores
- * da planilha já usam pra agrupar por estado nas páginas de categoria). */
-function renderFormularioEdicao(container, empresa) {
-  const categoriasAtuais = new Set(empresa.categorias || []);
-  const fotosAtuais = empresa.fotos || [];
+.navbar__links-desktop {
+  display: none;
+}
 
-  container.innerHTML = `
-    <div class="cadastro" style="border:2px solid #16a34a;border-radius:10px;padding:16px;margin-top:12px;">
-      <h3>Editando: ${empresa.nome}</h3>
-      <form id="form-editar-prestador">
-        <label>Nome da empresa <input name="nome" required value="${empresa.nome || ''}" /></label>
-        <label>Telefone (fixo, se tiver) <input name="telefone" value="${empresa.telefone || ''}" /></label>
-        <label>WhatsApp <input name="whatsapp" required value="${empresa.whatsapp || ''}" /></label>
-        <label>Instagram (opcional) <input name="instagram" value="${empresa.instagram || ''}" placeholder="@suaempresa" /></label>
+@media (min-width: 900px) {
+  main {
+    max-width: 1100px;
+  }
 
-        <label>Endereço completo <input name="endereco" id="editar-endereco" required value="${empresa.endereco || ''}" /></label>
-        <label>Cidade <input name="cidade" value="${empresa.cidade || ''}" /></label>
-        <label>Estado (sigla, ex: CE) <input name="estado" maxlength="2" value="${empresa.estado || ''}" /></label>
+  .footer__grid,
+  .footer__coluna--newsletter,
+  .footer__base {
+    max-width: 1100px;
+  }
 
-        <button type="button" id="btn-usar-localizacao-edicao" class="cadastro__botao-localizacao">
-          📍 Usar minha localização atual
-        </button>
-        <p class="cadastro__ajuda-endereco">
-          Útil quando você está na frente do prestador — captura a localização certa na hora pelo GPS do
-          celular. Se não usar, mantemos a coordenada que já existia (${
-            typeof empresa.lat === 'number' ? 'já tinha uma salva' : 'nenhuma salva ainda'
-          }).
-        </p>
-        <p id="editar-localizacao-status" class="cadastro__localizacao-status"></p>
+  .navbar {
+    justify-content: flex-start;
+    padding: 16px 32px;
+  }
 
-        <p class="cadastro__label-extra">Categorias:</p>
-        <div class="cadastro__categorias-extras">
-          ${CATEGORIAS_CADASTRO.map(
-            (c) => `
-            <label class="cadastro__categoria-extra-item">
-              <input type="checkbox" name="categorias" value="${c.id}" ${categoriasAtuais.has(c.id) ? 'checked' : ''} />
-              ${c.label}
-            </label>
-          `
-          ).join('')}
-        </div>
+  .navbar__hamburguer {
+    display: none;
+  }
 
-        <label>
-          Especialidades (opcional)
-          <textarea name="especialidades" rows="3">${empresa.especialidades || ''}</textarea>
-        </label>
+  .navbar__logo--centro {
+    position: static;
+    transform: none;
+  }
 
-        ${
-          fotosAtuais.length > 0
-            ? `
-          <p class="cadastro__label-extra">Fotos atuais (desmarque pra remover):</p>
-          <div class="admin-pendente-card__fotos" id="fotos-atuais-lista">
-            ${fotosAtuais
-              .map(
-                (url, i) => `
-              <label style="display:inline-block;text-align:center;margin-right:8px;">
-                <img src="${otimizarFotoCloudinary(url, { largura: 300, altura: 220 })}" alt="" style="width:120px;height:90px;object-fit:cover;border-radius:8px;display:block;margin-bottom:4px;" />
-                <input type="checkbox" name="manterFoto" value="${url}" checked /> manter
-              </label>
-            `
-              )
-              .join('')}
-          </div>
-        `
-            : ''
-        }
+  .navbar__logo-img--grande {
+    height: 48px;
+  }
 
-        <label>
-          Adicionar fotos novas (até ${MAX_FOTOS_EDICAO} no total, contando as mantidas acima)
-          <input type="file" name="fotosNovas" id="editar-fotos" accept="image/*" multiple />
-        </label>
+  .navbar__links-desktop {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: 20px;
+  }
 
-        <button type="submit">💾 Salvar como cadastro atualizado</button>
-        <button type="button" id="btn-cancelar-edicao" class="btn-secundario">Cancelar</button>
-      </form>
-      <p id="editar-status"></p>
-    </div>
-  `;
+  .navbar__link-desktop {
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
-  let coordenadasCapturadas = null;
+  .navbar__link-desktop:hover {
+    color: var(--cor-primaria);
+  }
 
-  container.querySelector('#btn-cancelar-edicao').addEventListener('click', () => {
-    container.innerHTML = '';
-  });
+  /* Menu "Serviços" (desktop) */
+  .navbar__dropdown {
+    position: relative;
+  }
 
-  container.querySelector('#btn-usar-localizacao-edicao').addEventListener('click', async () => {
-    const status = container.querySelector('#editar-localizacao-status');
-    status.textContent = '📡 Buscando sua localização...';
-    try {
-      coordenadasCapturadas = await obterLocalizacaoAtual();
-      status.textContent = '✅ Localização atual capturada com sucesso!';
-    } catch (erro) {
-      status.textContent = '❌ Não foi possível pegar sua localização. Verifique a permissão do navegador.';
-      console.error(erro);
+  .navbar__dropdown-botao {
+    background: none;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .navbar__dropdown-seta {
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+
+  .navbar__dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 14px);
+    /* "Serviços" fica logo depois de "Home": a caixa abre para a direita */
+    left: -16px;
+    z-index: 1000;
+    min-width: 440px;
+    grid-template-columns: 1fr 1fr;
+    /* Ordem alfabética descendo pela 1ª coluna e depois pela 2ª */
+    grid-template-rows: repeat(8, auto);
+    grid-auto-flow: column;
+    gap: 2px;
+    padding: 8px;
+    background: var(--cor-branco);
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  /* "Ponte" invisível: o menu não fecha no caminho do mouse até ele */
+  .navbar__dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 14px;
+  }
+
+  .navbar__dropdown--aberto .navbar__dropdown-menu {
+    display: grid;
+  }
+
+  .navbar__dropdown--aberto .navbar__dropdown-seta {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) {
+    .navbar__dropdown:hover .navbar__dropdown-menu {
+      display: grid;
     }
-  });
 
-  container.querySelector('#form-editar-prestador').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const status = container.querySelector('#editar-status');
-    status.textContent = 'Salvando...';
-
-    try {
-      const formData = new FormData(event.target);
-      const categorias = formData.getAll('categorias');
-      if (categorias.length === 0) {
-        status.textContent = 'Escolhe pelo menos uma categoria.';
-        return;
-      }
-
-      const fotosParaManter = formData.getAll('manterFoto');
-      const inputFotosNovas = container.querySelector('#editar-fotos');
-      const arquivosNovos = Array.from(inputFotosNovas.files).slice(
-        0,
-        Math.max(0, MAX_FOTOS_EDICAO - fotosParaManter.length)
-      );
-
-      status.textContent = 'Enviando fotos novas...';
-      const fotosNovasUrls = arquivosNovos.length ? await enviarFotos(arquivosNovos) : [];
-      const fotos = [...fotosParaManter, ...fotosNovasUrls];
-
-      const endereco = formData.get('endereco');
-      let lat = typeof empresa.lat === 'number' ? empresa.lat : null;
-      let lng = typeof empresa.lng === 'number' ? empresa.lng : null;
-
-      if (coordenadasCapturadas) {
-        lat = coordenadasCapturadas.lat;
-        lng = coordenadasCapturadas.lng;
-      } else if (endereco !== empresa.endereco) {
-        // Endereço mudou e ninguém usou o GPS — geocodifica de novo pra não
-        // deixar uma coordenada velha apontando pro endereço antigo.
-        status.textContent = 'Localizando novo endereço...';
-        const coordenadas = await geocodificarEndereco(endereco);
-        if (coordenadas) {
-          lat = coordenadas.lat;
-          lng = coordenadas.lng;
-        }
-      }
-
-      status.textContent = 'Salvando cadastro atualizado...';
-      await criarEmpresaAdmin({
-        nome: formData.get('nome'),
-        telefone: formData.get('telefone') || '',
-        whatsapp: formData.get('whatsapp'),
-        instagram: (formData.get('instagram') || '').replace(/^@/, ''),
-        endereco,
-        cidade: formData.get('cidade') || '',
-        estado: (formData.get('estado') || '').toUpperCase(),
-        categorias,
-        especialidades: formData.get('especialidades') || '',
-        fotos,
-        lat,
-        lng,
-      });
-
-      status.textContent =
-        '✅ Cadastro atualizado criado com sucesso! Não esquece de apagar a linha antiga desse prestador na planilha do Google.';
-    } catch (erro) {
-      status.textContent = 'Erro ao salvar. Tente novamente.';
-      console.error(erro);
+    .navbar__dropdown:hover .navbar__dropdown-seta {
+      transform: rotate(180deg);
     }
-  });
+  }
+
+  .navbar__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Telas largas: volta o espaçamento maior */
+  @media (min-width: 1440px) {
+    .navbar__links-desktop {
+      gap: 20px;
+      margin-left: 32px;
+    }
+
+    .navbar__link-desktop {
+      font-size: 14px;
+    }
+  }
+
+  .navbar__dropdown-item::before {
+    background: var(--cor-primaria);
+  }
+
+  .navbar__dropdown-item:hover,
+  .navbar__dropdown-item:focus-visible {
+    background: #eef7ee;
+    color: var(--cor-primaria);
+  }
+
+
+  .navbar__acoes {
+    margin-left: auto;
+  }
+
+  .carrossel {
+    aspect-ratio: 4 / 1;
+  }
+
+  .categorias-carrossel__seta {
+    display: none;
+  }
+
+  .categorias-carrossel__trilho {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    overflow: visible;
+  }
+
+  .categoria-card {
+    width: auto;
+  }
+
+  .home-secao__lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    overflow: visible;
+  }
+
+  .mini-card,
+  .frete-estado-card {
+    width: auto;
+  }
+
+  #aniversariantes-resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    overflow: visible;
+  }
+
+  .aniversario-card {
+    width: auto;
+  }
+
+  .resultados-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+
+  .grupos-whatsapp__lista {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* ===== Efeito brilhoso no contador de "X resultados disponíveis" =====
+   Reaproveita a mesma animação @keyframes brilho-pill que já existe acima
+   (definida junto com .banner-mapa-pill), só aplicada num texto. */
+
+.resultados__contador {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.resultados__contador::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(126, 211, 33, 0.55), transparent);
+  animation: brilho-pill 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ===== Selo de contagem regressiva nos cards de evento ===== */
+
+.card-evento__contagem {
+  display: inline-block;
+  background: #7ed321;
+  color: #0f2d1a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin: 4px 0 8px;
+}
+
+.card-evento__contagem--hoje {
+  background: #f5a623;
+  color: #fff;
+}
+
+.card-evento__contagem--passado {
+  background: #eee;
+  color: #888;
+}
+
+/* ===== Tópicos e botão de localização no card de evento ===== */
+
+.card-evento__local {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.card-evento__mapa-btn {
+  display: inline-block;
+  background: #eef1ee;
+  color: #333;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  margin: 0 0 12px;
+}
+
+.card-evento__detalhes {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.card-evento__detalhes li {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.5;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-evento__detalhes li:last-child {
+  border-bottom: none;
+}
+
+
+/* ---------------------------------------------------------------
+   Home: linha do "Ver mapa" + botão "Cadastre-se" (novos prestadores)
+   Toque = abre o cadastro • Segurar = copia o link
+   --------------------------------------------------------------- */
+.home-atalhos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+
+.home-atalhos .banner-mapa-pill {
+  margin: 0;
+  min-width: 0;
+}
+
+.botao-cadastre-se {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #1f6b3a;
+  background: #ffffff;
+  color: #1f6b3a;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.botao-cadastre-se:hover {
+  background: #1f6b3a;
+  color: #ffffff;
+}
+
+/* Enquanto segura: vai "enchendo" de verde até copiar */
+.botao-cadastre-se--segurando {
+  background: #1f6b3a;
+  color: #ffffff;
+  transform: scale(0.95);
+  transition: background 0.6s, color 0.6s, transform 0.6s;
+}
+
+/* Segurou o tempo suficiente: "Solte para copiar" */
+.botao-cadastre-se--pronto {
+  background: #1f6b3a;
+  color: #ffffff;
+  transform: scale(1);
+}
+
+.aviso-copiado {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  background: #0f2d1a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+.aviso-copiado--visivel {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+
+/* ---------------------------------------------------------------
+   Home: "Novas empresas cadastradas" (10 mais recentes)
+   --------------------------------------------------------------- */
+.nova-empresa-card {
+  position: relative;
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e3e8e5;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
+}
+
+.nova-empresa-card__selo {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #1f6b3a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.nova-empresa-card__icone {
+  font-size: 24px;
+}
+
+.nova-empresa-card__nome {
+  font-size: 14px;
+  line-height: 1.3;
+  color: #1a1a1a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nova-empresa-card__categoria {
+  font-size: 12px;
+  color: #1f6b3a;
+  font-weight: 600;
+}
+
+.nova-empresa-card__local,
+.nova-empresa-card__data {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* Aviso de cookies (Google Analytics / LGPD) */
+.aviso-cookies {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 3000;
+  max-width: 560px;
+  margin: 0 auto;
+  background: #0f2d1a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aviso-cookies__texto {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.aviso-cookies__botoes {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.aviso-cookies__botoes button {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.aviso-cookies__recusar {
+  background: transparent !important;
+  color: #cfe3d5 !important;
+  border: 1px solid #3c6b4c !important;
+}
+
+.aviso-cookies__aceitar {
+  background: #6fcf8f !important;
+  color: #0f2d1a !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Calendário do Transporte (página Eventos / Calendário)
+   --------------------------------------------------------------------------- */
+.calendario-transporte {
+  margin-top: 28px;
+}
+
+.calendario-transporte__intro {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.calendario-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.calendario-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--cor-branco);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.calendario-item__data {
+  flex-shrink: 0;
+  width: 52px;
+  text-align: center;
+  background: var(--cor-primaria);
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px 0;
+  line-height: 1.1;
+}
+
+.calendario-item__dia {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.calendario-item__mes {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.calendario-item__texto {
+  min-width: 0;
+}
+
+.calendario-item__texto h3 {
+  font-size: 15px;
+  margin: 0 0 2px 0;
+  line-height: 1.3;
+}
+
+.calendario-item__periodo {
+  font-size: 13px;
+  color: var(--cor-primaria);
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.calendario-item__contagem {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  background: #eef3ef;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.calendario-item__contagem--hoje {
+  background: #fff3c4;
+  color: #7a5b00;
+}
+
+.calendario-item__descricao {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   "Toque e segure para copiar" (utils/segurar-para-copiar.js)
+   --------------------------------------------------------------------------- */
+.segurar-copiar--segurando {
+  transform: scale(0.95);
+  filter: brightness(0.85);
+  transition: transform 0.6s, filter 0.6s;
+}
+
+.segurar-copiar--pronto {
+  transform: scale(1);
+  filter: brightness(0.8);
+}
+
+[data-whats-copiar] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.parceira-card__dica {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #777;
+  margin: 2px 0 0 0;
 }
