@@ -19,4 +19,6 @@ jobs:
       - name: Buscar vagas do IDT/SINE
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          # Só "sim" depois que a regra do Firestore para vagas_admin estiver no lugar
+          SALVAR_EMPRESAS_VAGAS: ${{ vars.SALVAR_EMPRESAS_VAGAS }}
         run: node scripts/buscar-vagas-idt.cjs
