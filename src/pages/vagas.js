@@ -101,6 +101,28 @@ function formatarDataHora(iso) {
   return `${dataFormatada}, às ${horaFormatada}`;
 }
 
+/**
+ * Link do Google Maps até o SINE da vaga.
+ * Usa as coordenadas da unidade quando o IDT manda; se não, o endereço;
+ * e, sem endereço, procura "SINE <cidade> CE".
+ */
+function linkLocalizacaoSine(vaga) {
+  if (Number.isFinite(vaga.lat) && Number.isFinite(vaga.lng)) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${vaga.lat},${vaga.lng}`;
+  }
+  const municipio = vaga.cidadeBase ? vaga.cidadeBase.charAt(0) + vaga.cidadeBase.slice(1).toLowerCase() : vaga.cidade;
+  const busca = vaga.endereco ? `${vaga.endereco}, ${municipio} - CE` : `SINE ${vaga.unidade || municipio} CE`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(busca)}`;
+}
+
+function renderBotoesSine(vaga) {
+  const tel = (vaga.fone || '').replace(/\D/g, '');
+  return `
+    ${tel ? `<a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>` : ''}
+    <a href="${linkLocalizacaoSine(vaga)}" target="_blank" rel="noopener" class="btn-localizacao">📍 Localização do SINE</a>
+  `;
+}
+
 function renderCardUnidadeSine(vaga) {
   const tel = (vaga.fone || '').replace(/\D/g, '');
   if (!vaga.endereco && !tel && !vaga.email) return '';
@@ -111,27 +133,73 @@ function renderCardUnidadeSine(vaga) {
       ${tel ? `<div class="sine-unidade__linha">📞 ${vaga.fone}</div>` : ''}
       ${vaga.email ? `<div class="sine-unidade__linha">✉️ ${vaga.email}</div>` : ''}
       <div class="sine-unidade__acoes">
-        ${tel ? `<a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>` : ''}
-        ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="btn-whatsapp">💬 WhatsApp</a>` : ''}
+        ${renderBotoesSine(vaga)}
         ${vaga.email ? `<a href="mailto:${vaga.email}" class="btn-email">✉️ E-mail</a>` : ''}
       </div>
     </div>
   `;
 }
 
+function textoQuantidade(vaga) {
+  const q = vaga.quantidade || 1;
+  const pcd = vaga.qtdPcd || 0;
+  const base = `${q} vaga${q !== 1 ? 's' : ''}`;
+  if (!pcd) return base;
+  if (pcd >= q) return `${base} • ♿ exclusiva${q !== 1 ? 's' : ''} para PcD`;
+  return `${base} (${pcd} exclusiva${pcd !== 1 ? 's' : ''} para PcD)`;
+}
+
 function renderCardVaga(vaga) {
-  const tel = (vaga.fone || '').replace(/\D/g, '');
   return `
     <div class="vaga-card">
       <div class="vaga-card__cargo">${vaga.cargo}</div>
-      <div class="vaga-card__local">📍 ${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</div>
-      ${vaga.tipo === 'Exclusiva PcD' ? `<div class="vaga-card__local">♿ Exclusiva para PcD</div>` : ''}
+      <div class="vaga-card__local">📍 ${vaga.cidade} • ${textoQuantidade(vaga)}</div>
       <div class="vaga-card__acoes">
-        ${tel ? `<a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>` : ''}
-        ${tel ? `<a href="https://wa.me/55${tel}" target="_blank" rel="noopener" class="btn-whatsapp">💬 WhatsApp</a>` : ''}
+        ${renderBotoesSine(vaga)}
       </div>
     </div>
   `;
+}
+
+/**
+ * Junta vagas repetidas: mesma cidade/posto + mesmo cargo vira UM card,
+ * somando as vagas ("Motorista entregador • 2 vagas" em vez de dois cards
+ * de 1 vaga). Vagas exclusivas PcD entram na soma e aparecem no texto.
+ */
+function juntarRepetidas(lista) {
+  const porChave = new Map();
+  for (const v of lista) {
+    const chave = `${normalizar(v.cidade)}|${normalizar(v.cargo).replace(/\s+/g, ' ').trim()}`;
+    const qtd = v.quantidade || 1;
+    const pcd = v.tipo === 'Exclusiva PcD' ? qtd : v.qtdPcd || 0;
+    const existente = porChave.get(chave);
+    if (existente) {
+      existente.quantidade += qtd;
+      existente.qtdPcd += pcd;
+    } else {
+      porChave.set(chave, { ...v, quantidade: qtd, qtdPcd: pcd });
+    }
+  }
+  return [...porChave.values()];
+}
+
+// Ordem dos títulos de área dentro da cidade: Motoristas sempre primeiro
+const ORDEM_TITULOS = ['motoristas', 'carga-estoque', 'logistica', 'maquinas', 'manutencao', 'outras'];
+
+/** Dentro da cidade: título da área e, embaixo, as vagas daquela área. */
+function renderPorArea(lista) {
+  return ORDEM_TITULOS.map((id) => {
+    const daArea = lista.filter((v) => v.area === id);
+    if (!daArea.length) return '';
+    const area = AREAS.find((a) => a.id === id);
+    const total = somaVagas(daArea);
+    return `
+      <div class="vagas__grupo-area">
+        <h3 class="vagas__area-titulo">${area.rotulo} <span>${total} vaga${total !== 1 ? 's' : ''}</span></h3>
+        ${daArea.map(renderCardVaga).join('')}
+      </div>
+    `;
+  }).join('');
 }
 
 function agruparPorPosto(lista) {
@@ -149,7 +217,7 @@ function renderGrupoPosto(posto, vagasPosto) {
   return `
     <div class="vagas__grupo-posto">
       <h3 class="vagas__posto-titulo">📍 ${posto} — ${totalPosto} vaga${totalPosto !== 1 ? 's' : ''}</h3>
-      ${vagasPosto.map(renderCardVaga).join('')}
+      ${renderPorArea(vagasPosto)}
     </div>
   `;
 }
@@ -166,7 +234,7 @@ export async function renderVagas(container) {
     return;
   }
 
-  const itens = (dados.itens || []).map((v) => ({ ...v, area: areaDoCargo(v.cargo) }));
+  const itens = juntarRepetidas(dados.itens || []).map((v) => ({ ...v, area: areaDoCargo(v.cargo) }));
   const cidades = [...new Set(itens.map((v) => v.cidadeBase).filter(Boolean))].sort();
 
   const doLink = lerFiltrosDoLink(cidades);
@@ -226,6 +294,9 @@ export async function renderVagas(container) {
       conteudoLista = agruparPorPosto(filtradas)
         .map(([posto, vagasPosto]) => renderGrupoPosto(posto, vagasPosto))
         .join('');
+    } else if (filtroCidade) {
+      // Dentro da cidade: separado por área (Motoristas primeiro)
+      conteudoLista = renderPorArea(filtradas);
     } else {
       conteudoLista = filtradas.map(renderCardVaga).join('');
     }
