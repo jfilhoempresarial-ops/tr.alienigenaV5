@@ -1,5 +1,5 @@
 import { ativarSegurarParaCopiar } from '../utils/segurar-para-copiar.js';
-import { buscarVagas, buscarOutrasVagas, avisarVagaEncerrada } from '../services/vagas.service.js';
+import { buscarVagas, buscarOutrasVagas } from '../services/vagas.service.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 function normalizar(txt) {
@@ -312,24 +312,6 @@ function renderContatoOutraVaga(contato, cargo) {
   `;
 }
 
-// Vagas que ESTE aparelho já avisou como encerradas (só para trocar o botão por "Obrigado")
-const CHAVE_AVISADAS = 'tra-vagas-avisadas';
-function lerAvisadas() {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(CHAVE_AVISADAS) || '[]'));
-  } catch {
-    return new Set();
-  }
-}
-function guardarAvisada(link) {
-  try {
-    const lista = [...lerAvisadas(), link].slice(-200);
-    localStorage.setItem(CHAVE_AVISADAS, JSON.stringify(lista));
-  } catch {
-    // modo privado: tudo bem
-  }
-}
-
 /** Quadro "Como me candidatar?" (aba Outras vagas) */
 function renderComoCandidatar() {
   return `
@@ -338,7 +320,7 @@ function renderComoCandidatar() {
       <ol>
         <li>Toque em <strong>Ver vaga</strong>. Abre o site onde a empresa publicou (Catho, InfoJobs, Gupy, site da empresa…).</li>
         <li>Faça a candidatura <strong>lá</strong>: normalmente é um cadastro rápido e o envio do currículo, ou siga a instrução da vaga (e-mail, WhatsApp).</li>
-        <li>Se aparecer <strong>"vaga encerrada"</strong> ou a página não abrir, ela já foi preenchida. Toque em <strong>Vaga encerrada? Avise</strong> para a gente tirar do site.</li>
+        <li>Se aparecer <strong>"vaga encerrada"</strong> ou a página não abrir, ela já foi preenchida. Aqui só mostramos vagas publicadas nos <strong>últimos 30 dias</strong>, e a lista é atualizada duas vezes por dia.</li>
       </ol>
       <p class="vagas__como-alerta">⚠️ <strong>Cuidado com golpe.</strong> Vaga de verdade nunca cobra nada. Desconfie se pedirem dinheiro (taxa, curso, exame, uniforme), foto de documento ou dados do banco por WhatsApp antes da entrevista, ou se o salário for bom demais. Na dúvida, pesquise o nome da empresa.</p>
     </details>
@@ -347,7 +329,6 @@ function renderComoCandidatar() {
 
 function renderCardOutraVaga(vaga) {
   const link = /^https?:\/\//i.test(vaga.link || '') ? vaga.link : '';
-  const jaAvisou = link && lerAvisadas().has(link);
   const quando = tempoDesde(vaga.publicado);
   const contato = renderContatoOutraVaga(vaga.contato, vaga.cargo);
   return `
@@ -365,13 +346,6 @@ function renderCardOutraVaga(vaga) {
               ${link ? `<a href="${escapar(link)}" target="_blank" rel="noopener nofollow" class="btn-localizacao">🔗 Ver vaga</a>` : ''}
               ${contato}
             </div>`
-          : ''
-      }
-      ${
-        link
-          ? jaAvisou
-            ? `<p class="vaga-card__avisado">✅ Obrigado pelo aviso! Vamos conferir.</p>`
-            : `<button type="button" class="vaga-card__avisar" data-avisar-link="${escapar(link)}">🚩 Vaga encerrada? Avise</button>`
           : ''
       }
     </div>
@@ -572,25 +546,6 @@ export async function renderVagas(container) {
       const alvo = container.querySelector('#vagas-busca');
       alvo.focus();
       alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
-    });
-
-    // "Vaga encerrada? Avise": manda o aviso pro admin e troca o botão por "Obrigado"
-    container.querySelectorAll('[data-avisar-link]').forEach((botao) => {
-      botao.addEventListener('click', async () => {
-        const vaga = itens.find((v) => v.link === botao.dataset.avisarLink);
-        if (!vaga) return;
-        botao.disabled = true;
-        botao.textContent = 'Enviando...';
-        try {
-          await avisarVagaEncerrada(vaga);
-          guardarAvisada(vaga.link);
-          botao.outerHTML = '<p class="vaga-card__avisado">✅ Obrigado pelo aviso! Vamos conferir.</p>';
-        } catch (erro) {
-          console.error(erro);
-          botao.disabled = false;
-          botao.textContent = '🚩 Não deu para avisar. Tente de novo';
-        }
-      });
     });
 
     const botaoTodasAreas = container.querySelector('#vagas-todas-areas');
