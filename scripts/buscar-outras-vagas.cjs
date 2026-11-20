@@ -94,6 +94,64 @@ function cidadeDoCeara(local) {
   return nomeProprio(cidade);
 }
 
+// Nome amigável do site de origem (o Jooble manda o domínio, ex.: "catho.com.br")
+const SITES_CONHECIDOS = [
+  ['catho', 'Catho'], ['infojobs', 'InfoJobs'], ['indeed', 'Indeed'], ['gupy', 'Gupy'],
+  ['linkedin', 'LinkedIn'], ['vagas.com', 'Vagas.com'], ['trabalhabrasil', 'Trabalha Brasil'],
+  ['empregos.com', 'Empregos.com.br'], ['bne.com', 'BNE'], ['solides', 'Sólides'],
+  ['glassdoor', 'Glassdoor'], ['emprega', 'Emprega Brasil'], ['olx', 'OLX'], ['sine', 'SINE'],
+];
+
+function nomeDoSite(source) {
+  const s = limparHtml(source).toLowerCase();
+  if (!s) return '';
+  const conhecido = SITES_CONHECIDOS.find(([chave]) => s.includes(chave));
+  if (conhecido) return conhecido[1];
+  return s.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+}
+
+// Empresa "genérica" que o site de vagas usa quando não quer dizer o nome
+const EMPRESAS_GENERICAS = ['empresa', 'empresa confidencial', 'confidencial', 'sigiloso', 'sigilosa', 'nao informado', 'nao informada', 'empresa sigilosa'];
+
+function limparEmpresa(nome) {
+  const e = limparHtml(nome);
+  return EMPRESAS_GENERICAS.includes(normalizar(e)) ? '' : e;
+}
+
+/**
+ * Arruma o título que vem do Jooble e, se o título disser a cidade, usa ela:
+ *  "MOTORISTA - CE"                      → "Motorista"
+ *  "Ajudante de Motorista - Tianguá/CE"  → "Ajudante de Motorista" (cidade: Tianguá)
+ */
+function arrumarTitulo(tituloBruto) {
+  let titulo = limparHtml(tituloBruto);
+  let cidade = '';
+  const m = titulo.match(/\s*[-–|(]\s*([A-Za-zÀ-ÿ' ]{3,})\s*[\/-]\s*CE\s*\)?\s*$/i);
+  if (m) {
+    cidade = nomeProprio(m[1].trim());
+    titulo = titulo.slice(0, m.index);
+  } else {
+    titulo = titulo.replace(/\s*[-–|(]\s*(CE|Ceará|Ceara)\s*\)?\s*$/i, '');
+  }
+  titulo = titulo.trim();
+  if (titulo && titulo === titulo.toUpperCase()) {
+    titulo = titulo.charAt(0) + titulo.slice(1).toLowerCase(); // "MOTORISTA" → "Motorista"
+  }
+  return { titulo, cidade };
+}
+
+/**
+ * Procura um telefone/WhatsApp no resumo da vaga (o Jooble manda só um trecho
+ * da descrição, então nem sempre tem). Devolve só dígitos com DDD, ou ''.
+ */
+function acharTelefone(texto) {
+  const t = limparHtml(texto);
+  const m = t.match(/(?:\+?55\s?)?\(?\b([1-9]{2})\)?[\s.-]?(9?\d{4})[\s.-]?(\d{4})\b/);
+  if (!m) return '';
+  const numero = `${m[1]}${m[2]}${m[3]}`;
+  return numero.length === 10 || numero.length === 11 ? numero : '';
+}
+
 function hojeISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -177,10 +235,11 @@ async function buscarJooble() {
   const limite = somarDias(hojeISO(), -DIAS_MAX_JOOBLE);
   const itens = [];
   for (const j of brutos) {
-    const cargo = limparHtml(j.title);
+    const { titulo: cargo, cidade: cidadeDoTitulo } = arrumarTitulo(j.title);
     if (!cargo || !ehVagaDeTransporte(cargo)) continue;
-    const cidade = cidadeDoCeara(j.location);
-    if (!cidade) continue;
+    const cidadeDoLocal = cidadeDoCeara(j.location);
+    if (!cidadeDoLocal && !cidadeDoTitulo) continue;
+    const cidade = cidadeDoTitulo || cidadeDoLocal;
     const publicado = String(j.updated || '').slice(0, 10);
     if (publicado && publicado < limite) continue;
     if (!j.link) continue;
@@ -188,10 +247,11 @@ async function buscarJooble() {
       cargo,
       cidade,
       cidadeBase: cidade.toUpperCase(),
-      empresa: limparHtml(j.company),
+      empresa: limparEmpresa(j.company),
       link: j.link,
-      contato: '',
+      contato: acharTelefone(`${j.snippet || ''} ${j.title || ''}`),
       fonte: 'jooble',
+      origem: nomeDoSite(j.source),
       publicado: publicado || '',
       salario: limparHtml(j.salary),
     });
@@ -218,7 +278,7 @@ async function buscarAdzuna() {
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       for (const r of json.results || []) {
-        const cargo = limparHtml(r.title);
+        const cargo = arrumarTitulo(r.title).titulo;
         if (!cargo || !ehVagaDeTransporte(cargo)) continue;
         const area = (r.location && r.location.area) || [];
         const cidade = area.length ? nomeProprio(area[area.length - 1]) : cidadeDoCeara(r.location && r.location.display_name);
@@ -227,7 +287,7 @@ async function buscarAdzuna() {
           cargo,
           cidade,
           cidadeBase: cidade.toUpperCase(),
-          empresa: limparHtml(r.company && r.company.display_name),
+          empresa: limparEmpresa(r.company && r.company.display_name),
           link: r.redirect_url,
           contato: '',
           fonte: 'adzuna',
@@ -343,6 +403,11 @@ async function main() {
   const controleSnap = await db.collection('outras_vagas').doc('controle').get();
   const controleAnterior = (controleSnap.exists && controleSnap.data().indicadas) || {};
 
+  // Vagas que motoristas avisaram como encerradas e o admin confirmou: não voltam mais
+  const avisosSnap = await db.collection('avisos_vagas').where('confirmado', '==', true).get();
+  const encerradas = new Set(avisosSnap.docs.map((d) => d.data().link).filter(Boolean));
+  if (encerradas.size) console.log(`🚩 ${encerradas.size} vaga(s) tirada(s) do site por aviso de encerrada.`);
+
   console.log('🔎 Buscando vagas no Jooble (Ceará)...');
   const jooble = await buscarJooble();
   const adzuna = await buscarAdzuna();
@@ -361,7 +426,9 @@ async function main() {
   }
 
   // Indicadas primeiro: se a mesma vaga vier também do Jooble, fica a sua.
-  const itens = semRepetidas([...indicadas.itens, ...jooble.itens, ...adzuna.itens]);
+  const itens = semRepetidas([...indicadas.itens, ...jooble.itens, ...adzuna.itens]).filter(
+    (v) => !v.link || !encerradas.has(v.link)
+  );
 
   const porFonte = itens.reduce((m, v) => ((m[v.fonte] = (m[v.fonte] || 0) + 1), m), {});
   const porCidade = itens.reduce((m, v) => ((m[v.cidade] = (m[v.cidade] || 0) + 1), m), {});
@@ -373,7 +440,8 @@ async function main() {
   });
   await db.collection('outras_vagas').doc('controle').set({ indicadas: indicadas.controle });
 
-  console.log(`✅ ${itens.length} vagas publicadas na aba "Outras vagas":`, porFonte);
+  const comContato = itens.filter((v) => v.contato).length;
+  console.log(`✅ ${itens.length} vagas publicadas na aba "Outras vagas":`, porFonte, `· ${comContato} com telefone/WhatsApp`);
   Object.entries(porCidade)
     .sort((a, b) => b[1] - a[1])
     .forEach(([cidade, n]) => console.log(`     - ${cidade}: ${n}`));
