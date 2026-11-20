@@ -50,14 +50,16 @@ function juntarRepetidas(itens) {
     if (existente) {
       existente.quantidade += item.quantidade;
       existente.qtdPcd += pcd;
+      if (item.empresa && !existente.empresas.includes(item.empresa)) existente.empresas.push(item.empresa);
     } else {
-      porChave.set(chave, { ...item, qtdPcd: pcd });
+      const { empresa, ...resto } = item;
+      porChave.set(chave, { ...resto, qtdPcd: pcd, empresas: empresa ? [empresa] : [] });
     }
   }
   return [...porChave.values()].sort((a, b) => b.quantidade - a.quantidade);
 }
 
-/** Nome da empresa que oferece a vaga (só para o painel do admin). */
+/** Nome da empresa que oferece a vaga (aparece no card e no painel do admin). */
 function nomeDaEmpresa(v) {
   const chave = Object.keys(v).find((k) => {
     const n = normalizar(k);
@@ -319,6 +321,8 @@ function montarItens(lista) {
       // Só o telefone da UNIDADE (público). Nunca celular/nome de funcionário.
       fone: String(campo(v, 'telefone_unidade', 'telefone')).trim(),
       email: String(campo(v, 'email_unidade')).trim(),
+      // Nome da empresa: aparece no card da vaga (pedido do Júlio, 20/11)
+      empresa: nomeDaEmpresa(v),
       ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : {}),
     });
 
