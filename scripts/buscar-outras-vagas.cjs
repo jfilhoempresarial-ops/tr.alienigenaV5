@@ -31,7 +31,7 @@ const PLANILHA_ID = '1csMdl7mts1mTZTF7BcZskjdPdIqYwnHmbXAlsRaAggg'; // arquivos_
 const ABA_INDICADAS = 'Vagas Indicadas';
 const CABECALHO_INDICADAS = ['Cargo', 'Cidade', 'Empresa', 'Link da vaga', 'Contato', 'Válida até'];
 const DIAS_PADRAO_INDICADA = 30;
-const DIAS_MAX_JOOBLE = 30; // vaga do Jooble mais velha que isso não entra
+const DIAS_MAX_JOOBLE = 30; // só vagas publicadas nos últimos 30 dias (sem data, não entra)
 
 // O que procurar no Jooble (uma busca por termo, no Ceará inteiro).
 // O filtro de transporte ainda passa em cada resultado depois.
@@ -241,7 +241,7 @@ async function buscarJooble() {
     if (!cidadeDoLocal && !cidadeDoTitulo) continue;
     const cidade = cidadeDoTitulo || cidadeDoLocal;
     const publicado = String(j.updated || '').slice(0, 10);
-    if (publicado && publicado < limite) continue;
+    if (!publicado || publicado < limite) continue; // sem data ou com mais de 30 dias: fora
     if (!j.link) continue;
     itens.push({
       cargo,
@@ -403,10 +403,6 @@ async function main() {
   const controleSnap = await db.collection('outras_vagas').doc('controle').get();
   const controleAnterior = (controleSnap.exists && controleSnap.data().indicadas) || {};
 
-  // Vagas que motoristas avisaram como encerradas e o admin confirmou: não voltam mais
-  const avisosSnap = await db.collection('avisos_vagas').where('confirmado', '==', true).get();
-  const encerradas = new Set(avisosSnap.docs.map((d) => d.data().link).filter(Boolean));
-  if (encerradas.size) console.log(`🚩 ${encerradas.size} vaga(s) tirada(s) do site por aviso de encerrada.`);
 
   console.log('🔎 Buscando vagas no Jooble (Ceará)...');
   const jooble = await buscarJooble();
@@ -426,9 +422,7 @@ async function main() {
   }
 
   // Indicadas primeiro: se a mesma vaga vier também do Jooble, fica a sua.
-  const itens = semRepetidas([...indicadas.itens, ...jooble.itens, ...adzuna.itens]).filter(
-    (v) => !v.link || !encerradas.has(v.link)
-  );
+  const itens = semRepetidas([...indicadas.itens, ...jooble.itens, ...adzuna.itens]);
 
   const porFonte = itens.reduce((m, v) => ((m[v.fonte] = (m[v.fonte] || 0) + 1), m), {});
   const porCidade = itens.reduce((m, v) => ((m[v.cidade] = (m[v.cidade] || 0) + 1), m), {});
