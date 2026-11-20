@@ -1,5 +1,5 @@
 import { ativarSegurarParaCopiar } from '../utils/segurar-para-copiar.js';
-import { buscarVagas, buscarOutrasVagas } from '../services/vagas.service.js';
+import { buscarVagas, buscarOutrasVagas, avisarVagaEncerrada } from '../services/vagas.service.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 function normalizar(txt) {
@@ -185,10 +185,21 @@ function textoQuantidade(vaga) {
   return `${base} (${pcd} exclusiva${pcd !== 1 ? 's' : ''} para PcD)`;
 }
 
+/** "Empresa A" · "Empresa A e Empresa B" · "Empresa A, Empresa B e mais 3" */
+function textoEmpresas(empresas) {
+  const lista = (empresas || []).filter(Boolean);
+  if (!lista.length) return '';
+  if (lista.length === 1) return lista[0];
+  if (lista.length === 2) return `${lista[0]} e ${lista[1]}`;
+  return `${lista[0]}, ${lista[1]} e mais ${lista.length - 2}`;
+}
+
 function renderCardVaga(vaga) {
+  const empresas = textoEmpresas(vaga.empresas);
   return `
     <div class="vaga-card">
       <div class="vaga-card__cargo">${vaga.cargo}</div>
+      ${empresas ? `<div class="vaga-card__empresa">🏢 ${escapar(empresas)}</div>` : ''}
       <div class="vaga-card__local">📍 ${vaga.cidade} • ${textoQuantidade(vaga)}</div>
       <div class="vaga-card__acoes">
         ${renderBotoesSine(vaga)}
@@ -208,12 +219,16 @@ function juntarRepetidas(lista) {
     const chave = `${normalizar(v.cidade)}|${normalizar(v.cargo).replace(/\s+/g, ' ').trim()}`;
     const qtd = v.quantidade || 1;
     const pcd = v.tipo === 'Exclusiva PcD' ? qtd : v.qtdPcd || 0;
+    const empresasDaVaga = Array.isArray(v.empresas) ? v.empresas : v.empresa ? [v.empresa] : [];
     const existente = porChave.get(chave);
     if (existente) {
       existente.quantidade += qtd;
       existente.qtdPcd += pcd;
+      empresasDaVaga.forEach((e) => {
+        if (!existente.empresas.includes(e)) existente.empresas.push(e);
+      });
     } else {
-      porChave.set(chave, { ...v, quantidade: qtd, qtdPcd: pcd });
+      porChave.set(chave, { ...v, quantidade: qtd, qtdPcd: pcd, empresas: [...empresasDaVaga] });
     }
   }
   return [...porChave.values()];
@@ -297,8 +312,42 @@ function renderContatoOutraVaga(contato, cargo) {
   `;
 }
 
+// Vagas que ESTE aparelho já avisou como encerradas (só para trocar o botão por "Obrigado")
+const CHAVE_AVISADAS = 'tra-vagas-avisadas';
+function lerAvisadas() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(CHAVE_AVISADAS) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+function guardarAvisada(link) {
+  try {
+    const lista = [...lerAvisadas(), link].slice(-200);
+    localStorage.setItem(CHAVE_AVISADAS, JSON.stringify(lista));
+  } catch {
+    // modo privado: tudo bem
+  }
+}
+
+/** Quadro "Como me candidatar?" (aba Outras vagas) */
+function renderComoCandidatar() {
+  return `
+    <details class="vagas__como">
+      <summary>❓ Como me candidatar? Como saber se a vaga é real?</summary>
+      <ol>
+        <li>Toque em <strong>Ver vaga</strong>. Abre o site onde a empresa publicou (Catho, InfoJobs, Gupy, site da empresa…).</li>
+        <li>Faça a candidatura <strong>lá</strong>: normalmente é um cadastro rápido e o envio do currículo, ou siga a instrução da vaga (e-mail, WhatsApp).</li>
+        <li>Se aparecer <strong>"vaga encerrada"</strong> ou a página não abrir, ela já foi preenchida. Toque em <strong>Vaga encerrada? Avise</strong> para a gente tirar do site.</li>
+      </ol>
+      <p class="vagas__como-alerta">⚠️ <strong>Cuidado com golpe.</strong> Vaga de verdade nunca cobra nada. Desconfie se pedirem dinheiro (taxa, curso, exame, uniforme), foto de documento ou dados do banco por WhatsApp antes da entrevista, ou se o salário for bom demais. Na dúvida, pesquise o nome da empresa.</p>
+    </details>
+  `;
+}
+
 function renderCardOutraVaga(vaga) {
   const link = /^https?:\/\//i.test(vaga.link || '') ? vaga.link : '';
+  const jaAvisou = link && lerAvisadas().has(link);
   const quando = tempoDesde(vaga.publicado);
   const contato = renderContatoOutraVaga(vaga.contato, vaga.cargo);
   return `
@@ -307,13 +356,22 @@ function renderCardOutraVaga(vaga) {
       ${vaga.empresa ? `<div class="vaga-card__empresa">🏢 ${escapar(vaga.empresa)}</div>` : ''}
       <div class="vaga-card__local">📍 ${escapar(vaga.cidade)}${quando ? ` • ${quando}` : ''}</div>
       ${vaga.salario ? `<div class="vaga-card__salario">💰 ${escapar(vaga.salario)}</div>` : ''}
-      <div class="vaga-card__fonte vaga-card__fonte--${escapar(vaga.fonte)}">${FONTES[vaga.fonte] || ''}</div>
+      <div class="vaga-card__fonte vaga-card__fonte--${escapar(vaga.fonte)}">${FONTES[vaga.fonte] || ''}${
+        vaga.origem ? ` · Fonte: <strong>${escapar(vaga.origem)}</strong>` : ''
+      }</div>
       ${
         link || contato
           ? `<div class="vaga-card__acoes">
               ${link ? `<a href="${escapar(link)}" target="_blank" rel="noopener nofollow" class="btn-localizacao">🔗 Ver vaga</a>` : ''}
               ${contato}
             </div>`
+          : ''
+      }
+      ${
+        link
+          ? jaAvisou
+            ? `<p class="vaga-card__avisado">✅ Obrigado pelo aviso! Vamos conferir.</p>`
+            : `<button type="button" class="vaga-card__avisar" data-avisar-link="${escapar(link)}">🚩 Vaga encerrada? Avise</button>`
           : ''
       }
     </div>
@@ -460,9 +518,11 @@ export async function renderVagas(container) {
           ${
             ehOutras
               ? `<p class="vagas__aviso">📌 Para se candidatar: toque em <strong>Ver vaga</strong> e siga as instruções do site da vaga, ou fale direto pelo contato. Estas vagas não são do SINE: confira os dados com a empresa e nunca pague para se candidatar.</p>`
-              : `<p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O nome da empresa contratante é informado no momento do atendimento.</p>`
+              : `<p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O encaminhamento para a empresa é feito pelo SINE.</p>`
           }
         </div>
+
+        ${ehOutras ? renderComoCandidatar() : ''}
 
         <input
           type="text"
@@ -512,6 +572,25 @@ export async function renderVagas(container) {
       const alvo = container.querySelector('#vagas-busca');
       alvo.focus();
       alvo.setSelectionRange(filtroTexto.length, filtroTexto.length);
+    });
+
+    // "Vaga encerrada? Avise": manda o aviso pro admin e troca o botão por "Obrigado"
+    container.querySelectorAll('[data-avisar-link]').forEach((botao) => {
+      botao.addEventListener('click', async () => {
+        const vaga = itens.find((v) => v.link === botao.dataset.avisarLink);
+        if (!vaga) return;
+        botao.disabled = true;
+        botao.textContent = 'Enviando...';
+        try {
+          await avisarVagaEncerrada(vaga);
+          guardarAvisada(vaga.link);
+          botao.outerHTML = '<p class="vaga-card__avisado">✅ Obrigado pelo aviso! Vamos conferir.</p>';
+        } catch (erro) {
+          console.error(erro);
+          botao.disabled = false;
+          botao.textContent = '🚩 Não deu para avisar. Tente de novo';
+        }
+      });
     });
 
     const botaoTodasAreas = container.querySelector('#vagas-todas-areas');
