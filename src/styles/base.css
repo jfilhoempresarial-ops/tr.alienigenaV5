@@ -3819,3 +3819,80 @@ button {
   color: #777;
   margin: 2px 0 0 0;
 }
+
+/* Vagas: segurar o nome da cidade copia o link (utils/segurar-para-copiar.js) */
+.vagas__cidades .chip {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.vagas__dica-copiar {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #889;
+}
+
+/* ---------------------------------------------------------------------------
+   Vagas: abas "Vagas do SINE" | "Outras vagas"
+   --------------------------------------------------------------------------- */
+.vagas__abas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  margin: 12px 0 16px;
+  background: #e9eee9;
+  border-radius: 12px;
+}
+
+.vagas__aba {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  color: #445;
+}
+
+.vagas__aba--ativa {
+  background: var(--cor-primaria);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.vaga-card__empresa {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.vaga-card__salario {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.vaga-card__fonte {
+  font-size: 12px;
+  color: #778;
+  margin-bottom: 10px;
+}
+
+.vaga-card__fonte--indicada {
+  color: #7a5b00;
+  font-weight: 700;
+}
+
+.vaga-card--outra .vaga-card__acoes {
+  flex-wrap: wrap;
+}
