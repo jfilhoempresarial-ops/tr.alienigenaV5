@@ -25,3 +25,13 @@ export async function buscarEmpresasDasVagas() {
   if (!snap.exists()) return { empresas: [], atualizado: null };
   return snap.data();
 }
+
+/**
+ * Aba "Outras vagas": Jooble + Vagas Indicadas da planilha.
+ * Atualizado 2x por dia pelo robô buscar-outras-vagas.cjs.
+ */
+export async function buscarOutrasVagas() {
+  const snap = await getDoc(doc(db, 'outras_vagas', 'atual'));
+  if (!snap.exists()) return { itens: [], atualizado: null };
+  return snap.data();
+}
