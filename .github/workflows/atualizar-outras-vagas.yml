@@ -1,0 +1,26 @@
+name: Atualizar outras vagas (Jooble + Indicadas)
+on:
+  schedule:
+    - cron: '23 11 * * *'  # 08:23 no horário de Brasília (UTC-3)
+    - cron: '23 20 * * *'  # 17:23 no horário de Brasília (UTC-3)
+  workflow_dispatch: {}    # permite rodar manualmente pela aba "Actions" do GitHub
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependências
+        run: npm ci
+      - name: Buscar outras vagas
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+          # Adzuna (paga): só funciona se esses dois secrets forem criados
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: node scripts/buscar-outras-vagas.cjs
