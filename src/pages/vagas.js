@@ -1,4 +1,5 @@
-import { buscarVagas } from '../services/vagas.service.js';
+import { ativarSegurarParaCopiar } from '../utils/segurar-para-copiar.js';
+import { buscarVagas, buscarOutrasVagas } from '../services/vagas.service.js';
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
 
 function normalizar(txt) {
@@ -62,24 +63,59 @@ function somaVagas(lista) {
   return lista.reduce((s, v) => s + (v.quantidade || 1), 0);
 }
 
-/** Lê ?area= e ?cidade= do link, pra dar pra divulgar "só vagas de motorista". */
+const SITE = 'https://www.tralienigena.com.br';
+
+/** "SÃO GONÇALO DO AMARANTE" → "sao-goncalo-do-amarante" (vai no link) */
+function slugCidade(cidade) {
+  return normalizar(cidade)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Aba da página: /vagas = Vagas do SINE · /vagas/outras = Outras vagas */
+function abaDoLink() {
+  const partes = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+  return partes[0] === 'vagas' && partes[1] === 'outras' ? 'outras' : 'sine';
+}
+
+function caminhoDaAba(aba, cidade) {
+  const base = aba === 'outras' ? '/vagas/outras' : '/vagas';
+  return cidade ? `${base}/${slugCidade(cidade)}` : base;
+}
+
+/** Link de uma cidade: www.tralienigena.com.br/vagas/sobral (ou /vagas/outras/sobral) */
+function linkDaCidade(cidade, aba = 'sine') {
+  return `${SITE}${caminhoDaAba(aba, cidade)}`;
+}
+
+/**
+ * Lê a cidade do link: /vagas/sobral (jeito novo) ou ?cidade=sobral (links antigos).
+ * Aceita maiúscula, acento e espaço: /vagas/Sobral, /vagas/São%20Gonçalo...
+ * Também lê ?area= de links antigos.
+ */
 function lerFiltrosDoLink(cidades) {
   const params = new URLSearchParams(window.location.search);
   const area = params.get('area') || '';
-  const cidade = normalizar(params.get('cidade') || '').toUpperCase();
+  const partes = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+  const posicao = partes[1] === 'outras' ? 2 : 1;
+  let pedido = partes[0] === 'vagas' && partes[posicao] ? partes[posicao] : params.get('cidade') || '';
+  try {
+    pedido = decodeURIComponent(pedido);
+  } catch {
+    // link quebrado: ignora
+  }
+  const slug = slugCidade(pedido);
   return {
     area: AREAS.some((a) => a.id === area) ? area : '',
-    cidade: cidades.find((c) => normalizar(c).toUpperCase() === cidade) || '',
+    cidade: slug ? cidades.find((c) => slugCidade(c) === slug) || '' : '',
   };
 }
 
-/** Atualiza o endereço da página (sem recarregar), pra o link copiado já vir filtrado. */
-function gravarFiltrosNoLink(area, cidade) {
-  const params = new URLSearchParams();
-  if (area) params.set('area', area);
-  if (cidade) params.set('cidade', cidade.toLowerCase());
-  const busca = params.toString();
-  const novo = `${window.location.pathname}${busca ? `?${busca}` : ''}`;
+/** Atualiza o endereço da página (sem recarregar): /vagas/sobral */
+function gravarFiltrosNoLink(area, cidade, aba = 'sine') {
+  const caminho = caminhoDaAba(aba, cidade);
+  const novo = `${caminho}${area ? `?area=${area}` : ''}`;
   if (novo !== window.location.pathname + window.location.search) {
     window.history.replaceState({}, '', novo);
   }
@@ -187,7 +223,7 @@ function juntarRepetidas(lista) {
 const ORDEM_TITULOS = ['motoristas', 'carga-estoque', 'logistica', 'maquinas', 'manutencao', 'outras'];
 
 /** Dentro da cidade: título da área e, embaixo, as vagas daquela área. */
-function renderPorArea(lista) {
+function renderPorArea(lista, renderCard = renderCardVaga) {
   return ORDEM_TITULOS.map((id) => {
     const daArea = lista.filter((v) => v.area === id);
     if (!daArea.length) return '';
@@ -197,7 +233,7 @@ function renderPorArea(lista) {
       <div class="vagas__grupo-area">
         <h3 class="vagas__area-titulo">${area.rotulo} <span>${total} vaga${total !== 1 ? 's' : ''}</span></h3>
         <div class="vagas__grade">
-          ${daArea.map(renderCardVaga).join('')}
+          ${daArea.map(renderCard).join('')}
         </div>
       </div>
     `;
@@ -208,18 +244,87 @@ const MINUSCULAS = ['de', 'da', 'do', 'das', 'dos', 'e'];
 
 /** "JUAZEIRO DO NORTE" → "Juazeiro do Norte" */
 function nomeCidade(cidadeBase) {
+  let dentroDeParenteses = false;
   return String(cidadeBase || '')
     .toLowerCase()
     .split(' ')
-    .map((p, i) => (i > 0 && MINUSCULAS.includes(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .map((p, i) => {
+      if (p.startsWith('(')) dentroDeParenteses = true;
+      const manter = dentroDeParenteses || (i > 0 && MINUSCULAS.includes(p));
+      return manter ? p : p.charAt(0).toUpperCase() + p.slice(1);
+    })
     .join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// OUTRAS VAGAS (Jooble + Vagas Indicadas). Os textos vêm de sites de fora,
+// então TUDO passa por escapar() antes de ir para a tela.
+// ---------------------------------------------------------------------------
+function escapar(txt) {
+  return String(txt == null ? '' : txt).replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+  );
+}
+
+const FONTES = {
+  indicada: '⭐ Indicada pela TR Alienígena',
+  jooble: 'via Jooble',
+  adzuna: 'via Adzuna',
+};
+
+function tempoDesde(isoData) {
+  if (!isoData) return '';
+  const dias = Math.floor((Date.now() - new Date(`${isoData}T12:00:00`).getTime()) / 86400000);
+  if (dias <= 0) return 'hoje';
+  if (dias === 1) return 'ontem';
+  return `há ${dias} dias`;
+}
+
+function renderContatoOutraVaga(contato, cargo) {
+  const c = String(contato || '').trim();
+  if (!c) return '';
+  if (c.includes('@')) {
+    return `<a href="mailto:${escapar(c)}" class="btn-email">✉️ E-mail</a>`;
+  }
+  let tel = c.replace(/\D/g, '');
+  if (tel.startsWith('55') && tel.length > 11) tel = tel.slice(2);
+  if (tel.length < 10) return '';
+  const msg = encodeURIComponent(`Olá! Vi a vaga de ${cargo} no site da TR Alienígena e queria saber mais.`);
+  return `
+    <a href="tel:+55${tel}" class="btn-ligar">📞 Ligar</a>
+    <a href="https://wa.me/55${tel}?text=${msg}" target="_blank" rel="noopener" class="btn-whatsapp">💬 WhatsApp</a>
+  `;
+}
+
+function renderCardOutraVaga(vaga) {
+  const link = /^https?:\/\//i.test(vaga.link || '') ? vaga.link : '';
+  const quando = tempoDesde(vaga.publicado);
+  const contato = renderContatoOutraVaga(vaga.contato, vaga.cargo);
+  return `
+    <div class="vaga-card vaga-card--outra">
+      <div class="vaga-card__cargo">${escapar(vaga.cargo)}</div>
+      ${vaga.empresa ? `<div class="vaga-card__empresa">🏢 ${escapar(vaga.empresa)}</div>` : ''}
+      <div class="vaga-card__local">📍 ${escapar(vaga.cidade)}${quando ? ` • ${quando}` : ''}</div>
+      ${vaga.salario ? `<div class="vaga-card__salario">💰 ${escapar(vaga.salario)}</div>` : ''}
+      <div class="vaga-card__fonte vaga-card__fonte--${escapar(vaga.fonte)}">${FONTES[vaga.fonte] || ''}</div>
+      ${
+        link || contato
+          ? `<div class="vaga-card__acoes">
+              ${link ? `<a href="${escapar(link)}" target="_blank" rel="noopener nofollow" class="btn-localizacao">🔗 Ver vaga</a>` : ''}
+              ${contato}
+            </div>`
+          : ''
+      }
+    </div>
+  `;
 }
 
 /**
  * Lista final: CIDADE (título) → ÁREA (subtítulo, Motoristas primeiro) → vagas.
  * Em Fortaleza, que tem vários postos, o posto aparece em cada card.
  */
-function renderPorCidade(lista) {
+function renderPorCidade(lista, renderCard = renderCardVaga) {
   const porCidade = new Map();
   lista.forEach((v) => {
     const c = v.cidadeBase || 'NÃO INFORMADO';
@@ -227,13 +332,14 @@ function renderPorCidade(lista) {
     porCidade.get(c).push(v);
   });
   return [...porCidade.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'))
+    // "Ceará (várias cidades)" vai pro fim; o resto em ordem alfabética
+    .sort((a, b) => a[0].includes('(') - b[0].includes('(') || a[0].localeCompare(b[0], 'pt-BR'))
     .map(([cidade, vagasCidade]) => {
       const total = somaVagas(vagasCidade);
       return `
         <section class="vagas__bloco-cidade">
           <h2 class="vagas__cidade-titulo">📍 ${nomeCidade(cidade)} <span>${total} vaga${total !== 1 ? 's' : ''}</span></h2>
-          ${renderPorArea(vagasCidade)}
+          ${renderPorArea(vagasCidade, renderCard)}
         </section>
       `;
     })
@@ -241,18 +347,22 @@ function renderPorCidade(lista) {
 }
 
 export async function renderVagas(container) {
+  const aba = abaDoLink();
+  const ehOutras = aba === 'outras';
   container.innerHTML = `<p class="loading">Carregando vagas...</p>`;
 
   let dados;
   try {
-    dados = await buscarVagas();
+    dados = ehOutras ? await buscarOutrasVagas() : await buscarVagas();
   } catch (erro) {
     container.innerHTML = `<p class="erro">Não foi possível carregar as vagas agora. Tente novamente em instantes.</p>`;
     console.error(erro);
     return;
   }
 
-  const itens = juntarRepetidas(dados.itens || []).map((v) => ({ ...v, area: areaDoCargo(v.cargo) }));
+  const brutos = ehOutras ? (dados.itens || []).map((v) => ({ ...v, quantidade: 1 })) : juntarRepetidas(dados.itens || []);
+  const itens = brutos.map((v) => ({ ...v, area: areaDoCargo(v.cargo) }));
+  const renderCard = ehOutras ? renderCardOutraVaga : renderCardVaga;
   const cidades = [...new Set(itens.map((v) => v.cidadeBase).filter(Boolean))].sort();
 
   const doLink = lerFiltrosDoLink(cidades);
@@ -266,18 +376,45 @@ export async function renderVagas(container) {
       .filter((v) => {
         const bateArea = !filtroArea || v.area === filtroArea;
         const bateCidade = !filtroCidade || v.cidadeBase === filtroCidade;
-        const bateTexto = !qn || normalizar(v.cidade).includes(qn) || normalizar(v.cargo).includes(qn);
+        const bateTexto =
+          !qn ||
+          normalizar(v.cidade).includes(qn) ||
+          normalizar(v.cargo).includes(qn) ||
+          normalizar(v.empresa || '').includes(qn);
         return bateArea && bateCidade && bateTexto;
       })
-      .sort((a, b) => (b.quantidade || 1) - (a.quantidade || 1));
+      .sort((a, b) =>
+        ehOutras
+          ? (a.fonte === 'indicada' ? -1 : 0) - (b.fonte === 'indicada' ? -1 : 0) ||
+            String(b.publicado || '').localeCompare(String(a.publicado || ''))
+          : (b.quantidade || 1) - (a.quantidade || 1)
+      );
+  }
+
+  // Aviso "Link copiado!" (fica fora do container, que é redesenhado a cada filtro)
+  let aviso = document.getElementById('aviso-vagas-copiado');
+  if (!aviso) {
+    aviso = document.createElement('div');
+    aviso.id = 'aviso-vagas-copiado';
+    aviso.className = 'aviso-copiado';
+    aviso.setAttribute('role', 'status');
+    aviso.setAttribute('aria-live', 'polite');
+    document.body.appendChild(aviso);
+  }
+  let timerAviso = null;
+  function avisar(texto) {
+    aviso.textContent = texto;
+    aviso.classList.add('aviso-copiado--visivel');
+    clearTimeout(timerAviso);
+    timerAviso = setTimeout(() => aviso.classList.remove('aviso-copiado--visivel'), 2500);
   }
 
   function render() {
     const filtradas = aplicarFiltros();
     const total = itens.reduce((s, v) => s + (v.quantidade || 1), 0);
-    const infoUnidade = filtroCidade && filtradas.length ? renderCardUnidadeSine(filtradas[0]) : '';
+    const infoUnidade = !ehOutras && filtroCidade && filtradas.length ? renderCardUnidadeSine(filtradas[0]) : '';
 
-    gravarFiltrosNoLink(filtroArea, filtroCidade);
+    gravarFiltrosNoLink(filtroArea, filtroCidade, aba);
 
     // Vagas da área escolhida (ou todas), usadas pra contar cidades e o total da cidade
     const daArea = filtroArea ? itens.filter((v) => v.area === filtroArea) : itens;
@@ -292,16 +429,26 @@ export async function renderVagas(container) {
     const nomeCidadeExibicao = filtroCidade ? nomeCidade(filtroCidade) : '';
 
     const conteudoLista = filtradas.length
-      ? renderPorCidade(filtradas)
+      ? renderPorCidade(filtradas, renderCard)
       : '<p class="vazio">Nenhuma vaga encontrada com esse filtro.</p>';
 
     container.innerHTML = `
       <section class="vagas">
         <div id="carrossel-vagas" class="carrossel-categoria"></div>
 
+        <nav class="vagas__abas" aria-label="Tipo de vaga">
+          <a href="${caminhoDaAba('sine', filtroCidade)}" class="vagas__aba ${!ehOutras ? 'vagas__aba--ativa' : ''}">🏛️ Vagas do SINE</a>
+          <a href="${caminhoDaAba('outras', filtroCidade)}" class="vagas__aba ${ehOutras ? 'vagas__aba--ativa' : ''}">🌐 Outras vagas</a>
+        </nav>
+
         <div class="vagas__header">
-          <h1>Vagas de Transporte e Logística do SINE</h1>
-          <p>Motoristas, ajudantes, estoque, expedição, logística, máquinas pesadas e manutenção de pesados, perto de você</p>
+          ${
+            ehOutras
+              ? `<h1>Outras vagas de Transporte e Logística</h1>
+                 <p>Vagas de sites de emprego e de empresas da região, e vagas indicadas pela TR Alienígena</p>`
+              : `<h1>Vagas de Transporte e Logística do SINE</h1>
+                 <p>Motoristas, ajudantes, estoque, expedição, logística, máquinas pesadas e manutenção de pesados, perto de você</p>`
+          }
         </div>
 
         <div class="vagas__total-destaque">
@@ -310,14 +457,18 @@ export async function renderVagas(container) {
 
         <div class="vagas__resumo">
           <p>📅 Atualizado em: ${formatarDataHora(dados.atualizado)}</p>
-          <p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O nome da empresa contratante é informado no momento do atendimento.</p>
+          ${
+            ehOutras
+              ? `<p class="vagas__aviso">📌 Para se candidatar: toque em <strong>Ver vaga</strong> e siga as instruções do site da vaga, ou fale direto pelo contato. Estas vagas não são do SINE: confira os dados com a empresa e nunca pague para se candidatar.</p>`
+              : `<p class="vagas__aviso">📌 Para se candidatar: dirija-se ao SINE ou DT da sua cidade com sua Carteira de Trabalho e documentação pessoal. O nome da empresa contratante é informado no momento do atendimento.</p>`
+          }
         </div>
 
         <input
           type="text"
           id="vagas-busca"
           class="vagas__busca"
-          placeholder="Filtrar por cargo ou cidade..."
+          placeholder="${ehOutras ? 'Filtrar por cargo, cidade ou empresa...' : 'Filtrar por cargo ou cidade...'}"
           value="${filtroTexto}"
         />
 
@@ -327,7 +478,7 @@ export async function renderVagas(container) {
             : ''
         }
 
-        <p class="vagas__filtro-titulo">Cidade</p>
+        <p class="vagas__filtro-titulo">Cidade <span class="vagas__dica-copiar">· segure o nome para copiar o link</span></p>
         <div class="vagas__cidades">
           <button data-cidade="" class="chip ${!filtroCidade ? 'chip--ativo' : ''}">🌐 Todas</button>
           ${cidadesDaArea
@@ -375,6 +526,15 @@ export async function renderVagas(container) {
       btn.addEventListener('click', () => {
         filtroCidade = btn.dataset.cidade;
         render();
+      });
+      // Toque e segure: copia www.tralienigena.com.br/vagas/<cidade> pra colar na conversa
+      ativarSegurarParaCopiar(btn, {
+        obterTexto: () => linkDaCidade(btn.dataset.cidade, aba),
+        avisar,
+        mensagemCopiado: btn.dataset.cidade
+          ? `🔗 Link das vagas de ${nomeCidade(btn.dataset.cidade)} copiado!`
+          : '🔗 Link das vagas copiado!',
+        tituloCompartilhar: 'Vagas de emprego',
       });
     });
   }
