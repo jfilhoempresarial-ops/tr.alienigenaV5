@@ -8,7 +8,12 @@ import {
   criarEmpresaAdmin,
 } from '../services/empresas.service.js';
 import { otimizarFotoCloudinary } from '../utils/cloudinary.js';
-import { buscarEmpresasDasVagas } from '../services/vagas.service.js';
+import {
+  buscarEmpresasDasVagas,
+  buscarAvisosVagas,
+  confirmarAvisoVaga,
+  ignorarAvisoVaga,
+} from '../services/vagas.service.js';
 import { obterLocalizacaoAtual } from '../services/geo.service.js';
 import { CATEGORIAS_CADASTRO, geocodificarEndereco, enviarFotos } from './cadastro-empresa.js';
 
@@ -71,6 +76,15 @@ function renderPainel(container, usuario) {
         <button type="submit">Salvar evento</button>
       </form>
       <p id="evento-status"></p>
+
+      <h2 class="admin-painel__titulo-cobertura">🚩 Vagas avisadas como encerradas</h2>
+      <p class="admin-painel__subtitulo-cobertura">
+        Motoristas avisaram que estas vagas (aba Outras vagas) já foram preenchidas. Abra o link para conferir.
+        "Tirar do site" faz a vaga sumir na próxima atualização do robô.
+      </p>
+      <div id="admin-avisos-vagas">
+        <p class="loading">Carregando avisos...</p>
+      </div>
 
       <h2 class="admin-painel__titulo-cobertura">🏢 Empresas das vagas do SINE</h2>
       <p class="admin-painel__subtitulo-cobertura">
@@ -137,6 +151,58 @@ function renderPainel(container, usuario) {
   carregarPendentes(container);
   configurarEdicaoPrestadores(container);
   carregarEmpresasDasVagas(container);
+  carregarAvisosVagas(container);
+}
+
+async function carregarAvisosVagas(container) {
+  const alvo = container.querySelector('#admin-avisos-vagas');
+  if (!alvo) return;
+  let avisos;
+  try {
+    avisos = await buscarAvisosVagas();
+  } catch (erro) {
+    alvo.innerHTML = `<p class="erro">Sem permissão para ver os avisos. Confira a regra do Firestore para "avisos_vagas".</p>`;
+    console.error(erro);
+    return;
+  }
+  if (!avisos.length) {
+    alvo.innerHTML = `<p class="vazio">Nenhum aviso de vaga encerrada. 👍</p>`;
+    return;
+  }
+  alvo.innerHTML = avisos
+    .map(
+      (a) => `
+      <div class="admin-aviso-vaga" data-aviso-id="${escaparHtml(a.id)}">
+        <p class="admin-aviso-vaga__cargo">${escaparHtml(a.cargo)}</p>
+        <p class="admin-aviso-vaga__info">${a.empresa ? `🏢 ${escaparHtml(a.empresa)} · ` : ''}📍 ${escaparHtml(a.cidade)}</p>
+        <div class="admin-aviso-vaga__acoes">
+          <a href="${escaparHtml(a.link)}" target="_blank" rel="noopener nofollow" class="btn-ligar">🔗 Conferir vaga</a>
+          <button type="button" class="btn-localizacao" data-acao="tirar">🚫 Tirar do site</button>
+          <button type="button" class="btn-email" data-acao="ignorar">Continua aberta</button>
+        </div>
+      </div>`
+    )
+    .join('');
+
+  alvo.querySelectorAll('.admin-aviso-vaga button').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      const card = botao.closest('[data-aviso-id]');
+      const id = card.dataset.avisoId;
+      botao.disabled = true;
+      try {
+        if (botao.dataset.acao === 'tirar') await confirmarAvisoVaga(id);
+        else await ignorarAvisoVaga(id);
+        card.remove();
+        if (!alvo.querySelector('[data-aviso-id]')) {
+          alvo.innerHTML = `<p class="vazio">Nenhum aviso de vaga encerrada. 👍</p>`;
+        }
+      } catch (erro) {
+        console.error(erro);
+        botao.disabled = false;
+        alert('Não foi possível salvar. Tente de novo.');
+      }
+    });
+  });
 }
 
 function escaparHtml(txt) {
