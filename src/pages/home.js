@@ -1,5 +1,5 @@
 import { renderCarrosselBanners } from '../components/carrossel-banners.js';
-import { buscarVagas } from '../services/vagas.service.js';
+import { buscarVagas, buscarOutrasVagas } from '../services/vagas.service.js';
 import { buscarTodosFretes, NOME_ESTADO } from '../services/fretes.service.js';
 import { buscarAniversariantesDaSemana, buscarAniversariantesDoMes } from '../services/aniversariantes.service.js';
 import { buscarManchetesHome } from '../services/noticias.service.js';
@@ -295,6 +295,13 @@ export function renderHome(container) {
         </div>
         <div class="home-secao__lista" id="lista-vagas">
           <p class="home-secao__vazio">Carregando...</p>
+        </div>
+        <div id="vagas-motorista-empresas" hidden>
+          <div class="home-secao__header home-secao__header--sub">
+            <h3 class="home-secao__subtitulo">🚛 Vagas para motorista nas empresas</h3>
+            <a href="/vagas/outras" class="home-secao__ver-todas">Ver todas</a>
+          </div>
+          <div class="home-secao__lista" id="lista-vagas-motorista"></div>
         </div>
       </div>
 
@@ -841,7 +848,7 @@ async function carregarVagasDestaque(container) {
     const total = todosItens.reduce((s, v) => s + (v.quantidade || 1), 0);
 
     titulo.innerHTML = todosItens.length
-      ? `<span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} disponíve${total !== 1 ? 'is' : 'l'} hoje</span>`
+      ? `<span class="resultados__contador">${total} vaga${total !== 1 ? 's' : ''} para a área do transporte</span>`
       : 'Vagas em destaque';
 
     const itens = [...todosItens]
@@ -857,12 +864,68 @@ async function carregarVagasDestaque(container) {
     renderErroComRetry(alvo, () => carregarVagasDestaque(container));
     console.error(erro);
   }
+  carregarVagasMotoristaEmpresas(container);
+}
+
+/** Só vaga de MOTORISTA de verdade (ajudante de motorista não entra no destaque). */
+function ehVagaDeMotorista(cargo) {
+  const c = String(cargo || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  if (/ajudante|auxiliar|assistente|instrutor|despachante|moto ?boy|motofret|mototaxi/.test(c)) return false;
+  return /motorista|caminhoneiro|carreteiro|cacambeiro/.test(c);
+}
+
+/**
+ * Destaque da Home: "Vaga para Motorista — Empresa X", vindo da aba Outras vagas
+ * (Jooble + Indicadas). Só entra vaga de motorista com o nome da empresa.
+ */
+async function carregarVagasMotoristaEmpresas(container) {
+  const bloco = container.querySelector('#vagas-motorista-empresas');
+  const alvo = container.querySelector('#lista-vagas-motorista');
+  if (!bloco || !alvo) return;
+  try {
+    const dados = await comTimeout(buscarOutrasVagas());
+    const itens = (dados.itens || [])
+      .filter((v) => v.empresa && ehVagaDeMotorista(v.cargo))
+      .sort(
+        (a, b) =>
+          (a.fonte === 'indicada' ? -1 : 0) - (b.fonte === 'indicada' ? -1 : 0) ||
+          String(b.publicado || '').localeCompare(String(a.publicado || ''))
+      )
+      .slice(0, 8);
+    if (!itens.length) return; // sem vaga de motorista com empresa: a faixa nem aparece
+    alvo.innerHTML = itens.map(renderMiniCardVagaEmpresa).join('');
+    bloco.hidden = false;
+  } catch (erro) {
+    console.error(erro); // destaque extra: se falhar, só não aparece
+  }
+}
+
+function renderMiniCardVagaEmpresa(vaga) {
+  const link = /^https?:\/\//i.test(vaga.link || '') ? vaga.link : '';
+  return `
+    <div class="mini-card mini-card--empresa">
+      <p class="mini-card__titulo">${escaparHtml(vaga.cargo)}</p>
+      <p class="mini-card__empresa">🏢 ${escaparHtml(vaga.empresa)}</p>
+      <p class="mini-card__sub">📍 ${escaparHtml(vaga.cidade)}</p>
+      ${
+        link
+          ? `<a href="${escaparHtml(link)}" target="_blank" rel="noopener nofollow" class="mini-card__acao">Ver vaga</a>`
+          : `<a href="/vagas/outras" class="mini-card__acao">Ver detalhes</a>`
+      }
+    </div>
+  `;
 }
 
 function renderMiniCardVaga(vaga) {
+  const empresas = (Array.isArray(vaga.empresas) ? vaga.empresas : []).filter(Boolean);
+  const textoEmpresa = empresas.length > 1 ? `${empresas[0]} e mais ${empresas.length - 1}` : empresas[0] || '';
   return `
     <div class="mini-card">
       <p class="mini-card__titulo">${vaga.cargo}</p>
+      ${textoEmpresa ? `<p class="mini-card__empresa">🏢 ${escaparHtml(textoEmpresa)}</p>` : ''}
       <p class="mini-card__sub">${vaga.cidade} • ${vaga.quantidade} vaga${vaga.quantidade !== 1 ? 's' : ''}</p>
       <a href="/vagas" class="mini-card__acao">Ver detalhes</a>
     </div>
